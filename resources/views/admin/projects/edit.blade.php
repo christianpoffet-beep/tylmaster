@@ -1,0 +1,153 @@
+@extends('admin.layouts.app')
+
+@section('title', 'Projekt bearbeiten')
+
+@section('content')
+<div class="max-w-3xl" x-data="{ type: '{{ old('type', $project->type) }}' }">
+    <form method="POST" action="{{ route('admin.projects.update', $project) }}">
+        @csrf
+        @method('PUT')
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <input type="text" name="name" id="name" value="{{ old('name', $project->name) }}" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Typ *</label>
+                <select name="type" id="type" x-model="type" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">— Typ wählen —</option>
+                    @foreach($projectTypes as $pt)
+                        <option value="{{ $pt->slug }}" {{ old('type', $project->type) === $pt->slug ? 'selected' : '' }}>{{ $pt->name }}</option>
+                    @endforeach
+                </select>
+                @error('type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Beschreibung</label>
+                <textarea name="description" id="description" rows="4" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('description', $project->description) }}</textarea>
+                @error('description') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" id="status" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        @foreach(['planned' => 'Geplant', 'in_progress' => 'In Arbeit', 'completed' => 'Abgeschlossen', 'paused' => 'Pausiert'] as $value => $label)
+                            <option value="{{ $value }}" {{ old('status', $project->status) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('status') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="deadline" class="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+                    <input type="date" name="deadline" id="deadline" value="{{ old('deadline', $project->deadline?->format('Y-m-d')) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    @error('deadline') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Kontakte</label>
+                <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
+                    @php $selectedContacts = old('contacts', $project->contacts->pluck('id')->toArray()); @endphp
+                    @foreach($contacts as $contact)
+                        <label class="flex items-center">
+                            <input type="checkbox" name="contacts[]" value="{{ $contact->id }}" {{ in_array($contact->id, $selectedContacts) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">{{ $contact->full_name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                @error('contacts') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Genres --}}
+            @if($genres->count())
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Genres</label>
+                @php $selectedGenres = old('genre_ids', $project->genres->pluck('id')->toArray()); @endphp
+                <div class="flex flex-wrap gap-2">
+                    @foreach($genres as $genre)
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="genre_ids[]" value="{{ $genre->id }}" {{ in_array($genre->id, $selectedGenres) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-1.5 text-sm text-gray-700">{{ $genre->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            {{-- Organisationen --}}
+            @include('admin.partials.organization-search', ['selected' => $project->organizations])
+
+            {{-- Verträge --}}
+            @if($contracts->count())
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Verträge</label>
+                <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
+                    @php $selectedContracts = old('contract_ids', $project->contracts->pluck('id')->toArray()); @endphp
+                    @foreach($contracts as $contract)
+                        <label class="flex items-center">
+                            <input type="checkbox" name="contract_ids[]" value="{{ $contract->id }}" {{ in_array($contract->id, $selectedContracts) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">{{ $contract->title }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            {{-- Tracks (nur Release + Administration) --}}
+            <div x-show="type === 'release' || type === 'administration'" x-cloak>
+                @if($tracks->count())
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tracks (Musik)</label>
+                    <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
+                        @php $selectedTracks = old('track_ids', $project->tracks->pluck('id')->toArray()); @endphp
+                        @foreach($tracks as $track)
+                            <label class="flex items-center">
+                                <input type="checkbox" name="track_ids[]" value="{{ $track->id }}" {{ in_array($track->id, $selectedTracks) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">{{ $track->title }}{{ $track->isrc ? ' (' . $track->isrc . ')' : '' }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+            </div>
+
+            {{-- Artworks (nur Release + Administration) --}}
+            <div x-show="type === 'release' || type === 'administration'" x-cloak>
+                @if($artworks->count())
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Logo & Artwork</label>
+                    <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
+                        @php $selectedArtworks = old('artwork_ids', $project->artworks->pluck('id')->toArray()); @endphp
+                        @foreach($artworks as $artwork)
+                            <label class="flex items-center">
+                                <input type="checkbox" name="artwork_ids[]" value="{{ $artwork->id }}" {{ in_array($artwork->id, $selectedArtworks) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">{{ $artwork->title }}{{ $artwork->yoc ? ' (' . $artwork->yoc . ')' : '' }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <div class="mt-4 flex gap-3">
+            <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Projekt aktualisieren</button>
+            <a href="{{ route('admin.projects.show', $project) }}" class="px-5 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50">Abbrechen</a>
+        </div>
+    </form>
+
+    <!-- Delete -->
+    <div class="mt-8 pt-6 border-t border-gray-200">
+        <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" onsubmit="return confirm('Projekt wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700">Projekt löschen</button>
+        </form>
+    </div>
+</div>
+@endsection

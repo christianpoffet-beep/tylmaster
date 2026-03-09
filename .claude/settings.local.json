@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan make:migration expand_tasks_module)",
+      "Bash(C:/php/php-8.3.29-Win32-vs16-x64/php.exe artisan db:seed --class=ContactTypeSeeder)",
+      "Bash(C:/php/php-8.3.29-Win32-vs16-x64/php.exe artisan db:seed --class=ProjectTypeSeeder)"
+    ]
+  }
+}
