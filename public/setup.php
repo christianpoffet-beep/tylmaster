@@ -50,6 +50,7 @@ if ($step === 'menu') {
     echo '<p><a class="btn" href="' . $baseUrl . '&step=migrate">2. Migrationen ausfuehren</a></p>';
     echo '<p><a class="btn" href="' . $baseUrl . '&step=seed">3. Seeders ausfuehren (Testdaten)</a></p>';
     echo '<p><a class="btn" href="' . $baseUrl . '&step=storage">4. Storage Link erstellen</a></p>';
+    echo '<p><a class="btn" href="' . $baseUrl . '&step=import">3b. Daten aus SQLite importieren</a></p>';
     echo '<p><a class="btn" href="' . $baseUrl . '&step=cache">5. Caches erstellen (Produktion)</a></p>';
     echo '<p><a class="btn" href="' . $baseUrl . '&step=clear">6. Caches leeren</a></p>';
     echo '<p><a class="btn" href="' . $baseUrl . '&step=all">ALLES ausfuehren (1-5)</a></p>';
@@ -118,6 +119,80 @@ elseif ($step === 'seed') {
 
     echo '</pre>';
     echo '<p class="ok">Seeders abgeschlossen.</p>';
+    echo '<p><a class="btn" href="' . $baseUrl . '&step=menu">Zurueck</a></p>';
+}
+
+elseif ($step === 'import') {
+    echo '<h2>Daten aus SQLite importieren</h2><pre>';
+
+    $sqlitePath = base_path('database/database.sqlite');
+    if (!file_exists($sqlitePath)) {
+        echo '<span class="err">SQLite-Datei nicht gefunden: database/database.sqlite</span>';
+    } else {
+        try {
+            $sqlite = new PDO('sqlite:' . $sqlitePath);
+            $sqlite->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $mysql = \DB::connection()->getPdo();
+
+            // Tabellen die importiert werden (keine System-Tabellen)
+            $tables = [
+                'users', 'contacts', 'contact_types', 'organizations', 'organization_types',
+                'genres', 'tags', 'contracts', 'contract_types', 'contract_templates',
+                'contract_parties', 'documents', 'projects', 'project_types', 'tasks', 'taskables',
+                'tracks', 'releases', 'artworks', 'artwork_credits', 'artwork_logos',
+                'photos', 'photo_folders', 'music_submissions',
+                'invoices', 'invoice_items', 'invoice_templates', 'invoice_template_items',
+                'expenses', 'accountings', 'accounts', 'bookings',
+                'chart_templates', 'chart_template_accounts',
+                // Pivot-Tabellen
+                'contact_contract', 'contact_genre', 'contact_organization', 'contact_photo_folder',
+                'contact_tag', 'contract_organization', 'contract_release', 'contract_track',
+                'genre_organization', 'genre_project', 'organization_photo_folder',
+                'organization_project', 'organization_release', 'organization_track',
+                'photo_folder_project', 'project_contact', 'project_contract', 'project_track',
+                'release_contact', 'artwork_project', 'track_contact',
+            ];
+
+            $mysql->exec('SET FOREIGN_KEY_CHECKS=0');
+            $totalRows = 0;
+
+            foreach ($tables as $table) {
+                try {
+                    $rows = $sqlite->query("SELECT * FROM {$table}")->fetchAll(PDO::FETCH_ASSOC);
+                    if (empty($rows)) {
+                        continue;
+                    }
+
+                    // Tabelle leeren
+                    $mysql->exec("DELETE FROM `{$table}`");
+
+                    // Daten einfuegen
+                    $columns = array_keys($rows[0]);
+                    $placeholders = '(' . implode(',', array_fill(0, count($columns), '?')) . ')';
+                    $colNames = '`' . implode('`,`', $columns) . '`';
+                    $insertSql = "INSERT INTO `{$table}` ({$colNames}) VALUES {$placeholders}";
+                    $stmt = $mysql->prepare($insertSql);
+
+                    $count = 0;
+                    foreach ($rows as $row) {
+                        $stmt->execute(array_values($row));
+                        $count++;
+                    }
+                    $totalRows += $count;
+                    echo '<span class="ok">OK</span>  ' . $table . " ({$count} Eintraege)\n";
+                } catch (\Exception $e) {
+                    echo '<span class="err">FEHLER</span>  ' . $table . ': ' . htmlspecialchars($e->getMessage()) . "\n";
+                }
+            }
+
+            $mysql->exec('SET FOREIGN_KEY_CHECKS=1');
+            echo "\n<strong>Total: {$totalRows} Eintraege importiert.</strong>\n";
+        } catch (\Exception $e) {
+            echo '<span class="err">Import-Fehler: ' . htmlspecialchars($e->getMessage()) . '</span>';
+        }
+    }
+
+    echo '</pre>';
     echo '<p><a class="btn" href="' . $baseUrl . '&step=menu">Zurueck</a></p>';
 }
 
