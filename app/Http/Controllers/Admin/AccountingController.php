@@ -40,7 +40,7 @@ class AccountingController extends Controller
     {
         $contacts = Contact::orderBy('last_name')->get();
         $organizations = Organization::orderBy('names')->get();
-        $templates = ChartTemplate::orderBy('name')->get();
+        $templates = ChartTemplate::with(['accounts' => fn($q) => $q->orderBy('number')])->orderBy('name')->get();
         $year = now()->year;
 
         return view('admin.accountings.create', compact('contacts', 'organizations', 'templates', 'year'));
@@ -57,6 +57,12 @@ class AccountingController extends Controller
             'period_end' => 'required|date|after:period_start',
             'chart_template_id' => 'nullable|exists:chart_templates,id',
             'notes' => 'nullable|string',
+            'custom_accounts' => 'nullable|array',
+            'custom_accounts.*.number' => 'required_with:custom_accounts|string|max:20',
+            'custom_accounts.*.name' => 'required_with:custom_accounts|string|max:255',
+            'custom_accounts.*.type' => 'required_with:custom_accounts|in:asset,liability,income,expense',
+            'custom_accounts.*.is_header' => 'nullable|boolean',
+            'custom_accounts.*.opening_balance' => 'nullable|numeric',
         ]);
 
         $type = $validated['accountable_type'] === 'contact' ? Contact::class : Organization::class;
@@ -73,7 +79,20 @@ class AccountingController extends Controller
             'notes' => $validated['notes'],
         ]);
 
-        if ($validated['chart_template_id']) {
+        if (!empty($validated['custom_accounts'])) {
+            // Manuell angepasster Kontenplan (Schritt 2)
+            $sortOrder = 0;
+            foreach ($validated['custom_accounts'] as $acc) {
+                $accounting->accounts()->create([
+                    'number' => $acc['number'],
+                    'name' => $acc['name'],
+                    'type' => $acc['type'],
+                    'is_header' => !empty($acc['is_header']),
+                    'opening_balance' => $acc['opening_balance'] ?? 0,
+                    'sort_order' => $sortOrder++,
+                ]);
+            }
+        } elseif ($validated['chart_template_id']) {
             $template = ChartTemplate::findOrFail($validated['chart_template_id']);
             $accounting->applyTemplate($template);
         }
@@ -93,7 +112,24 @@ class AccountingController extends Controller
         $totalIncome = $accounting->bookings()->whereIn('credit_account_id', $incomeAccounts)->sum('amount');
         $totalExpenses = $accounting->bookings()->whereIn('debit_account_id', $expenseAccounts)->sum('amount');
 
-        return view('admin.accountings.show', compact('accounting', 'bookingsCount', 'totalDebit', 'totalIncome', 'totalExpenses'));
+        // Chart-Daten: Top Ertragskonten
+        $incomeByAccount = $accounting->accounts()
+            ->where('type', 'income')->where('is_header', false)->get()
+            ->map(fn($a) => ['name' => $a->number . ' ' . $a->name, 'balance' => abs($a->balance)])
+            ->filter(fn($a) => $a['balance'] > 0)
+            ->sortByDesc('balance')->take(8)->values();
+
+        // Chart-Daten: Top Aufwandkonten
+        $expenseByAccount = $accounting->accounts()
+            ->where('type', 'expense')->where('is_header', false)->get()
+            ->map(fn($a) => ['name' => $a->number . ' ' . $a->name, 'balance' => abs($a->balance)])
+            ->filter(fn($a) => $a['balance'] > 0)
+            ->sortByDesc('balance')->take(8)->values();
+
+        return view('admin.accountings.show', compact(
+            'accounting', 'bookingsCount', 'totalDebit', 'totalIncome', 'totalExpenses',
+            'incomeByAccount', 'expenseByAccount'
+        ));
     }
 
     public function edit(Accounting $accounting)

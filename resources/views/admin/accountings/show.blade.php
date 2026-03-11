@@ -45,25 +45,111 @@
 {{-- Quick Stats --}}
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-        <p class="text-xs font-medium text-gray-500 uppercase">Buchungen</p>
+        <p class="text-xs font-medium text-gray-500 uppercase">
+            Buchungen
+            <span x-data="{ show: false }" class="relative inline-block ml-1">
+                <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
+                <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg normal-case">
+                    Anzahl aller erfassten Buchungen in dieser Buchhaltung (Soll an Haben).
+                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                </div>
+            </span>
+        </p>
         <p class="text-2xl font-bold text-gray-900 mt-1">{{ $bookingsCount }}</p>
     </div>
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-        <p class="text-xs font-medium text-gray-500 uppercase">Ertrag</p>
+        <p class="text-xs font-medium text-gray-500 uppercase">
+            Ertrag
+            <span x-data="{ show: false }" class="relative inline-block ml-1">
+                <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
+                <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg normal-case">
+                    Summe aller Einnahmen (Ertragskonten 3xxx-8xxx). Buchungen, die auf Ertragskonten gutgeschrieben wurden.
+                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                </div>
+            </span>
+        </p>
         <p class="text-2xl font-bold text-green-600 mt-1">{{ number_format($totalIncome, 2, '.', "'") }} {{ $accounting->currency }}</p>
     </div>
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-        <p class="text-xs font-medium text-gray-500 uppercase">Aufwand</p>
+        <p class="text-xs font-medium text-gray-500 uppercase">
+            Aufwand
+            <span x-data="{ show: false }" class="relative inline-block ml-1">
+                <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
+                <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg normal-case">
+                    Summe aller Ausgaben (Aufwandkonten 4xxx-7xxx). Buchungen, die Aufwandkonten belastet haben.
+                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                </div>
+            </span>
+        </p>
         <p class="text-2xl font-bold text-red-600 mt-1">{{ number_format($totalExpenses, 2, '.', "'") }} {{ $accounting->currency }}</p>
     </div>
 </div>
+
+{{-- Grafiken --}}
+@if($totalIncome > 0 || $totalExpenses > 0)
+@php $profit = $totalIncome - $totalExpenses; @endphp
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+    {{-- Ertrag vs. Aufwand --}}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+        <p class="text-xs font-medium text-gray-500 uppercase mb-1">Ertrag / Aufwand</p>
+        <div class="flex items-center gap-3">
+            <div class="w-16 h-16 flex-shrink-0">
+                <canvas id="revenueExpenseChart"></canvas>
+            </div>
+            <div class="min-w-0">
+                <p class="text-xs {{ $profit >= 0 ? 'text-green-600' : 'text-red-600' }} font-semibold">
+                    {{ $profit >= 0 ? 'Gewinn' : 'Verlust' }}: {{ $profit >= 0 ? '+' : '' }}{{ number_format($profit, 2, '.', "'") }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {{-- Top Ertragskonten --}}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+        <p class="text-xs font-medium text-gray-500 uppercase mb-1">Top Ertrag</p>
+        @if($incomeByAccount->count())
+            <div style="height: 60px;"><canvas id="incomeChart"></canvas></div>
+        @else
+            <p class="text-xs text-gray-400 py-4">Keine Daten</p>
+        @endif
+    </div>
+
+    {{-- Top Aufwandkonten --}}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+        <p class="text-xs font-medium text-gray-500 uppercase mb-1">Top Aufwand</p>
+        @if($expenseByAccount->count())
+            <div style="height: 60px;"><canvas id="expenseChart"></canvas></div>
+        @else
+            <p class="text-xs text-gray-400 py-4">Keine Daten</p>
+        @endif
+    </div>
+</div>
+@endif
 
 {{-- Navigation Links --}}
 <div class="flex flex-wrap gap-3 mb-6">
     <a href="{{ route('admin.accountings.journal', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50">Buchungsjournal</a>
     <a href="{{ route('admin.accountings.trialBalance', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50">Probebilanz</a>
-    <a href="{{ route('admin.accountings.balanceSheet', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50">Bilanz</a>
-    <a href="{{ route('admin.accountings.incomeStatement', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50">Erfolgsrechnung</a>
+    <div class="relative inline-flex items-center gap-1">
+        <a href="{{ route('admin.accountings.balanceSheet', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50">Bilanz</a>
+        <span x-data="{ show: false }" class="relative">
+            <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
+            <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg">
+                Zeigt Aktiven vs. Passiven mit Eröffnungs- und Schlusssaldo.
+                <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+            </div>
+        </span>
+    </div>
+    <div class="relative inline-flex items-center gap-1">
+        <a href="{{ route('admin.accountings.incomeStatement', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50">Erfolgsrechnung</a>
+        <span x-data="{ show: false }" class="relative">
+            <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
+            <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg">
+                Zeigt Ertrag vs. Aufwand und den Gewinn/Verlust der Periode.
+                <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+            </div>
+        </span>
+    </div>
     @if(!$accounting->is_closed)
         <a href="{{ route('admin.bookings.create', $accounting) }}" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">+ Neue Buchung</a>
     @endif
@@ -161,3 +247,100 @@
 </div>
 @endif
 @endsection
+
+@if($totalIncome > 0 || $totalExpenses > 0)
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var currency = @json($accounting->currency);
+    var fmt = function(v) { return v.toLocaleString('de-CH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + currency; };
+
+    // Doughnut: Ertrag vs. Aufwand
+    new Chart(document.getElementById('revenueExpenseChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Ertrag', 'Aufwand'],
+            datasets: [{
+                data: [{{ $totalIncome }}, {{ $totalExpenses }}],
+                backgroundColor: ['#22c55e', '#ef4444'],
+                borderWidth: 1,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '55%',
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + fmt(ctx.parsed); } } }
+            }
+        }
+    });
+
+    @if($incomeByAccount->count())
+    // Bar: Top Ertragskonten
+    new Chart(document.getElementById('incomeChart'), {
+        type: 'bar',
+        data: {
+            labels: @json($incomeByAccount->pluck('name')),
+            datasets: [{
+                data: @json($incomeByAccount->pluck('balance')),
+                backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                borderColor: '#22c55e',
+                borderWidth: 1,
+                borderRadius: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            layout: { padding: 0 },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: function(ctx) { return fmt(ctx.parsed.x); } } }
+            },
+            scales: {
+                x: { display: false },
+                y: { grid: { display: false }, ticks: { font: { size: 8 }, padding: 2 } }
+            }
+        }
+    });
+    @endif
+
+    @if($expenseByAccount->count())
+    // Bar: Top Aufwandkonten
+    new Chart(document.getElementById('expenseChart'), {
+        type: 'bar',
+        data: {
+            labels: @json($expenseByAccount->pluck('name')),
+            datasets: [{
+                data: @json($expenseByAccount->pluck('balance')),
+                backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                borderColor: '#ef4444',
+                borderWidth: 1,
+                borderRadius: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            layout: { padding: 0 },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: function(ctx) { return fmt(ctx.parsed.x); } } }
+            },
+            scales: {
+                x: { display: false },
+                y: { grid: { display: false }, ticks: { font: { size: 8 }, padding: 2 } }
+            }
+        }
+    });
+    @endif
+});
+</script>
+@endpush
+@endif

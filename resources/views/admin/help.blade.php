@@ -256,24 +256,76 @@
 
         {{-- 12. Finanzen --}}
         <div id="finanzen" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 scroll-mt-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">12. Finanzen (Rechnungen & Ausgaben)</h3>
-            <p class="text-sm text-gray-600 mb-3">Rechnungs- und Ausgabenverwaltung mit Mehrwährungsunterstützung.</p>
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">12. Finanzen (Rechnungen)</h3>
+            <p class="text-sm text-gray-600 mb-3">Hier verwaltest du alle Rechnungen &ndash; sowohl solche, die du verschickst (ausgehend), als auch solche, die du erhältst (eingehend).</p>
             <div class="space-y-3">
                 <div>
-                    <h4 class="text-sm font-medium text-gray-800">Rechnungen erstellen</h4>
-                    <p class="text-sm text-gray-600">Erstelle Rechnungen mit Rechnungsvorlage, Empfänger (Organisation/Kontakt), Positionen, Währung (CHF/EUR/USD) und Fälligkeitsdatum. Du kannst eine <strong>Rechnungsvorlage</strong> wählen, um Layout und Standardwerte vorzubelegen.</p>
+                    <h4 class="text-sm font-medium text-gray-800">Ausgehende vs. eingehende Rechnungen</h4>
+                    <p class="text-sm text-gray-600">
+                        <strong>Ausgehend</strong> = Du stellst jemandem eine Rechnung (z.B. Kunde soll dir Geld zahlen).<br>
+                        <strong>Eingehend</strong> = Du erhältst eine Rechnung (z.B. Studiokosten, die du zahlen musst).
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Rechnung erstellen</h4>
+                    <p class="text-sm text-gray-600">Erstelle Rechnungen mit Empfänger (Organisation/Kontakt), Positionen, Währung (CHF/EUR/USD) und Fälligkeitsdatum. Du kannst eine <strong>Rechnungsvorlage</strong> wählen, um Layout und Standardwerte (Absender, Bankverbindung, Zahlungskonditionen) automatisch vorzubelegen.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Positionen</h4>
+                    <p class="text-sm text-gray-600">Füge beliebig viele Positionen hinzu (Beschreibung, Menge, Einzelpreis). Das Total wird automatisch berechnet. Optional kannst du einen MWST-Satz angeben &ndash; die MWST wird dann separat ausgewiesen.</p>
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800">PDF-Export</h4>
-                    <p class="text-sm text-gray-600">Generiere professionelle PDF-Rechnungen mit Swiss QR-Bill (für CHF-Rechnungen). Klicke auf <strong>«PDF»</strong> in der Rechnungsliste.</p>
+                    <p class="text-sm text-gray-600">Für ausgehende Rechnungen kannst du ein professionelles PDF mit Swiss QR-Bill generieren (für CHF-Rechnungen). Klicke auf <strong>«PDF»</strong> auf der Rechnungs-Detailseite.</p>
                 </div>
                 <div>
-                    <h4 class="text-sm font-medium text-gray-800">Bezahlt markieren</h4>
-                    <p class="text-sm text-gray-600">Markiere Rechnungen als bezahlt. Überfällige offene Rechnungen erscheinen auf dem Dashboard.</p>
+                    <h4 class="text-sm font-medium text-gray-800">Status &amp; Bezahlt markieren</h4>
+                    <p class="text-sm text-gray-600">
+                        Rechnungen haben drei Status: <strong>Offen</strong>, <strong>Überfällig</strong> (automatisch nach Fälligkeitsdatum) und <strong>Bezahlt</strong>.<br>
+                        Überfällige Rechnungen erscheinen auf dem Dashboard als Erinnerung.
+                    </p>
                 </div>
                 <div>
-                    <h4 class="text-sm font-medium text-gray-800">Ausgaben</h4>
-                    <p class="text-sm text-gray-600">Erfasse Ausgaben mit Betrag, Kategorie, Datum und optionalem Beleg-Upload.</p>
+                    <h4 class="text-sm font-medium text-gray-800">Verknüpfung mit der Buchhaltung</h4>
+                    <p class="text-sm text-gray-600">
+                        Du kannst eine Rechnung mit einer <strong>Buchhaltung</strong> und den passenden <strong>Soll-/Haben-Konten</strong> verknüpfen. Was das bedeutet:
+                    </p>
+                    <ul class="text-sm text-gray-600 list-disc list-inside mt-1.5 space-y-1">
+                        <li>Beim <strong>Erstellen</strong> der Rechnung wird automatisch eine Buchung in der Buchhaltung erfasst (z.B. «Debitoren an Ertrag»).</li>
+                        <li>Beim <strong>Bezahlt-Markieren</strong> wird automatisch eine zweite Buchung erstellt (z.B. «Bank an Debitoren»).</li>
+                        <li>Du musst dich also nicht um die Buchhaltung kümmern &ndash; das System bucht für dich!</li>
+                    </ul>
+                    <p class="text-sm text-gray-500 mt-1.5 italic">Tipp: Wenn du keine Buchhaltung brauchst, kannst du dieses Feld einfach leer lassen. Die Rechnung funktioniert trotzdem.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Soll-Konto &amp; Haben-Konto &ndash; einfach erklärt</h4>
+                    <p class="text-sm text-gray-600">
+                        Bei der Verknüpfung mit der Buchhaltung musst du ein Soll- und ein Haben-Konto wählen. Hier die wichtigsten Faustregeln:
+                    </p>
+                    <div class="mt-2 overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                                <tr class="text-xs text-gray-500 uppercase border-b border-gray-200">
+                                    <th class="text-left py-1.5 font-medium">Rechnungstyp</th>
+                                    <th class="text-left py-1.5 font-medium">Soll-Konto</th>
+                                    <th class="text-left py-1.5 font-medium">Haben-Konto</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr>
+                                    <td class="py-1.5 text-gray-700">Ausgehend (du stellst Rechnung)</td>
+                                    <td class="py-1.5 text-gray-600">Debitoren (1100)</td>
+                                    <td class="py-1.5 text-gray-600">Ertragskonto (3xxx&ndash;8xxx)</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5 text-gray-700">Eingehend (du erhältst Rechnung)</td>
+                                    <td class="py-1.5 text-gray-600">Aufwandkonto (4xxx&ndash;7xxx)</td>
+                                    <td class="py-1.5 text-gray-600">Kreditoren (2001)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1.5 italic">Tipp: Im Suchfeld kannst du nach Kontonummer oder Name suchen.</p>
                 </div>
             </div>
         </div>
@@ -281,43 +333,155 @@
         {{-- 13. Buchhaltung --}}
         <div id="buchhaltung" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 scroll-mt-4">
             <h3 class="text-lg font-semibold text-gray-900 mb-3">13. Buchhaltung</h3>
-            <p class="text-sm text-gray-600 mb-3">Vollständige doppelte Buchhaltung mit Kontenplan, Journal und Bilanz.</p>
+            <p class="text-sm text-gray-600 mb-3">Die Buchhaltung erfasst alle Geldbewegungen deines Unternehmens. Das System nutzt die <strong>doppelte Buchhaltung</strong> &ndash; das klingt kompliziert, ist aber im Grunde einfach: Jede Buchung hat zwei Seiten (woher kommt das Geld, wohin geht es).</p>
+
             <div class="space-y-3">
                 <div>
+                    <h4 class="text-sm font-medium text-gray-800">Grundprinzip: Soll an Haben</h4>
+                    <p class="text-sm text-gray-600">
+                        Jede Buchung bewegt Geld von einem Konto zum anderen:<br>
+                        <strong>Soll-Konto</strong> = Wohin geht das Geld? (Empfänger-Konto, wird belastet)<br>
+                        <strong>Haben-Konto</strong> = Woher kommt das Geld? (Quell-Konto, wird entlastet)
+                    </p>
+                    <div class="mt-2 bg-gray-50 rounded-lg p-3">
+                        <p class="text-sm text-gray-700"><strong>Beispiel:</strong> Du erhältst 500 CHF von einem Kunden auf dein Bankkonto.</p>
+                        <p class="text-sm text-gray-600 mt-1">Soll: <em>Bank</em> (1020) &mdash; Geld kommt auf die Bank<br>Haben: <em>Debitoren</em> (1100) &mdash; Forderung wird aufgelöst</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Die 4 Kontotypen &ndash; einfach erklärt</h4>
+                    <div class="mt-2 overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                                <tr class="text-xs text-gray-500 uppercase border-b border-gray-200">
+                                    <th class="text-left py-1.5 font-medium">Typ</th>
+                                    <th class="text-left py-1.5 font-medium">Was ist das?</th>
+                                    <th class="text-left py-1.5 font-medium">Beispiele</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr>
+                                    <td class="py-1.5"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Aktiven</span></td>
+                                    <td class="py-1.5 text-gray-600">Was du <strong>besitzt</strong></td>
+                                    <td class="py-1.5 text-gray-600">Bank, Kasse, Debitoren (offene Forderungen)</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">Passiven</span></td>
+                                    <td class="py-1.5 text-gray-600">Was du <strong>schuldest</strong></td>
+                                    <td class="py-1.5 text-gray-600">Kreditoren (offene Rechnungen), Darlehen, Eigenkapital</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Ertrag</span></td>
+                                    <td class="py-1.5 text-gray-600">Was du <strong>verdienst</strong></td>
+                                    <td class="py-1.5 text-gray-600">Honorare, Lizenzeinnahmen, Verkäufe</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Aufwand</span></td>
+                                    <td class="py-1.5 text-gray-600">Was du <strong>ausgibst</strong></td>
+                                    <td class="py-1.5 text-gray-600">Studiokosten, Reisekosten, Werbung, Miete</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Buchungstypen im Journal</h4>
+                    <p class="text-sm text-gray-600 mb-2">Im Buchungsjournal siehst du verschiedene Buchungstypen. Diese beschreiben den <strong>Anlass</strong> der Buchung:</p>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                                <tr class="text-xs text-gray-500 uppercase border-b border-gray-200">
+                                    <th class="text-left py-1.5 font-medium">Typ</th>
+                                    <th class="text-left py-1.5 font-medium">Bedeutung</th>
+                                    <th class="text-left py-1.5 font-medium">Beispiel</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr>
+                                    <td class="py-1.5 font-medium text-gray-700">Forderung</td>
+                                    <td class="py-1.5 text-gray-600">Du hast eine Rechnung gestellt &ndash; Geld steht dir zu</td>
+                                    <td class="py-1.5 text-gray-600">Debitoren <em>an</em> Ertrag</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5 font-medium text-gray-700">Eingang</td>
+                                    <td class="py-1.5 text-gray-600">Zahlung für eine Forderung erhalten</td>
+                                    <td class="py-1.5 text-gray-600">Bank <em>an</em> Debitoren</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5 font-medium text-gray-700">Verbindlichkeit</td>
+                                    <td class="py-1.5 text-gray-600">Du hast eine Rechnung erhalten &ndash; du schuldest Geld</td>
+                                    <td class="py-1.5 text-gray-600">Aufwand <em>an</em> Kreditoren</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5 font-medium text-gray-700">Zahlung</td>
+                                    <td class="py-1.5 text-gray-600">Du hast eine Verbindlichkeit bezahlt</td>
+                                    <td class="py-1.5 text-gray-600">Kreditoren <em>an</em> Bank</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-2 bg-blue-50 rounded-lg p-3">
+                        <p class="text-sm text-blue-800">
+                            <strong>Zusammenhang:</strong> Forderung &rarr; Eingang = Ausgehende Rechnung gestellt, dann Geld erhalten.<br>
+                            Verbindlichkeit &rarr; Zahlung = Eingehende Rechnung erhalten, dann bezahlt.
+                        </p>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1.5 italic">Diese Buchungen werden automatisch erstellt, wenn du Rechnungen mit einer Buchhaltung verknüpfst und als «Bezahlt» markierst.</p>
+                </div>
+
+                <div>
                     <h4 class="text-sm font-medium text-gray-800">Buchhaltung erstellen</h4>
-                    <p class="text-sm text-gray-600">Erstelle eine neue Buchhaltung (z.B. pro Jahr). Nutze eine <strong>Kontenplan-Vorlage</strong> aus <strong>Settings &rarr; Vorlagen &rarr; Kontopläne</strong>, um die Konten automatisch anzulegen.</p>
+                    <p class="text-sm text-gray-600">Erstelle eine neue Buchhaltung (typischerweise pro Jahr, z.B. «TYL 2026»). Nutze eine <strong>Kontenplan-Vorlage</strong> aus <strong>Settings &rarr; Vorlagen &rarr; Kontopläne</strong>, um die Konten automatisch anzulegen &ndash; so musst du nicht jedes Konto einzeln erfassen.</p>
                 </div>
                 <div>
-                    <h4 class="text-sm font-medium text-gray-800">Konten</h4>
-                    <p class="text-sm text-gray-600">Verwalte die Konten deiner Buchhaltung (Aktiven, Passiven, Aufwand, Ertrag). Konten haben eine Nummer, einen Namen und einen Typ.</p>
+                    <h4 class="text-sm font-medium text-gray-800">Kontenplan</h4>
+                    <p class="text-sm text-gray-600">Der Kontenplan ist die Liste aller Konten deiner Buchhaltung. Jedes Konto hat eine <strong>Nummer</strong> (z.B. 1020 = Bank), einen <strong>Namen</strong> und einen <strong>Typ</strong> (Aktiven/Passiven/Ertrag/Aufwand). Du kannst jederzeit neue Konten hinzufügen.</p>
                 </div>
                 <div>
-                    <h4 class="text-sm font-medium text-gray-800">Buchungen</h4>
-                    <p class="text-sm text-gray-600">Erfasse Buchungen mit Soll- und Haben-Konto, Betrag, Datum und Beschreibung. An Buchungen können Belege (Dokumente) angehängt werden.</p>
+                    <h4 class="text-sm font-medium text-gray-800">Manuelle Buchung erfassen</h4>
+                    <p class="text-sm text-gray-600">
+                        Für Buchungen, die nicht automatisch über Rechnungen entstehen, kannst du manuell buchen. Gib Datum, Soll-Konto, Haben-Konto, Betrag und eine kurze Beschreibung an. Den Betrag immer <strong>positiv</strong> eingeben &ndash; die Richtung wird durch Soll/Haben bestimmt.
+                    </p>
+                    <div class="mt-2 bg-gray-50 rounded-lg p-3">
+                        <p class="text-sm text-gray-700"><strong>Beispiel:</strong> Studiokosten 200 CHF bar bezahlt.</p>
+                        <p class="text-sm text-gray-600 mt-1">Soll: <em>Studiokosten</em> (Aufwand) &mdash; Haben: <em>Kasse</em> (Aktiven) &mdash; 200.00 CHF</p>
+                    </div>
                 </div>
+
                 <div>
                     <h4 class="text-sm font-medium text-gray-800">Auswertungen</h4>
-                    <p class="text-sm text-gray-600">
-                        <strong>Journal:</strong> Chronologische Liste aller Buchungen.<br>
-                        <strong>Kontoblatt:</strong> Alle Buchungen eines bestimmten Kontos.<br>
-                        <strong>Probebilanz:</strong> Übersicht aller Konten mit Soll/Haben-Summen.
-                    </p>
+                    <div class="space-y-2 mt-1">
+                        <p class="text-sm text-gray-600"><strong>Buchungsjournal:</strong> Chronologische Liste aller Buchungen &ndash; wie ein Tagebuch deiner Finanzen.</p>
+                        <p class="text-sm text-gray-600"><strong>Kontoblatt:</strong> Alle Buchungen eines bestimmten Kontos. Klicke im Kontenplan auf ein Konto, um sein Kontoblatt zu sehen.</p>
+                        <p class="text-sm text-gray-600"><strong>Probebilanz:</strong> Übersicht aller Konten mit ihren Soll- und Haben-Summen. Dient zur Kontrolle &ndash; die Summe aller Soll-Buchungen muss gleich der Summe aller Haben-Buchungen sein.</p>
+                        <p class="text-sm text-gray-600"><strong>Bilanz:</strong> Zeigt dein Vermögen (Aktiven) und deine Schulden (Passiven). Die Differenz ist dein Eigenkapital. Du siehst die Eröffnungsbilanz (Jahresanfang) und die Schlussbilanz (aktueller Stand).</p>
+                        <p class="text-sm text-gray-600"><strong>Erfolgsrechnung:</strong> Zeigt alle Einnahmen (Ertrag) und Ausgaben (Aufwand). Ertrag minus Aufwand = Gewinn (oder Verlust). Dieses Ergebnis stimmt mit der Differenz in der Bilanz überein.</p>
+                    </div>
                 </div>
-                <div>
-                    <h4 class="text-sm font-medium text-gray-800">Bilanz</h4>
-                    <p class="text-sm text-gray-600">Die <strong>Bilanz</strong> zeigt Aktiven vs. Passiven. Du siehst sowohl die <strong>Eröffnungsbilanz</strong> (Anfangssaldi) als auch die <strong>Schlussbilanz</strong> (nach allen Buchungen). Die Differenz ergibt den Gewinn oder Verlust der Periode.</p>
-                </div>
-                <div>
-                    <h4 class="text-sm font-medium text-gray-800">Erfolgsrechnung</h4>
-                    <p class="text-sm text-gray-600">Die <strong>Erfolgsrechnung</strong> zeigt alle Ertrags- und Aufwandskonten mit ihren Saldi. Ertrag minus Aufwand ergibt den Gewinn (oder Verlust) der Periode. Dieser Wert stimmt mit der Differenz in der Bilanz überein.</p>
-                </div>
+
                 <div>
                     <h4 class="text-sm font-medium text-gray-800">Eröffnungssaldi</h4>
-                    <p class="text-sm text-gray-600">Beim Erstellen einer neuen Buchhaltung solltest du die <strong>Eröffnungssaldi</strong> der Aktiv- und Passivkonten vom Vorjahr übertragen. Dies geschieht über das Feld «Eröffnungssaldo» beim Hinzufügen oder Bearbeiten eines Kontos.</p>
+                    <p class="text-sm text-gray-600">Wenn du eine neue Buchhaltung für ein neues Jahr erstellst, solltest du die <strong>Endsaldi des Vorjahres</strong> als Anfangswerte übertragen (z.B. Bankstand, offene Forderungen). Dies geschieht über das Feld «Eröffnungssaldo» beim Hinzufügen eines Kontos.</p>
+                    <p class="text-sm text-gray-500 mt-1 italic">Nur Aktiv- und Passivkonten haben Eröffnungssaldi. Ertrags- und Aufwandskonten starten immer bei 0.</p>
                 </div>
                 <div>
-                    <h4 class="text-sm font-medium text-gray-800">Perioden</h4>
-                    <p class="text-sm text-gray-600">Schliesse eine Buchhaltungsperiode ab, um weitere Buchungen zu verhindern. Bei Bedarf kann die Periode wieder geöffnet werden.</p>
+                    <h4 class="text-sm font-medium text-gray-800">Periode abschliessen</h4>
+                    <p class="text-sm text-gray-600">Am Ende eines Geschäftsjahres schliesst du die Buchhaltung ab. Danach können keine neuen Buchungen mehr erfasst werden. Falls nötig, kann die Periode wieder geöffnet werden.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Zusammenspiel Rechnungen &amp; Buchhaltung</h4>
+                    <div class="mt-2 bg-green-50 rounded-lg p-3">
+                        <p class="text-sm text-green-800 font-medium mb-2">So funktioniert der automatische Ablauf:</p>
+                        <ol class="text-sm text-green-800 list-decimal list-inside space-y-1">
+                            <li>Du erstellst eine <strong>Rechnung</strong> und verknüpfst sie mit einer Buchhaltung + Konten</li>
+                            <li>Das System erstellt automatisch eine <strong>Buchung</strong> (Forderung oder Verbindlichkeit)</li>
+                            <li>Wenn du die Rechnung als <strong>«Bezahlt»</strong> markierst, erstellt das System automatisch die <strong>Zahlungsbuchung</strong> (Eingang oder Zahlung)</li>
+                        </ol>
+                        <p class="text-sm text-green-700 mt-2">Du musst also nur Rechnungen erfassen und als bezahlt markieren &ndash; die Buchhaltung führt sich weitgehend von selbst!</p>
+                    </div>
                 </div>
             </div>
         </div>

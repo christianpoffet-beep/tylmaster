@@ -364,5 +364,6 @@
     </div>
 
     @include('admin.partials.document-viewer-modal')
+    @stack('scripts')
 </body>
 </html>

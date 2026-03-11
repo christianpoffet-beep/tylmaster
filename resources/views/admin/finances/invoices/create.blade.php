@@ -53,7 +53,15 @@
             {{-- Soll-/Haben-Konto (wenn Buchhaltung gewählt) --}}
             <div x-show="accountingId && accounts.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div x-data="{ search: '', open: false }" @click.outside="open = false" class="relative">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Soll-Konto *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Soll-Konto *
+                        <span x-data="{ show: false }" class="relative inline-block ml-1">
+                            <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
+                            <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg">
+                                Bei ausgehenden Rechnungen z.B. Debitoren (1100). Bei eingehenden z.B. Aufwandkonto.
+                                <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                            </div>
+                        </span>
+                    </label>
                     <input type="text" x-model="search" @focus="open = true" @input="open = true"
                         :placeholder="debitAccountId ? accounts.find(a => String(a.id) === String(debitAccountId))?.number + ' ' + accounts.find(a => String(a.id) === String(debitAccountId))?.name : 'Konto suchen...'"
                         class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
@@ -70,7 +78,15 @@
                     </div>
                 </div>
                 <div x-data="{ search: '', open: false }" @click.outside="open = false" class="relative">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Haben-Konto *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Haben-Konto *
+                        <span x-data="{ show: false }" class="relative inline-block ml-1">
+                            <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
+                            <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg">
+                                Bei ausgehenden Rechnungen z.B. Ertragskonto (3xxx). Bei eingehenden z.B. Kreditoren (2001).
+                                <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                            </div>
+                        </span>
+                    </label>
                     <input type="text" x-model="search" @focus="open = true" @input="open = true"
                         :placeholder="creditAccountId ? accounts.find(a => String(a.id) === String(creditAccountId))?.number + ' ' + accounts.find(a => String(a.id) === String(creditAccountId))?.name : 'Konto suchen...'"
                         class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">

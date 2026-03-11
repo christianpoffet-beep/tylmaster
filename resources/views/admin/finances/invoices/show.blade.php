@@ -40,10 +40,21 @@
                     <a href="{{ route('admin.invoices.pdf', $invoice) }}" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700">PDF</a>
                 @endif
                 @if($invoice->status !== 'paid')
-                    <form method="POST" action="{{ route('admin.invoices.markPaid', $invoice) }}">
-                        @csrf @method('PATCH')
-                        <button type="submit" class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700" onclick="return confirm('Als bezahlt markieren?')">Bezahlt</button>
-                    </form>
+                    <div class="flex items-center gap-2">
+                        <form method="POST" action="{{ route('admin.invoices.markPaid', $invoice) }}">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700" onclick="return confirm('Als bezahlt markieren?')">Bezahlt</button>
+                        </form>
+                        @if($invoice->accounting)
+                            <span x-data="{ show: false }" class="relative inline-block">
+                                <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-green-600 text-xs hover:bg-green-200 focus:outline-none">?</button>
+                                <div x-show="show" x-transition class="absolute z-20 bottom-full right-0 mb-2 w-72 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg">
+                                    Beim Bezahlt-Markieren wird automatisch eine Zahlungsbuchung in der verknüpften Buchhaltung ({{ $invoice->accounting->name }}) erstellt.
+                                    <div class="absolute top-full right-4 border-4 border-transparent border-t-gray-800"></div>
+                                </div>
+                            </span>
+                        @endif
+                    </div>
                 @endif
                 <a href="{{ route('admin.invoices.edit', $invoice) }}" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">Bearbeiten</a>
             </div>
