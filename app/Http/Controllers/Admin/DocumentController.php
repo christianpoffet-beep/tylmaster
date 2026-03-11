@@ -127,6 +127,11 @@ class DocumentController extends Controller
 
     public function destroy(Document $document)
     {
+        if ($document->documentable_type === \App\Models\Contract::class) {
+            return redirect()->route('admin.documents.index')
+                ->with('error', 'Vertragsdokumente können nicht gelöscht werden.');
+        }
+
         Storage::disk('public')->delete($document->file_path);
         $document->delete();
         return redirect()->route('admin.documents.index')->with('success', 'Dokument gelöscht.');

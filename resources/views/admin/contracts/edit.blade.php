@@ -217,13 +217,6 @@
     </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.contracts.destroy', $contract) }}" class="mt-8 pt-6 border-t border-gray-200" onsubmit="return confirm('Vertrag wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')">
-        @csrf
-        @method('DELETE')
-        <h3 class="text-sm font-semibold text-red-600 mb-2">Gefahrenzone</h3>
-        <p class="text-sm text-gray-500 mb-3">Der Vertrag und alle zugehörigen Verknüpfungen werden unwiderruflich gelöscht.</p>
-        <button type="submit" class="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700">Vertrag löschen</button>
-    </form>
 </div>
 
 <script>

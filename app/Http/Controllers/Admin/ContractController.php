@@ -245,9 +245,4 @@ class ContractController extends Controller
         return redirect()->route('admin.contracts.edit', $contract)->with('success', 'Dokument archiviert.');
     }
 
-    public function destroy(Contract $contract)
-    {
-        $contract->delete();
-        return redirect()->route('admin.contracts.index')->with('success', 'Vertrag gelöscht.');
-    }
 }

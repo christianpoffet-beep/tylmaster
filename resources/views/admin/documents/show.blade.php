@@ -82,10 +82,12 @@
         @endif
         <a href="{{ route('admin.documents.download', $document) }}" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Download</a>
         <a href="{{ route('admin.documents.index') }}" class="px-5 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50">Zurück zur Liste</a>
+        @if($document->documentable_type !== \App\Models\Contract::class)
         <form method="POST" action="{{ route('admin.documents.destroy', $document) }}" onsubmit="return confirm('Dokument wirklich löschen?')">
             @csrf @method('DELETE')
             <button type="submit" class="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700">Löschen</button>
         </form>
+        @endif
     </div>
 </div>
 @endsection

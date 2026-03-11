@@ -60,7 +60,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::resource('contact-types', ContactTypeController::class)->except('show');
     Route::resource('project-types', ProjectTypeController::class)->except('show');
     Route::resource('contract-types', ContractTypeController::class)->except('show');
-    Route::resource('contracts', ContractController::class);
+    Route::resource('contracts', ContractController::class)->except(['destroy']);
     Route::patch('contracts/{contract}/documents/{document}/archive', [ContractController::class, 'archiveDocument'])->name('contracts.documents.archive');
     Route::resource('documents', DocumentController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
     Route::get('documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');

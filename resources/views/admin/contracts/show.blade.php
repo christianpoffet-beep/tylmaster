@@ -62,10 +62,6 @@
 
         <div class="mt-4 flex gap-3">
             <a href="{{ route('admin.contracts.edit', $contract) }}" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700">Bearbeiten</a>
-            <form method="POST" action="{{ route('admin.contracts.destroy', $contract) }}" onsubmit="return confirm('Vertrag wirklich löschen?')">
-                @csrf @method('DELETE')
-                <button type="submit" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700">Löschen</button>
-            </form>
         </div>
     </div>
 
