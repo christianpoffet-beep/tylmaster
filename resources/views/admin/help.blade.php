@@ -28,6 +28,7 @@
             <a href="#buchhaltung" class="text-sm text-blue-600 hover:text-blue-800 py-0.5">13. Buchhaltung</a>
             <a href="#settings" class="text-sm text-blue-600 hover:text-blue-800 py-0.5">14. Settings</a>
             <a href="#navigation" class="text-sm text-blue-600 hover:text-blue-800 py-0.5">15. Navigation & Sidebar</a>
+            <a href="#benutzerverwaltung" class="text-sm text-blue-600 hover:text-blue-800 py-0.5">16. Benutzerverwaltung</a>
         </div>
     </div>
 
@@ -531,6 +532,40 @@
                 <div>
                     <h4 class="text-sm font-medium text-gray-800">Mobile Ansicht</h4>
                     <p class="text-sm text-gray-600">Auf mobilen Geräten öffnest du die Sidebar über das <strong>Hamburger-Menü</strong> (drei Striche) oben links. Tippe ausserhalb der Sidebar, um sie wieder zu schliessen.</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- 16. Benutzerverwaltung --}}
+        <div id="benutzerverwaltung" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 scroll-mt-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">16. Benutzerverwaltung</h3>
+            <p class="text-sm text-gray-600 mb-3">Unter <strong>Benutzerverwaltung</strong> in der Sidebar findest du verschiedene Werkzeuge und Informationen zur Systemverwaltung.</p>
+            <div class="space-y-3">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Benutzeranleitung</h4>
+                    <p class="text-sm text-gray-600">Diese Seite hier — die vollständige Dokumentation aller Funktionen des TYL Admin Panels.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Change Log</h4>
+                    <p class="text-sm text-gray-600">Zeigt die Versionshistorie des Systems. Hier siehst du, welche neuen Funktionen, Änderungen und Fehlerbehebungen in jeder Version vorgenommen wurden.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Passwort ändern</h4>
+                    <p class="text-sm text-gray-600">Öffnet die Profilseite, auf der du dein Passwort und deine E-Mail-Adresse ändern kannst.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Logfile (Aktivitätslog)</h4>
+                    <p class="text-sm text-gray-600">Das Logfile zeigt alle Änderungen im System in chronologischer Reihenfolge. Für jeden Eintrag siehst du:</p>
+                    <ul class="text-sm text-gray-600 list-disc list-inside mt-1 space-y-0.5">
+                        <li><strong>Datum:</strong> Zeitpunkt der Änderung</li>
+                        <li><strong>Benutzer:</strong> Wer die Änderung vorgenommen hat</li>
+                        <li><strong>Aktion:</strong> Erstellt, Geändert oder Gelöscht</li>
+                        <li><strong>Bereich:</strong> Welcher Datentyp betroffen ist (z.B. Kontakt, Vertrag, Rechnung)</li>
+                        <li><strong>Objekt:</strong> Name des betroffenen Datensatzes</li>
+                        <li><strong>Feld:</strong> Welches Feld geändert wurde (nur bei Änderungen)</li>
+                        <li><strong>Alter / Neuer Wert:</strong> Der bisherige und der neue Wert des Felds</li>
+                    </ul>
+                    <p class="text-sm text-gray-600 mt-2">Du kannst das Logfile nach Aktion, Bereich, Datum und Suchbegriff filtern.</p>
                 </div>
             </div>
         </div>

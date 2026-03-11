@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class MusicSubmission extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         // Original fields
         'artist_name', 'email', 'track_title', 'genre', 'message',

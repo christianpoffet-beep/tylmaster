@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class Contract extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'contract_number', 'title', 'type', 'status', 'start_date', 'end_date', 'terms',
     ];

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class Track extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'title', 'isrc', 'genre', 'duration_seconds', 'status',
         'audio_file_path', 'release_id',

@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class ContractTemplate extends Model
 {
+    use LogsActivity;
+
     protected $fillable = ['name', 'slug', 'contract_type_slug', 'default_terms', 'default_status', 'default_parties', 'sort_order'];
 
     protected $casts = [

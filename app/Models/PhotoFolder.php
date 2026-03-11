@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class PhotoFolder extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'name', 'slug', 'parent_id', 'share_token', 'description',
     ];

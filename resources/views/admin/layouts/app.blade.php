@@ -286,6 +286,52 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Benutzerverwaltung --}}
+                @php
+                    $userAdminActive = request()->routeIs('admin.help') || request()->routeIs('admin.changelog') || request()->routeIs('admin.activity-logs.*');
+
+                    $userAdminItems = [
+                        ['route' => 'admin.help', 'label' => 'Benutzeranleitung', 'match' => 'admin.help', 'icon' => 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+                        ['route' => 'admin.changelog', 'label' => 'Change Log', 'match' => 'admin.changelog', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'],
+                        ['route' => 'admin.activity-logs.index', 'label' => 'Logfile', 'match' => 'admin.activity-logs.*', 'icon' => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+                    ];
+                @endphp
+                <div class="pt-3 mt-3 border-t border-gray-700">
+                    <p x-show="!collapsed || sidebarOpen" x-cloak class="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">Benutzerverwaltung</p>
+
+                    <div class="space-y-0.5">
+                        @foreach($userAdminItems as $item)
+                            @php
+                                $matches = collect(explode('||', $item['match']))->contains(fn($p) => request()->routeIs($p));
+                            @endphp
+                            <a href="{{ route($item['route']) }}"
+                               class="group relative flex items-center text-sm font-medium {{ $matches ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }}"
+                               :class="collapsed && !sidebarOpen ? 'justify-center p-1.5 rounded' : 'px-3 py-2 rounded-lg'">
+                                <svg class="w-5 h-5 flex-shrink-0" :class="collapsed && !sidebarOpen ? '' : 'mr-3'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"></path>
+                                </svg>
+                                <span x-show="!collapsed || sidebarOpen" x-cloak>{{ $item['label'] }}</span>
+                                <span :class="collapsed && !sidebarOpen ? 'absolute left-full ml-3 px-2.5 py-1.5 rounded-md bg-gray-900 text-white text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50 shadow-lg ring-1 ring-gray-700' : 'hidden'">
+                                    {{ $item['label'] }}
+                                </span>
+                            </a>
+                        @endforeach
+
+                        {{-- Passwort ändern (external link) --}}
+                        <a href="{{ url('/profile') }}"
+                           class="group relative flex items-center text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white"
+                           :class="collapsed && !sidebarOpen ? 'justify-center p-1.5 rounded' : 'px-3 py-2 rounded-lg'">
+                            <svg class="w-5 h-5 flex-shrink-0" :class="collapsed && !sidebarOpen ? '' : 'mr-3'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                            </svg>
+                            <span x-show="!collapsed || sidebarOpen" x-cloak>Passwort ändern</span>
+                            <span :class="collapsed && !sidebarOpen ? 'absolute left-full ml-3 px-2.5 py-1.5 rounded-md bg-gray-900 text-white text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50 shadow-lg ring-1 ring-gray-700' : 'hidden'">
+                                Passwort ändern
+                            </span>
+                        </a>
+                    </div>
+                </div>
             </nav>
 
             <!-- Collapse toggle (desktop only) -->
@@ -304,14 +350,6 @@
                         <p class="text-xs text-gray-400 truncate">{{ Auth::user()->email }}</p>
                     </div>
                     <div class="flex items-center" :class="collapsed && !sidebarOpen ? 'gap-0' : 'gap-1'">
-                        <a href="{{ route('admin.help') }}" class="group relative text-gray-400 hover:text-white" :class="collapsed && !sidebarOpen ? 'p-1.5' : 'ml-3'">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span :class="collapsed && !sidebarOpen ? 'absolute left-full ml-3 px-2.5 py-1.5 rounded-md bg-gray-900 text-white text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50 shadow-lg ring-1 ring-gray-700 bottom-0' : 'hidden'">
-                                Hilfe
-                            </span>
-                        </a>
                         <form method="POST" action="{{ route('logout') }}" class="group relative">
                             @csrf
                             <button type="submit" class="text-gray-400 hover:text-white" :class="collapsed && !sidebarOpen ? 'p-1.5' : ''">

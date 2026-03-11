@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class InvoiceTemplateItem extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'invoice_template_id', 'description', 'quantity', 'unit_price', 'sort_order',
     ];

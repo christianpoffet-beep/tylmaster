@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class Organization extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'type', 'names', 'biography', 'websites',
         'street', 'zip', 'city', 'country', 'email', 'phone',

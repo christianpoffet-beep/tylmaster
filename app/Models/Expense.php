@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class Expense extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'description', 'amount', 'currency', 'expense_date',
         'category', 'contact_id',

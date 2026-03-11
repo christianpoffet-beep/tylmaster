@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class OrganizationType extends Model
 {
+    use LogsActivity;
+
     protected $fillable = ['name', 'slug', 'color', 'sort_order'];
 
     protected static function booted(): void

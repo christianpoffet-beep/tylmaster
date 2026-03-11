@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class Accounting extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'accountable_type', 'accountable_id', 'name', 'currency',
         'period_start', 'period_end', 'status', 'chart_template_id', 'notes',

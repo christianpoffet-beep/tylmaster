@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class ArtworkCredit extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'artwork_id', 'role', 'creditable_type', 'creditable_id',
     ];

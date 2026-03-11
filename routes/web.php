@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\ContractTemplateController;
 use App\Http\Controllers\Admin\ContractTypeController;
 use App\Http\Controllers\Admin\InvoiceTemplateController;
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\PublicGalleryController;
 use Illuminate\Support\Facades\Route;
 
@@ -138,6 +139,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('chart-templates/{chartTemplate}/accounts', [ChartTemplateController::class, 'storeAccount'])->name('chart-templates.accounts.store');
     Route::put('chart-template-accounts/{account}', [ChartTemplateController::class, 'updateAccount'])->name('chart-templates.accounts.update');
     Route::delete('chart-template-accounts/{account}', [ChartTemplateController::class, 'destroyAccount'])->name('chart-templates.accounts.destroy');
+
+    // Benutzerverwaltung
+    Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('activity-logs/export', [ActivityLogController::class, 'export'])->name('activity-logs.export');
+    Route::view('changelog', 'admin.changelog')->name('changelog');
 });
 
 require __DIR__.'/auth.php';

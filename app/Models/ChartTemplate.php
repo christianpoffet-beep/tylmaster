@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class ChartTemplate extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'name', 'slug', 'description', 'organization_type_slug',
     ];

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'accounting_id', 'booking_date', 'reference', 'description',
         'debit_account_id', 'credit_account_id', 'amount', 'notes',

@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Photo extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'photo_folder_id', 'file_path', 'file_size', 'mime_type',
         'original_name', 'public_slug', 'title', 'location',

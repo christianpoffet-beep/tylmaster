@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 class Artwork extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'title', 'artwork_path', 'artwork_file_size',
         'artwork_mime_type', 'artwork_original_name',
