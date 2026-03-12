@@ -49,19 +49,7 @@
                 </div>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Kontakte</label>
-                <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
-                    @php $selectedContacts = old('contacts', $project->contacts->pluck('id')->toArray()); @endphp
-                    @foreach($contacts as $contact)
-                        <label class="flex items-center">
-                            <input type="checkbox" name="contacts[]" value="{{ $contact->id }}" {{ in_array($contact->id, $selectedContacts) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700">{{ $contact->full_name }}</span>
-                        </label>
-                    @endforeach
-                </div>
-                @error('contacts') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-            </div>
+            @include('admin.partials.contact-search', ['selected' => $project->contacts, 'inputName' => 'contacts[]', 'contactSearchLabel' => 'Kontakte'])
 
             {{-- Genres --}}
             @if($genres->count())

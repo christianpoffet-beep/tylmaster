@@ -40,19 +40,17 @@ class OrganizationController extends Controller
 
     public function create()
     {
-        $contacts = Contact::orderBy('last_name')->get();
-        $projects = Project::orderBy('name')->get();
         $tracks = Track::orderBy('title')->get();
         $releases = Release::orderBy('title')->get();
-        $contracts = Contract::orderBy('title')->get();
         $genres = Genre::orderBy('name')->get();
-        return view('admin.organizations.create', compact('contacts', 'projects', 'tracks', 'releases', 'contracts', 'genres'));
+        return view('admin.organizations.create', compact('tracks', 'releases', 'genres'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'type' => 'required|exists:organization_types,slug',
+            'legal_form' => 'nullable|string|max:50',
             'names' => 'required|array|min:1',
             'names.*' => 'required|string|max:255',
             'biography' => 'nullable|string',
@@ -126,21 +124,19 @@ class OrganizationController extends Controller
 
     public function edit(Organization $organization)
     {
-        $contacts = Contact::orderBy('last_name')->get();
-        $projects = Project::orderBy('name')->get();
         $tracks = Track::orderBy('title')->get();
         $releases = Release::orderBy('title')->get();
-        $contracts = Contract::orderBy('title')->get();
         $genres = Genre::orderBy('name')->get();
         $organization->load(['contacts', 'projects', 'tracks', 'releases', 'contracts', 'genres']);
         $organization->setRelation('documents', $organization->documents()->withTrashed()->get());
-        return view('admin.organizations.edit', compact('organization', 'contacts', 'projects', 'tracks', 'releases', 'contracts', 'genres'));
+        return view('admin.organizations.edit', compact('organization', 'tracks', 'releases', 'genres'));
     }
 
     public function update(Request $request, Organization $organization)
     {
         $validated = $request->validate([
             'type' => 'required|exists:organization_types,slug',
+            'legal_form' => 'nullable|string|max:50',
             'names' => 'required|array|min:1',
             'names.*' => 'required|string|max:255',
             'biography' => 'nullable|string',
@@ -242,14 +238,19 @@ class OrganizationController extends Controller
         $query = Organization::query();
 
         if ($q = $request->input('q')) {
-            $query->where('names', 'like', "%{$q}%");
+            $terms = preg_split('/\s+/', trim($q));
+            $query->where(function ($qb) use ($terms) {
+                foreach ($terms as $term) {
+                    $qb->where('names', 'like', "%{$term}%");
+                }
+            });
         }
 
         if ($type = $request->input('type')) {
             $query->where('type', $type);
         }
 
-        $results = $query->limit(20)->get()->map(fn ($org) => [
+        $results = $query->orderBy('names')->limit(50)->get()->map(fn ($org) => [
             'id' => $org->id,
             'primary_name' => $org->primary_name,
             'all_names' => $org->all_names,

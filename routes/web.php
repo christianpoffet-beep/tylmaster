@@ -90,6 +90,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('photos/{photo}', [PhotoController::class, 'updatePhoto'])->name('photos.update');
     Route::delete('photos/{photo}', [PhotoController::class, 'destroyPhoto'])->name('photos.destroy');
     Route::post('contacts-quick', [ContactController::class, 'storeQuick'])->name('contacts.storeQuick');
+    Route::get('contacts-search', [ContactController::class, 'search'])->name('contacts.search');
+    Route::get('projects-search', [ProjectController::class, 'search'])->name('projects.search');
+    Route::get('contracts-search', [ContractController::class, 'search'])->name('contracts.search');
     Route::resource('tasks', TaskController::class);
     Route::patch('tasks/{task}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');
     Route::delete('tasks/{task}/documents/{document}', [TaskController::class, 'destroyDocument'])->name('tasks.documents.destroy');
@@ -144,6 +147,30 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('activity-logs/export', [ActivityLogController::class, 'export'])->name('activity-logs.export');
     Route::view('changelog', 'admin.changelog')->name('changelog');
+
+    // PLZ Lookup (by zip or city)
+    Route::get('postal-codes/lookup', function (\Illuminate\Http\Request $request) {
+        $zip = $request->input('zip', '');
+        $city = $request->input('city', '');
+        if (strlen($zip) < 4 && strlen($city) < 2) {
+            return response()->json([]);
+        }
+        $file = public_path('data/postal-codes.json');
+        if (!file_exists($file)) {
+            return response()->json([]);
+        }
+        $data = json_decode(file_get_contents($file), true);
+        $results = [];
+        foreach ($data as $entry) {
+            if ($zip && str_starts_with($entry['zip'], $zip)) {
+                $results[] = $entry;
+            } elseif ($city && stripos($entry['city'], $city) !== false) {
+                $results[] = $entry;
+            }
+            if (count($results) >= 10) break;
+        }
+        return response()->json($results);
+    })->name('postal-codes.lookup');
 });
 
 require __DIR__.'/auth.php';

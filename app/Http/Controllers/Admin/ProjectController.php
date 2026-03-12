@@ -43,13 +43,12 @@ class ProjectController extends Controller
 
     public function create()
     {
-        $contacts = Contact::orderBy('last_name')->get();
         $artworks = Artwork::orderBy('title')->get();
         $genres = Genre::orderBy('name')->get();
         $tracks = Track::orderBy('title')->get();
         $contracts = Contract::orderBy('title')->get();
         $projectTypes = ProjectType::orderBy('sort_order')->get();
-        return view('admin.projects.create', compact('contacts', 'artworks', 'genres', 'tracks', 'contracts', 'projectTypes'));
+        return view('admin.projects.create', compact('artworks', 'genres', 'tracks', 'contracts', 'projectTypes'));
     }
 
     public function store(Request $request)
@@ -86,14 +85,13 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
-        $contacts = Contact::orderBy('last_name')->get();
         $artworks = Artwork::orderBy('title')->get();
         $genres = Genre::orderBy('name')->get();
         $tracks = Track::orderBy('title')->get();
         $contracts = Contract::orderBy('title')->get();
         $projectTypes = ProjectType::orderBy('sort_order')->get();
         $project->load(['contacts', 'organizations', 'artworks', 'genres', 'tracks', 'contracts']);
-        return view('admin.projects.edit', compact('project', 'contacts', 'artworks', 'genres', 'tracks', 'contracts', 'projectTypes'));
+        return view('admin.projects.edit', compact('project', 'artworks', 'genres', 'tracks', 'contracts', 'projectTypes'));
     }
 
     public function update(Request $request, Project $project)
@@ -142,5 +140,22 @@ class ProjectController extends Controller
     {
         $task->update(['is_completed' => !$task->is_completed]);
         return back();
+    }
+
+    public function search(Request $request)
+    {
+        $query = Project::query();
+
+        if ($q = $request->input('q')) {
+            $query->where('name', 'like', "%{$q}%");
+        }
+
+        $results = $query->orderBy('name')->limit(50)->get()->map(fn ($p) => [
+            'id' => $p->id,
+            'name' => $p->name,
+            'status' => $p->status,
+        ]);
+
+        return response()->json($results);
     }
 }

@@ -22,7 +22,9 @@
                         </div>
                     @endif
                     <div>
-                        <h2 class="text-xl font-bold text-gray-900">{{ $organization->primary_name }}</h2>
+                        <h2 class="text-xl font-bold text-gray-900">{{ $organization->primary_name }}
+                            <span class="text-sm font-normal text-gray-400 ml-2">{{ $organization->ref_nr }}</span>
+                        </h2>
                         @if(count($organization->names) > 1)
                             <p class="text-sm text-gray-500 mt-0.5">Alias: {{ implode(', ', array_slice($organization->names, 1)) }}</p>
                         @endif

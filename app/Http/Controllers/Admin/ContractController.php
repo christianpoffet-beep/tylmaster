@@ -245,4 +245,23 @@ class ContractController extends Controller
         return redirect()->route('admin.contracts.edit', $contract)->with('success', 'Dokument archiviert.');
     }
 
+    public function search(Request $request)
+    {
+        $query = Contract::query();
+
+        if ($q = $request->input('q')) {
+            $query->where(function ($qb) use ($q) {
+                $qb->where('title', 'like', "%{$q}%")
+                   ->orWhere('contract_number', 'like', "%{$q}%");
+            });
+        }
+
+        $results = $query->orderBy('title')->limit(50)->get()->map(fn ($c) => [
+            'id' => $c->id,
+            'title' => $c->title,
+            'contract_number' => $c->contract_number,
+        ]);
+
+        return response()->json($results);
+    }
 }

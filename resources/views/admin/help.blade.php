@@ -68,6 +68,22 @@
                     <h4 class="text-sm font-medium text-gray-800">Verknüpfungen</h4>
                     <p class="text-sm text-gray-600">Kontakte können mit Organisationen, Verträgen, Projekten und Tracks verknüpft werden. Diese Verknüpfungen siehst du auf der Detailseite des Kontakts.</p>
                 </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Neue Felder</h4>
+                    <ul class="text-sm text-gray-600 list-disc list-inside mt-1 space-y-0.5">
+                        <li><strong>Geschlecht:</strong> Männlich, Weiblich oder Nicht definiert</li>
+                        <li><strong>Nationalität:</strong> Auswahl aus der Länderliste</li>
+                        <li><strong>AHV-Nr.:</strong> Schweizer Sozialversicherungsnummer im Format 756.XXXX.XXXX.XX mit automatischer Eingabemaske und Validierung</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">PLZ-Autovervollständigung</h4>
+                    <p class="text-sm text-gray-600">Bei allen PLZ-Feldern (Adresse und Bankadresse) wird der Ort automatisch ausgefüllt, wenn eine gültige Schweizer oder deutsche Postleitzahl eingegeben wird. Der Ort kann jederzeit manuell überschrieben werden.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Organisation zuordnen</h4>
+                    <p class="text-sm text-gray-600">Beim Erstellen oder Bearbeiten eines Kontakts kannst du über das Suchfeld Organisationen suchen und zuordnen. Klicke ins Feld, um alle verfügbaren Organisationen anzuzeigen, oder tippe einen Suchbegriff ein. Neue Organisationen können direkt inline erstellt werden.</p>
+                </div>
             </div>
         </div>
 
@@ -87,6 +103,18 @@
                 <div>
                     <h4 class="text-sm font-medium text-gray-800">Schnellerstellung</h4>
                     <p class="text-sm text-gray-600">An einigen Stellen (z.B. bei Rechnungen) kannst du direkt eine neue Organisation erstellen, ohne die aktuelle Seite zu verlassen.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Rechtsform</h4>
+                    <p class="text-sm text-gray-600">Jede Organisation kann eine Rechtsform haben: AG, GmbH, Verein, Stiftung, Einzelfirma, Ltd, LLP (UK) oder LLC.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">Verknüpfungen</h4>
+                    <p class="text-sm text-gray-600">Beim Erstellen oder Bearbeiten einer Organisation kannst du über Suchfelder <strong>Kontakte</strong>, <strong>Projekte</strong> und <strong>Verträge</strong> suchen und zuordnen. Mehrfachauswahl ist möglich. Neue Kontakte können direkt inline erstellt werden.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800">PLZ-Autovervollständigung</h4>
+                    <p class="text-sm text-gray-600">Bei allen PLZ-Feldern wird der Ort automatisch ausgefüllt, wenn eine gültige Schweizer oder deutsche Postleitzahl eingegeben wird.</p>
                 </div>
             </div>
         </div>
@@ -126,7 +154,7 @@
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800">Verknüpfungen</h4>
-                    <p class="text-sm text-gray-600">Projekte können mit Kontakten, Verträgen und Tracks verknüpft werden. Auf der Detailseite siehst du alle verknüpften Elemente und Aufgaben.</p>
+                    <p class="text-sm text-gray-600">Projekte können mit Kontakten, Organisationen, Verträgen und Tracks verknüpft werden. Kontakte und Organisationen werden über Suchfelder mit Mehrfachauswahl zugeordnet. Neue Kontakte können direkt inline erstellt werden. Auf der Detailseite siehst du alle verknüpften Elemente und Aufgaben.</p>
                 </div>
             </div>
         </div>

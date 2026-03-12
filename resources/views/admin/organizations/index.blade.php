@@ -31,6 +31,7 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ref</th>
                     <x-admin.sortable-header column="names">Name</x-admin.sortable-header>
                     <x-admin.sortable-header column="type">Typ</x-admin.sortable-header>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kontakte</th>
@@ -41,6 +42,7 @@
             <tbody class="divide-y divide-gray-200">
                 @forelse($organizations as $org)
                     <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-xs text-gray-400 font-mono">{{ $org->ref_nr }}</td>
                         <td class="px-4 py-3 text-sm font-medium">
                             <a href="{{ route('admin.organizations.show', $org) }}" class="text-gray-900 hover:text-blue-600">{{ $org->primary_name }}</a>
                             @if(count($org->names) > 1)
@@ -58,7 +60,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">Keine Organisationen gefunden.</td>
+                        <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-500">Keine Organisationen gefunden.</td>
                     </tr>
                 @endforelse
             </tbody>

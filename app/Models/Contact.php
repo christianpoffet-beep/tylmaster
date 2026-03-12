@@ -9,10 +9,20 @@ class Contact extends Model
 {
     use LogsActivity;
 
+    protected static function booted(): void
+    {
+        static::creating(function (Contact $contact) {
+            $last = static::whereNotNull('ref_nr')->orderByRaw("CAST(SUBSTR(ref_nr, 2) AS INTEGER) DESC")->value('ref_nr');
+            $nextNr = $last ? (int) substr($last, 1) + 1 : 1001;
+            $contact->ref_nr = 'C' . $nextNr;
+        });
+    }
+
     protected $fillable = [
-        'first_name', 'last_name', 'birth_date', 'death_date',
+        'first_name', 'last_name', 'gender', 'birth_date', 'death_date',
         'email', 'secondary_emails',
         'phone', 'secondary_phones', 'street', 'zip', 'city', 'country',
+        'nationality', 'ahv_number',
         'iban', 'bank_name', 'bank_zip', 'bank_city', 'bank_country', 'bic',
         'avatar_path', 'types', 'notes', 'ipis',
     ];

@@ -17,7 +17,9 @@
                         </div>
                     @endif
                     <div>
-                        <h2 class="text-xl font-bold text-gray-900">{{ $contact->full_name }}</h2>
+                        <h2 class="text-xl font-bold text-gray-900">{{ $contact->full_name }}
+                            <span class="text-sm font-normal text-gray-400 ml-2">{{ $contact->ref_nr }}</span>
+                        </h2>
                         @if($contact->birth_date || $contact->death_date)
                             <p class="text-sm text-gray-500">
                                 @if($contact->birth_date)* {{ $contact->birth_date->format('d.m.Y') }}@endif

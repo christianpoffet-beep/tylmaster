@@ -37,7 +37,16 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Geschlecht</label>
+                    <select name="gender" id="gender" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">— Bitte wählen —</option>
+                        <option value="male" {{ old('gender', $contact->gender) === 'male' ? 'selected' : '' }}>Männlich</option>
+                        <option value="female" {{ old('gender', $contact->gender) === 'female' ? 'selected' : '' }}>Weiblich</option>
+                        <option value="other" {{ old('gender', $contact->gender) === 'other' ? 'selected' : '' }}>Nicht definiert</option>
+                    </select>
+                </div>
                 <div>
                     <label for="birth_date" class="block text-sm font-medium text-gray-700 mb-1">Geburtsdatum</label>
                     <input type="date" name="birth_date" id="birth_date" value="{{ old('birth_date', $contact->birth_date?->format('Y-m-d')) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
@@ -47,6 +56,19 @@
                     <label for="death_date" class="block text-sm font-medium text-gray-700 mb-1">Todesdatum</label>
                     <input type="date" name="death_date" id="death_date" value="{{ old('death_date', $contact->death_date?->format('Y-m-d')) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
                     @error('death_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    @include('admin.partials.country-select', ['name' => 'nationality', 'label' => 'Nationalität', 'value' => old('nationality', $contact->nationality ?? '')])
+                </div>
+                <div>
+                    <label for="ahv_number" class="block text-sm font-medium text-gray-700 mb-1">AHV-Nr.</label>
+                    <input type="text" name="ahv_number" id="ahv_number" value="{{ old('ahv_number', $contact->ahv_number) }}" placeholder="756.XXXX.XXXX.XX"
+                        class="w-full rounded-lg border-gray-300 text-sm font-mono focus:border-blue-500 focus:ring-blue-500"
+                        x-data x-mask="756.9999.9999.99">
+                    @error('ahv_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
 
@@ -111,17 +133,12 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                @include('admin.partials.postal-code-input', [
+                    'zipName' => 'zip', 'cityName' => 'city',
+                    'zipValue' => old('zip', $contact->zip), 'cityValue' => old('city', $contact->city),
+                ])
                 <div>
-                    <label for="zip" class="block text-sm font-medium text-gray-700 mb-1">PLZ</label>
-                    <input type="text" name="zip" id="zip" value="{{ old('zip', $contact->zip) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="city" class="block text-sm font-medium text-gray-700 mb-1">Ort</label>
-                    <input type="text" name="city" id="city" value="{{ old('city', $contact->city) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Land</label>
-                    <input type="text" name="country" id="country" value="{{ old('country', $contact->country) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    @include('admin.partials.country-select', ['name' => 'country', 'label' => 'Land', 'value' => old('country', $contact->country ?? '')])
                 </div>
             </div>
 
@@ -145,17 +162,14 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                @include('admin.partials.postal-code-input', [
+                    'zipName' => 'bank_zip', 'cityName' => 'bank_city',
+                    'zipValue' => old('bank_zip', $contact->bank_zip), 'cityValue' => old('bank_city', $contact->bank_city),
+                    'zipLabel' => 'PLZ Bank', 'cityLabel' => 'Ort Bank',
+                    'zipId' => 'bank_zip', 'cityId' => 'bank_city',
+                ])
                 <div>
-                    <label for="bank_zip" class="block text-sm font-medium text-gray-700 mb-1">PLZ Bank</label>
-                    <input type="text" name="bank_zip" id="bank_zip" value="{{ old('bank_zip', $contact->bank_zip) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="bank_city" class="block text-sm font-medium text-gray-700 mb-1">Ort Bank</label>
-                    <input type="text" name="bank_city" id="bank_city" value="{{ old('bank_city', $contact->bank_city) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="bank_country" class="block text-sm font-medium text-gray-700 mb-1">Land Bank</label>
-                    <input type="text" name="bank_country" id="bank_country" value="{{ old('bank_country', $contact->bank_country) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    @include('admin.partials.country-select', ['name' => 'bank_country', 'id' => 'bank_country', 'label' => 'Land Bank', 'value' => old('bank_country', $contact->bank_country ?? '')])
                 </div>
             </div>
 

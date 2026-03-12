@@ -11,7 +11,7 @@
 
     {{-- Search input --}}
     <div class="flex gap-2 mb-2">
-        <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="open = results.length > 0"
+        <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="if(results.length) open = true; else search()"
             placeholder="Organisation suchen..." class="flex-1 rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
         <select x-model="typeFilter" @change="search()" class="rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
             <option value="">Alle Typen</option>
@@ -39,7 +39,7 @@
     </div>
 
     {{-- No results --}}
-    <div x-show="open && results.length === 0 && query.length >= 2 && !loading" x-cloak class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-3">
+    <div x-show="open && results.length === 0 && !loading" x-cloak class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-3">
         <p class="text-sm text-gray-500">Keine Organisationen gefunden.</p>
     </div>
 
@@ -108,11 +108,6 @@ function organizationSearch() {
         createError: '',
 
         async search() {
-            if (this.query.length < 2) {
-                this.results = [];
-                this.open = false;
-                return;
-            }
             this.loading = true;
             try {
                 const params = new URLSearchParams({ q: this.query });

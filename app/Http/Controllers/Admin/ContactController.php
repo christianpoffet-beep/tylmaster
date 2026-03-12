@@ -55,6 +55,7 @@ class ContactController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
+            'gender' => 'nullable|string|in:male,female,other',
             'birth_date' => 'nullable|date',
             'death_date' => 'nullable|date|after_or_equal:birth_date',
             'email' => 'nullable|email|max:255',
@@ -67,6 +68,8 @@ class ContactController extends Controller
             'zip' => 'nullable|string|max:20',
             'city' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:255',
+            'nationality' => 'nullable|string|max:2',
+            'ahv_number' => 'nullable|string|max:16|regex:/^756\.\d{4}\.\d{4}\.\d{2}$/',
             'iban' => 'nullable|string|max:34',
             'bank_name' => 'nullable|string|max:255',
             'bank_zip' => 'nullable|string|max:20',
@@ -133,6 +136,7 @@ class ContactController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
+            'gender' => 'nullable|string|in:male,female,other',
             'birth_date' => 'nullable|date',
             'death_date' => 'nullable|date|after_or_equal:birth_date',
             'email' => 'nullable|email|max:255',
@@ -145,6 +149,8 @@ class ContactController extends Controller
             'zip' => 'nullable|string|max:20',
             'city' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:255',
+            'nationality' => 'nullable|string|max:2',
+            'ahv_number' => 'nullable|string|max:16|regex:/^756\.\d{4}\.\d{4}\.\d{2}$/',
             'iban' => 'nullable|string|max:34',
             'bank_name' => 'nullable|string|max:255',
             'bank_zip' => 'nullable|string|max:20',
@@ -216,5 +222,26 @@ class ContactController extends Controller
             'name' => $contact->full_name,
             'detail' => null,
         ]);
+    }
+
+    public function search(Request $request)
+    {
+        $query = Contact::query();
+
+        if ($q = $request->input('q')) {
+            $query->where(function ($qb) use ($q) {
+                $qb->where('first_name', 'like', "%{$q}%")
+                   ->orWhere('last_name', 'like', "%{$q}%")
+                   ->orWhere('email', 'like', "%{$q}%");
+            });
+        }
+
+        $results = $query->orderBy('last_name')->limit(50)->get()->map(fn ($c) => [
+            'id' => $c->id,
+            'name' => $c->full_name,
+            'email' => $c->email,
+        ]);
+
+        return response()->json($results);
     }
 }

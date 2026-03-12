@@ -9,8 +9,17 @@ class Organization extends Model
 {
     use LogsActivity;
 
+    protected static function booted(): void
+    {
+        static::creating(function (Organization $org) {
+            $last = static::whereNotNull('ref_nr')->orderByRaw("CAST(SUBSTR(ref_nr, 2) AS INTEGER) DESC")->value('ref_nr');
+            $nextNr = $last ? (int) substr($last, 1) + 1 : 1001;
+            $org->ref_nr = 'O' . $nextNr;
+        });
+    }
+
     protected $fillable = [
-        'type', 'names', 'biography', 'websites',
+        'type', 'legal_form', 'names', 'biography', 'websites',
         'street', 'zip', 'city', 'country', 'email', 'phone',
         'iban', 'bank_name', 'bank_zip', 'bank_city', 'bank_country', 'bic',
         'vat_number', 'avatar_path',

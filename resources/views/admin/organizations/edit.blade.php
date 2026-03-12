@@ -27,14 +27,25 @@
                 @error('avatar') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
-            <div>
-                <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Typ *</label>
-                <select name="type" id="type" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    @foreach($typeLabels as $v => $l)
-                        <option value="{{ $v }}" {{ old('type', $organization->type) === $v ? 'selected' : '' }}>{{ $l }}</option>
-                    @endforeach
-                </select>
-                @error('type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Typ *</label>
+                    <select name="type" id="type" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        @foreach($typeLabels as $v => $l)
+                            <option value="{{ $v }}" {{ old('type', $organization->type) === $v ? 'selected' : '' }}>{{ $l }}</option>
+                        @endforeach
+                    </select>
+                    @error('type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="legal_form" class="block text-sm font-medium text-gray-700 mb-1">Rechtsform</label>
+                    <select name="legal_form" id="legal_form" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">— Bitte wählen —</option>
+                        @foreach(['AG' => 'AG', 'GmbH' => 'GmbH', 'Verein' => 'Verein', 'Stiftung' => 'Stiftung', 'Einzelfirma' => 'Einzelfirma', 'Ltd' => 'Ltd', 'LLP' => 'LLP (UK)', 'LLC' => 'LLC'] as $v => $l)
+                            <option value="{{ $v }}" {{ old('legal_form', $organization->legal_form) === $v ? 'selected' : '' }}>{{ $l }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
 
             {{-- Dynamic names --}}
@@ -94,17 +105,12 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                @include('admin.partials.postal-code-input', [
+                    'zipName' => 'zip', 'cityName' => 'city',
+                    'zipValue' => old('zip', $organization->zip), 'cityValue' => old('city', $organization->city),
+                ])
                 <div>
-                    <label for="zip" class="block text-sm font-medium text-gray-700 mb-1">PLZ</label>
-                    <input type="text" name="zip" id="zip" value="{{ old('zip', $organization->zip) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="city" class="block text-sm font-medium text-gray-700 mb-1">Ort</label>
-                    <input type="text" name="city" id="city" value="{{ old('city', $organization->city) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Land</label>
-                    <input type="text" name="country" id="country" value="{{ old('country', $organization->country) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    @include('admin.partials.country-select', ['name' => 'country', 'label' => 'Land', 'value' => old('country', $organization->country ?? '')])
                 </div>
             </div>
 
@@ -128,17 +134,14 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                @include('admin.partials.postal-code-input', [
+                    'zipName' => 'bank_zip', 'cityName' => 'bank_city',
+                    'zipValue' => old('bank_zip', $organization->bank_zip), 'cityValue' => old('bank_city', $organization->bank_city),
+                    'zipLabel' => 'PLZ Bank', 'cityLabel' => 'Ort Bank',
+                    'zipId' => 'bank_zip', 'cityId' => 'bank_city',
+                ])
                 <div>
-                    <label for="bank_zip" class="block text-sm font-medium text-gray-700 mb-1">PLZ Bank</label>
-                    <input type="text" name="bank_zip" id="bank_zip" value="{{ old('bank_zip', $organization->bank_zip) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="bank_city" class="block text-sm font-medium text-gray-700 mb-1">Ort Bank</label>
-                    <input type="text" name="bank_city" id="bank_city" value="{{ old('bank_city', $organization->bank_city) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="bank_country" class="block text-sm font-medium text-gray-700 mb-1">Land Bank</label>
-                    <input type="text" name="bank_country" id="bank_country" value="{{ old('bank_country', $organization->bank_country) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    @include('admin.partials.country-select', ['name' => 'bank_country', 'id' => 'bank_country', 'label' => 'Land Bank', 'value' => old('bank_country', $organization->bank_country ?? '')])
                 </div>
             </div>
 
@@ -159,25 +162,9 @@
                 <button type="button" @click="websites.push('')" class="text-sm text-blue-600 hover:text-blue-800">+ Weitere Website</button>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Kontakte</label>
-                <select name="contact_ids[]" multiple class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" size="5">
-                    @foreach($contacts as $contact)
-                        <option value="{{ $contact->id }}" {{ in_array($contact->id, old('contact_ids', $organization->contacts->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $contact->full_name }}</option>
-                    @endforeach
-                </select>
-                <p class="text-xs text-gray-400 mt-1">Ctrl/Cmd gedrückt halten für Mehrfachauswahl</p>
-            </div>
+            @include('admin.partials.contact-search', ['selected' => $organization->contacts, 'inputName' => 'contact_ids[]'])
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Projekte</label>
-                <select name="project_ids[]" multiple class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" size="4">
-                    @foreach($projects as $project)
-                        <option value="{{ $project->id }}" {{ in_array($project->id, old('project_ids', $organization->projects->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $project->name }}</option>
-                    @endforeach
-                </select>
-                <p class="text-xs text-gray-400 mt-1">Ctrl/Cmd gedrückt halten für Mehrfachauswahl</p>
-            </div>
+            @include('admin.partials.project-search', ['selected' => $organization->projects])
 
             @if($tracks->count())
             <div>
@@ -203,17 +190,7 @@
             </div>
             @endif
 
-            @if($contracts->count())
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Verträge</label>
-                <select name="contract_ids[]" multiple class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" size="4">
-                    @foreach($contracts as $contract)
-                        <option value="{{ $contract->id }}" {{ in_array($contract->id, old('contract_ids', $organization->contracts->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $contract->title }}</option>
-                    @endforeach
-                </select>
-                <p class="text-xs text-gray-400 mt-1">Ctrl/Cmd gedrückt halten für Mehrfachauswahl</p>
-            </div>
-            @endif
+            @include('admin.partials.contract-search', ['selected' => $organization->contracts])
 
             <div>
                 <label for="document" class="block text-sm font-medium text-gray-700 mb-1">Neues Dokument hochladen</label>
