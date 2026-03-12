@@ -20,38 +20,38 @@
 
 <div x-data="postalCodeLookup_{{ $componentId }}()" class="contents">
     <div>
-        <label for="{{ $zipId }}" class="block text-sm font-medium text-gray-700 mb-1">{{ $zipLabel }}</label>
+        <label for="{{ $zipId }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $zipLabel }}</label>
         <div class="relative">
             <input type="text" name="{{ $zipName }}" id="{{ $zipId }}" x-model="zip"
                 @input.debounce.300ms="lookup()" @focus="if(suggestions.length) showSuggestions = true"
                 value="{{ $zipValue }}"
-                class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             <div x-show="showSuggestions && suggestions.length > 1" @click.away="showSuggestions = false" x-cloak
                 class="absolute z-20 w-64 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto mt-1">
                 <template x-for="s in suggestions" :key="s.zip">
                     <button type="button" @click="selectSuggestion(s)"
-                        class="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-sm border-b border-gray-100 last:border-0">
-                        <span class="font-medium text-gray-700" x-text="s.zip"></span>
-                        <span class="text-gray-500" x-text="s.city"></span>
+                        class="w-full text-left px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-sm border-b border-gray-100 last:border-0">
+                        <span class="font-medium text-gray-700 dark:text-gray-300" x-text="s.zip"></span>
+                        <span class="text-gray-500 dark:text-gray-400" x-text="s.city"></span>
                     </button>
                 </template>
             </div>
         </div>
     </div>
     <div>
-        <label for="{{ $cityId }}" class="block text-sm font-medium text-gray-700 mb-1">{{ $cityLabel }}</label>
+        <label for="{{ $cityId }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $cityLabel }}</label>
         <div class="relative">
             <input type="text" name="{{ $cityName }}" id="{{ $cityId }}" x-model="city"
                 @input.debounce.300ms="lookupByCity()" @focus="if(citySuggestions.length) showCitySuggestions = true"
                 value="{{ $cityValue }}"
-                class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             <div x-show="showCitySuggestions && citySuggestions.length > 0" @click.away="showCitySuggestions = false" x-cloak
                 class="absolute z-20 w-64 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto mt-1">
                 <template x-for="s in citySuggestions" :key="s.zip">
                     <button type="button" @click="selectSuggestion(s); showCitySuggestions = false"
-                        class="w-full text-left px-3 py-1.5 hover:bg-gray-50 text-sm border-b border-gray-100 last:border-0">
-                        <span class="font-medium text-gray-700" x-text="s.zip"></span>
-                        <span class="text-gray-500" x-text="s.city"></span>
+                        class="w-full text-left px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-sm border-b border-gray-100 last:border-0">
+                        <span class="font-medium text-gray-700 dark:text-gray-300" x-text="s.zip"></span>
+                        <span class="text-gray-500 dark:text-gray-400" x-text="s.city"></span>
                     </button>
                 </template>
             </div>

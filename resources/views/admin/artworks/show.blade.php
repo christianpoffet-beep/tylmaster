@@ -5,7 +5,7 @@
 @section('content')
 <div class="max-w-4xl">
     <div class="mb-4">
-        <a href="{{ route('admin.artworks.index') }}" class="text-sm text-gray-500 hover:text-gray-700">&larr; Zurück zur Übersicht</a>
+        <a href="{{ route('admin.artworks.index') }}" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-300">&larr; Zurück zur Übersicht</a>
     </div>
 
     @if(session('warning'))
@@ -14,25 +14,25 @@
     </div>
     @endif
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex justify-between items-start mb-6">
             <div>
-                <h2 class="text-xl font-bold text-gray-900">{{ $artwork->title }}</h2>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ $artwork->title }}</h2>
                 @if($artwork->projects->count())
                     <p class="text-sm text-gray-500 mt-1">
                         Projekte:
                         @foreach($artwork->projects as $project)
-                            <a href="{{ route('admin.projects.show', $project) }}" class="text-blue-600 hover:text-blue-800">{{ $project->name }}</a>{{ !$loop->last ? ', ' : '' }}
+                            <a href="{{ route('admin.projects.show', $project) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $project->name }}</a>{{ !$loop->last ? ', ' : '' }}
                         @endforeach
                     </p>
                 @endif
             </div>
             <div class="flex gap-2">
-                <a href="{{ route('admin.artworks.edit', $artwork) }}" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700">Bearbeiten</a>
+                <a href="{{ route('admin.artworks.edit', $artwork) }}" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Bearbeiten</a>
                 <form method="POST" action="{{ route('admin.artworks.destroy', $artwork) }}" onsubmit="return confirm('Artwork wirklich löschen?')">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700">Löschen</button>
+                    <button type="submit" class="px-4 py-2 bg-red-600 dark:bg-red-700 text-white text-sm rounded-lg hover:bg-red-700 dark:hover:bg-red-600">Löschen</button>
                 </form>
             </div>
         </div>
@@ -76,11 +76,11 @@
             @foreach($creditRoles as $role => $roleLabel)
                 @if($groupedCredits->has($role))
                 <div>
-                    <dt class="text-gray-500">{{ $roleLabel }}</dt>
+                    <dt class="text-gray-500 dark:text-gray-400">{{ $roleLabel }}</dt>
                     <dd class="text-gray-900 mt-0.5">
                         @foreach($groupedCredits[$role] as $credit)
                             @if($credit->creditable_type === \App\Models\Contact::class)
-                                <a href="{{ route('admin.contacts.show', $credit->creditable_id) }}" class="text-blue-600 hover:text-blue-800">{{ $credit->display_name }}</a>
+                                <a href="{{ route('admin.contacts.show', $credit->creditable_id) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $credit->display_name }}</a>
                             @elseif($credit->creditable_type === \App\Models\Organization::class)
                                 <a href="{{ route('admin.organizations.show', $credit->creditable_id) }}" class="text-purple-600 hover:text-purple-800">{{ $credit->display_name }}</a>
                             @endif
@@ -92,7 +92,7 @@
             @endforeach
             @if($artwork->yoc)
             <div>
-                <dt class="text-gray-500">YOC (Year of Creation)</dt>
+                <dt class="text-gray-500 dark:text-gray-400">YOC (Year of Creation)</dt>
                 <dd class="text-gray-900 mt-0.5">{{ $artwork->yoc }}</dd>
             </div>
             @endif
@@ -107,14 +107,14 @@
         @if($artwork->logos->count())
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             @foreach($artwork->logos as $logo)
-            <div class="group relative bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+            <div class="group relative bg-gray-50 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                 <div class="aspect-square flex items-center justify-center p-2">
                     <img src="{{ $logo->url }}" alt="{{ $logo->original_name }}" class="max-w-full max-h-full object-contain">
                 </div>
-                <div class="p-2 border-t border-gray-200">
+                <div class="p-2 border-t border-gray-200 dark:border-gray-700">
                     <p class="text-xs text-gray-700 truncate" title="{{ $logo->original_name }}">{{ $logo->original_name }}</p>
                     @if($logo->comment)
-                        <p class="text-xs text-gray-400 truncate" title="{{ $logo->comment }}">{{ $logo->comment }}</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 truncate" title="{{ $logo->comment }}">{{ $logo->comment }}</p>
                     @endif
                 </div>
                 <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">

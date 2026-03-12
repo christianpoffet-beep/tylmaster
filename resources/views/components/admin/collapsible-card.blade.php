@@ -1,8 +1,8 @@
 @props(['title', 'count' => null, 'open' => true])
 
-<div x-data="{ open: {{ $open ? 'true' : 'false' }} }" {{ $attributes->merge(['class' => 'bg-white rounded-xl shadow-sm border border-gray-200']) }}>
+<div x-data="{ open: {{ $open ? 'true' : 'false' }} }" {{ $attributes->merge(['class' => 'bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700']) }}>
     <div @click="open = !open" class="flex items-center justify-between cursor-pointer px-6 py-4">
-        <h3 class="text-sm font-semibold text-gray-700">
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
             {{ $title }}@if($count !== null) ({{ $count }})@endif
         </h3>
         <div class="flex items-center gap-2">

@@ -9,7 +9,7 @@
     <div class="fixed inset-0 bg-black/70" @click="close()"></div>
 
     {{-- Modal: fixed mit Abstand zum Rand --}}
-    <div class="fixed bg-white rounded-xl shadow-2xl overflow-hidden"
+    <div class="fixed bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden"
          style="top: 24px; right: 24px; bottom: 24px; left: 24px;"
          @click.stop>
 

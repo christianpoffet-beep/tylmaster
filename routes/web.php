@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\ContractTemplateController;
 use App\Http\Controllers\Admin\ContractTypeController;
 use App\Http\Controllers\Admin\InvoiceTemplateController;
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\PublicGalleryController;
 use Illuminate\Support\Facades\Route;
 
@@ -143,7 +144,14 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('chart-template-accounts/{account}', [ChartTemplateController::class, 'updateAccount'])->name('chart-templates.accounts.update');
     Route::delete('chart-template-accounts/{account}', [ChartTemplateController::class, 'destroyAccount'])->name('chart-templates.accounts.destroy');
 
-    // Benutzerverwaltung
+    // Einstellungen
+    Route::get('settings/profile', [SettingsController::class, 'profile'])->name('settings.profile');
+    Route::patch('settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
+    Route::put('settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
+    Route::get('settings/appearance', [SettingsController::class, 'appearance'])->name('settings.appearance');
+    Route::get('settings/system', [SettingsController::class, 'system'])->name('settings.system');
+
+    // System (Logs, Changelog)
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('activity-logs/export', [ActivityLogController::class, 'export'])->name('activity-logs.export');
     Route::view('changelog', 'admin.changelog')->name('changelog');

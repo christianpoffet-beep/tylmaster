@@ -5,25 +5,25 @@
 @section('content')
 <div class="max-w-3xl" x-data="invoiceForm()">
     <div class="mb-6">
-        <h2 class="text-xl font-bold text-gray-900">Rechnung bearbeiten</h2>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Rechnung bearbeiten</h2>
         <p class="text-sm text-gray-500 mt-1">{{ $invoice->invoice_number }}</p>
     </div>
 
     <form method="POST" action="{{ route('admin.invoices.update', $invoice) }}" @submit="submitting = true">
         @csrf @method('PUT')
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
             {{-- Titel --}}
             <div>
-                <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Titel</label>
-                <input type="text" name="title" id="title" value="{{ old('title', $invoice->title) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="z.B. Webdesign März 2026">
+                <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Titel</label>
+                <input type="text" name="title" id="title" value="{{ old('title', $invoice->title) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="z.B. Webdesign März 2026">
             </div>
 
             {{-- Vorlage, Buchhaltung, Projekt --}}
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                    <label for="invoice_template_id" class="block text-sm font-medium text-gray-700 mb-1">Rechnungsvorlage</label>
-                    <select name="invoice_template_id" id="invoice_template_id" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label for="invoice_template_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rechnungsvorlage</label>
+                    <select name="invoice_template_id" id="invoice_template_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">— Keine Vorlage —</option>
                         @foreach($templates as $tpl)
                             <option value="{{ $tpl->id }}" {{ old('invoice_template_id', $invoice->invoice_template_id) == $tpl->id ? 'selected' : '' }}>{{ $tpl->name }}</option>
@@ -31,8 +31,8 @@
                     </select>
                 </div>
                 <div>
-                    <label for="accounting_id" class="block text-sm font-medium text-gray-700 mb-1">Buchhaltung</label>
-                    <select name="accounting_id" id="accounting_id" x-model="accountingId" @change="onAccountingChange()" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label for="accounting_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Buchhaltung</label>
+                    <select name="accounting_id" id="accounting_id" x-model="accountingId" @change="onAccountingChange()" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">— Keine —</option>
                         @foreach($accountings as $acc)
                             <option value="{{ $acc->id }}">{{ $acc->name }}</option>
@@ -40,8 +40,8 @@
                     </select>
                 </div>
                 <div>
-                    <label for="project_id" class="block text-sm font-medium text-gray-700 mb-1">Projekt</label>
-                    <select name="project_id" id="project_id" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label for="project_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Projekt</label>
+                    <select name="project_id" id="project_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">— Kein Projekt —</option>
                         @foreach($projects as $project)
                             <option value="{{ $project->id }}" {{ old('project_id', $invoice->project_id) == $project->id ? 'selected' : '' }}>{{ $project->name }}</option>
@@ -53,7 +53,7 @@
             {{-- Soll-/Haben-Konto (wenn Buchhaltung gewählt) --}}
             <div x-show="accountingId && accounts.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div x-data="{ search: '', open: false }" @click.outside="open = false" class="relative">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Soll-Konto *
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Soll-Konto *
                         <span x-data="{ show: false }" class="relative inline-block ml-1">
                             <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
                             <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg">
@@ -64,7 +64,7 @@
                     </label>
                     <input type="text" x-model="search" @focus="open = true" @input="open = true"
                         :placeholder="debitAccountId ? accounts.find(a => String(a.id) === String(debitAccountId))?.number + ' ' + accounts.find(a => String(a.id) === String(debitAccountId))?.name : 'Konto suchen...'"
-                        class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     <input type="hidden" name="debit_account_id" :value="debitAccountId">
                     <div x-show="open" class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                         <template x-for="acc in accounts.filter(a => !search || (a.number + ' ' + a.name).toLowerCase().includes(search.toLowerCase()))" :key="acc.id">
@@ -78,7 +78,7 @@
                     </div>
                 </div>
                 <div x-data="{ search: '', open: false }" @click.outside="open = false" class="relative">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Haben-Konto *
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Haben-Konto *
                         <span x-data="{ show: false }" class="relative inline-block ml-1">
                             <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
                             <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg">
@@ -89,7 +89,7 @@
                     </label>
                     <input type="text" x-model="search" @focus="open = true" @input="open = true"
                         :placeholder="creditAccountId ? accounts.find(a => String(a.id) === String(creditAccountId))?.number + ' ' + accounts.find(a => String(a.id) === String(creditAccountId))?.name : 'Konto suchen...'"
-                        class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     <input type="hidden" name="credit_account_id" :value="creditAccountId">
                     <div x-show="open" class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                         <template x-for="acc in accounts.filter(a => !search || (a.number + ' ' + a.name).toLowerCase().includes(search.toLowerCase()))" :key="acc.id">
@@ -107,16 +107,16 @@
             {{-- Typ, Währung --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Typ *</label>
-                    <select name="type" id="type" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Typ *</label>
+                    <select name="type" id="type" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         @foreach(['outgoing' => 'Ausgehend', 'incoming' => 'Eingehend'] as $value => $label)
                             <option value="{{ $value }}" {{ old('type', $invoice->type) === $value ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div>
-                    <label for="currency" class="block text-sm font-medium text-gray-700 mb-1">Währung *</label>
-                    <select name="currency" id="currency" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label for="currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Währung *</label>
+                    <select name="currency" id="currency" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         @foreach(['CHF' => 'CHF', 'EUR' => 'EUR', 'USD' => 'USD'] as $value => $label)
                             <option value="{{ $value }}" {{ old('currency', $invoice->currency) === $value ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
@@ -125,27 +125,27 @@
             </div>
 
             {{-- Absender --}}
-            <div class="border-t border-gray-200 pt-6">
-                <p class="text-sm font-medium text-gray-700 mb-3">Absender</p>
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Absender</p>
                 <input type="hidden" name="sender_type" :value="senderType">
                 <input type="hidden" name="sender_contact_id" :value="senderContactId">
                 <div class="flex gap-4 mb-4">
                     <label class="inline-flex items-center">
                         <input type="radio" x-model="senderType" value="" class="text-blue-600 focus:ring-blue-500">
-                        <span class="ml-1.5 text-sm text-gray-700">Kein Absender</span>
+                        <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">Kein Absender</span>
                     </label>
                     <label class="inline-flex items-center">
                         <input type="radio" x-model="senderType" value="contact" class="text-blue-600 focus:ring-blue-500">
-                        <span class="ml-1.5 text-sm text-gray-700">Kontakt</span>
+                        <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">Kontakt</span>
                     </label>
                     <label class="inline-flex items-center">
                         <input type="radio" x-model="senderType" value="organization" class="text-blue-600 focus:ring-blue-500">
-                        <span class="ml-1.5 text-sm text-gray-700">Organisation</span>
+                        <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">Organisation</span>
                     </label>
                 </div>
 
                 <div x-show="senderType === 'contact'">
-                    <select x-model="senderContactId" :disabled="senderType !== 'contact'" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select x-model="senderContactId" :disabled="senderType !== 'contact'" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">— Kontakt wählen —</option>
                         @foreach($contacts as $contact)
                             <option value="{{ $contact->id }}">{{ $contact->full_name }}</option>
@@ -154,7 +154,7 @@
                 </div>
 
                 <div x-show="senderType === 'organization'" class="space-y-3">
-                    <select name="sender_organization_id" x-model="senderOrganizationId" :disabled="senderType !== 'organization'" @change="onSenderOrgChange()" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select name="sender_organization_id" x-model="senderOrganizationId" :disabled="senderType !== 'organization'" @change="onSenderOrgChange()" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">— Organisation wählen —</option>
                         @foreach($organizations as $org)
                             <option value="{{ $org->id }}">{{ $org->primary_name }}</option>
@@ -163,7 +163,7 @@
 
                     <div x-show="senderOrgContacts.length > 0">
                         <label class="block text-sm text-gray-600 mb-1">Ansprechperson (optional)</label>
-                        <select x-model="senderContactId" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <select x-model="senderContactId" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                             <option value="">— Keine Person —</option>
                             <template x-for="c in senderOrgContacts" :key="c.id">
                                 <option :value="c.id" x-text="c.name"></option>
@@ -174,24 +174,24 @@
             </div>
 
             {{-- Empfänger --}}
-            <div class="border-t border-gray-200 pt-6">
-                <p class="text-sm font-medium text-gray-700 mb-3">Empfänger *</p>
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Empfänger *</p>
                 @error('contact_id') <p class="text-red-500 text-xs mb-2">{{ $message }}</p> @enderror
                 <input type="hidden" name="recipient_type" :value="recipientType">
                 <input type="hidden" name="contact_id" :value="recipientContactId">
                 <div class="flex gap-4 mb-4">
                     <label class="inline-flex items-center">
                         <input type="radio" x-model="recipientType" value="contact" class="text-blue-600 focus:ring-blue-500">
-                        <span class="ml-1.5 text-sm text-gray-700">Kontakt</span>
+                        <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">Kontakt</span>
                     </label>
                     <label class="inline-flex items-center">
                         <input type="radio" x-model="recipientType" value="organization" class="text-blue-600 focus:ring-blue-500">
-                        <span class="ml-1.5 text-sm text-gray-700">Organisation</span>
+                        <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">Organisation</span>
                     </label>
                 </div>
 
                 <div x-show="recipientType === 'contact'">
-                    <select x-model="recipientContactId" :disabled="recipientType !== 'contact'" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select x-model="recipientContactId" :disabled="recipientType !== 'contact'" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">— Kontakt wählen —</option>
                         @foreach($contacts as $contact)
                             <option value="{{ $contact->id }}">{{ $contact->full_name }}</option>
@@ -200,7 +200,7 @@
                 </div>
 
                 <div x-show="recipientType === 'organization'" class="space-y-3">
-                    <select name="organization_id" x-model="recipientOrganizationId" :disabled="recipientType !== 'organization'" @change="onRecipientOrgChange()" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select name="organization_id" x-model="recipientOrganizationId" :disabled="recipientType !== 'organization'" @change="onRecipientOrgChange()" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">— Organisation wählen —</option>
                         @foreach($organizations as $org)
                             <option value="{{ $org->id }}">{{ $org->primary_name }}</option>
@@ -209,7 +209,7 @@
 
                     <div x-show="recipientOrgContacts.length > 0">
                         <label class="block text-sm text-gray-600 mb-1">Ansprechperson (optional)</label>
-                        <select x-model="recipientContactId" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <select x-model="recipientContactId" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                             <option value="">— Keine Person —</option>
                             <template x-for="c in recipientOrgContacts" :key="c.id">
                                 <option :value="c.id" x-text="c.name"></option>
@@ -220,21 +220,21 @@
             </div>
 
             {{-- Daten --}}
-            <div class="border-t border-gray-200 pt-6">
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                        <label for="invoice_date" class="block text-sm font-medium text-gray-700 mb-1">Rechnungsdatum *</label>
-                        <input type="date" name="invoice_date" id="invoice_date" value="{{ old('invoice_date', $invoice->invoice_date?->format('Y-m-d')) }}" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <label for="invoice_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rechnungsdatum *</label>
+                        <input type="date" name="invoice_date" id="invoice_date" value="{{ old('invoice_date', $invoice->invoice_date?->format('Y-m-d')) }}" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         @error('invoice_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label for="due_date" class="block text-sm font-medium text-gray-700 mb-1">Fälligkeitsdatum</label>
-                        <input type="date" name="due_date" id="due_date" value="{{ old('due_date', $invoice->due_date?->format('Y-m-d')) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <label for="due_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fälligkeitsdatum</label>
+                        <input type="date" name="due_date" id="due_date" value="{{ old('due_date', $invoice->due_date?->format('Y-m-d')) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         @error('due_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select name="status" id="status" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                        <select name="status" id="status" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                             @foreach(['open' => 'Offen', 'paid' => 'Bezahlt', 'overdue' => 'Überfällig'] as $value => $label)
                                 <option value="{{ $value }}" {{ old('status', $invoice->status) === $value ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
@@ -244,19 +244,19 @@
             </div>
 
             {{-- MWST --}}
-            <div class="border-t border-gray-200 pt-6">
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <div class="w-48">
-                    <label for="vat_rate" class="block text-sm font-medium text-gray-700 mb-1">MWST-Satz (%)</label>
-                    <input type="number" name="vat_rate" id="vat_rate" x-model="vatRate" step="0.01" min="0" max="100" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="z.B. 8.10">
+                    <label for="vat_rate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">MWST-Satz (%)</label>
+                    <input type="number" name="vat_rate" id="vat_rate" x-model="vatRate" step="0.01" min="0" max="100" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="z.B. 8.10">
                     <p class="text-xs text-gray-400 mt-1">Leer lassen = ohne MWST</p>
                 </div>
             </div>
 
             {{-- Positionen --}}
-            <div class="border-t border-gray-200 pt-6">
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <div class="flex justify-between items-center mb-3">
-                    <p class="text-sm font-medium text-gray-700">Positionen *</p>
-                    <button type="button" @click="addItem()" class="text-xs text-blue-600 hover:text-blue-800">+ Position hinzufügen</button>
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Positionen *</p>
+                    <button type="button" @click="addItem()" class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">+ Position hinzufügen</button>
                 </div>
                 @error('items') <p class="text-red-500 text-xs mb-2">{{ $message }}</p> @enderror
 
@@ -272,15 +272,15 @@
                     <template x-for="(item, index) in items" :key="index">
                         <div class="grid grid-cols-12 gap-2 items-center">
                             <div class="col-span-6">
-                                <input type="text" :name="'items['+index+'][description]'" x-model="item.description" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Beschreibung">
+                                <input type="text" :name="'items['+index+'][description]'" x-model="item.description" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Beschreibung">
                             </div>
                             <div class="col-span-2">
-                                <input type="number" :name="'items['+index+'][quantity]'" x-model="item.quantity" step="0.001" min="0.001" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                <input type="number" :name="'items['+index+'][quantity]'" x-model="item.quantity" step="0.001" min="0.001" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                             <div class="col-span-2">
-                                <input type="number" :name="'items['+index+'][unit_price]'" x-model="item.unit_price" step="0.01" min="0" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                <input type="number" :name="'items['+index+'][unit_price]'" x-model="item.unit_price" step="0.01" min="0" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
-                            <div class="col-span-1 text-right text-sm font-mono text-gray-700" x-text="(item.quantity * item.unit_price).toFixed(2)"></div>
+                            <div class="col-span-1 text-right text-sm font-mono text-gray-700 dark:text-gray-300" x-text="(item.quantity * item.unit_price).toFixed(2)"></div>
                             <div class="col-span-1 text-right">
                                 <button type="button" @click="removeItem(index)" x-show="items.length > 1" class="text-red-400 hover:text-red-600">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -290,21 +290,21 @@
                     </template>
                 </div>
 
-                <div class="flex justify-end mt-3 pt-3 border-t border-gray-100">
+                <div class="flex justify-end mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50">
                     <div class="text-sm text-gray-700 space-y-1 text-right">
                         <div>Zwischensumme: <span class="font-mono" x-text="subtotal().toFixed(2)"></span></div>
                         <template x-if="vatRate > 0">
                             <div>MWST <span x-text="vatRate"></span>%: <span class="font-mono" x-text="vatAmount().toFixed(2)"></span></div>
                         </template>
-                        <div class="font-medium text-gray-900">Total: <span class="font-mono font-bold" x-text="total().toFixed(2)"></span></div>
+                        <div class="font-medium text-gray-900 dark:text-gray-100">Total: <span class="font-mono font-bold" x-text="total().toFixed(2)"></span></div>
                     </div>
                 </div>
             </div>
 
             {{-- Notizen --}}
-            <div class="border-t border-gray-200 pt-6">
-                <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
-                <textarea name="notes" id="notes" rows="2" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('notes', $invoice->notes) }}</textarea>
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notizen</label>
+                <textarea name="notes" id="notes" rows="2" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('notes', $invoice->notes) }}</textarea>
             </div>
         </div>
 
@@ -313,7 +313,7 @@
                 <svg x-show="submitting" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                 <span x-text="submitting ? 'Wird gespeichert…' : 'Speichern'"></span>
             </button>
-            <a href="{{ route('admin.invoices.show', $invoice) }}" x-show="!submitting" class="px-5 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50">Abbrechen</a>
+            <a href="{{ route('admin.invoices.show', $invoice) }}" x-show="!submitting" class="px-5 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Abbrechen</a>
         </div>
     </form>
 
@@ -321,7 +321,7 @@
         <h3 class="text-sm font-medium text-red-800 mb-2">Rechnung löschen</h3>
         <form method="POST" action="{{ route('admin.invoices.destroy', $invoice) }}" onsubmit="return confirm('Rechnung wirklich löschen?')">
             @csrf @method('DELETE')
-            <button type="submit" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700">Löschen</button>
+            <button type="submit" class="px-4 py-2 bg-red-600 dark:bg-red-700 text-white text-sm rounded-lg hover:bg-red-700 dark:hover:bg-red-600">Löschen</button>
         </form>
     </div>
 </div>

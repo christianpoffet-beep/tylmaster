@@ -6,7 +6,7 @@
 <div class="max-w-4xl">
 
     {{-- Header --}}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
         <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div class="flex-1">
                 <div class="flex items-center gap-3">
@@ -24,31 +24,31 @@
 
                 <div class="mt-2 flex flex-wrap items-center gap-2">
                     @if($task->is_completed)
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Erledigt</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300">Erledigt</span>
                     @else
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Offen</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">Offen</span>
                     @endif
 
                     @if($task->priority === 'high')
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Hoch</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300">Hoch</span>
                     @elseif($task->priority === 'medium')
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">Mittel</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300">Mittel</span>
                     @elseif($task->priority === 'low')
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">Tief</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">Tief</span>
                     @endif
 
                     @if($task->isOverdue())
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Überfällig</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300">Überfällig</span>
                     @endif
                 </div>
             </div>
 
             <div class="flex gap-2">
-                <a href="{{ route('admin.tasks.edit', $task) }}" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700">Bearbeiten</a>
+                <a href="{{ route('admin.tasks.edit', $task) }}" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Bearbeiten</a>
                 <form method="POST" action="{{ route('admin.tasks.destroy', $task) }}" onsubmit="return confirm('Aufgabe wirklich löschen?')">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700">Löschen</button>
+                    <button type="submit" class="px-4 py-2 bg-red-600 dark:bg-red-700 text-white text-sm rounded-lg hover:bg-red-700 dark:hover:bg-red-600">Löschen</button>
                 </form>
             </div>
         </div>
@@ -56,27 +56,27 @@
         {{-- Details --}}
         <dl class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div>
-                <dt class="text-gray-500">Fällig am</dt>
+                <dt class="text-gray-500 dark:text-gray-400">Fällig am</dt>
                 <dd class="mt-1 {{ $task->isOverdue() ? 'text-red-600 font-medium' : 'text-gray-900' }}">{{ $task->due_date?->format('d.m.Y') ?? '-' }}</dd>
             </div>
             <div>
-                <dt class="text-gray-500">Hauptprojekt</dt>
-                <dd class="mt-1 text-gray-900">
+                <dt class="text-gray-500 dark:text-gray-400">Hauptprojekt</dt>
+                <dd class="mt-1 text-gray-900 dark:text-gray-100">
                     @if($task->project)
-                        <a href="{{ route('admin.projects.show', $task->project) }}" class="text-blue-600 hover:text-blue-800">{{ $task->project->name }}</a>
+                        <a href="{{ route('admin.projects.show', $task->project) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $task->project->name }}</a>
                     @else - @endif
                 </dd>
             </div>
             <div>
-                <dt class="text-gray-500">Erstellt am</dt>
-                <dd class="mt-1 text-gray-900">{{ $task->created_at->format('d.m.Y H:i') }}</dd>
+                <dt class="text-gray-500 dark:text-gray-400">Erstellt am</dt>
+                <dd class="mt-1 text-gray-900 dark:text-gray-100">{{ $task->created_at->format('d.m.Y H:i') }}</dd>
             </div>
         </dl>
 
         @if($task->description)
-            <div class="mt-4 pt-4 border-t border-gray-200">
-                <h3 class="text-sm font-semibold text-gray-700 mb-1">Beschreibung</h3>
-                <p class="text-sm text-gray-600 whitespace-pre-line">{{ $task->description }}</p>
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Beschreibung</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $task->description }}</p>
             </div>
         @endif
     </div>
@@ -99,7 +99,7 @@
                         <span class="inline-flex items-center justify-center w-8 h-8 rounded bg-gray-200 text-[10px] font-bold text-gray-500 flex-shrink-0">{{ $doc->file_extension }}</span>
                         <div class="min-w-0">
                             @if($docPreviewable)
-                                <button type="button" class="text-sm font-medium text-blue-600 hover:text-blue-800 text-left truncate block"
+                                <button type="button" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-left truncate block"
                                     @click="$dispatch('open-doc-viewer', {
                                         url: '{{ route('admin.documents.preview', $doc) }}',
                                         title: '{{ e($doc->title) }}',
@@ -107,7 +107,7 @@
                                         downloadUrl: '{{ route('admin.documents.download', $doc) }}'
                                     })">{{ $doc->title }}</button>
                             @else
-                                <a href="{{ route('admin.documents.download', $doc) }}" class="text-sm font-medium text-blue-600 hover:text-blue-800 truncate block">{{ $doc->title }}</a>
+                                <a href="{{ route('admin.documents.download', $doc) }}" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 truncate block">{{ $doc->title }}</a>
                             @endif
                             <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 mt-0.5">
                                 <span>{{ $doc->created_at->format('d.m.Y H:i') }}</span>
@@ -152,7 +152,7 @@
         @if($task->contacts->count())
         <x-admin.collapsible-card title="Kontakte" :count="$task->contacts->count()">
             @foreach($task->contacts as $contact)
-                <a href="{{ route('admin.contacts.show', $contact) }}" class="block text-sm text-blue-600 hover:text-blue-800 py-1">{{ $contact->full_name }}</a>
+                <a href="{{ route('admin.contacts.show', $contact) }}" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-1">{{ $contact->full_name }}</a>
             @endforeach
         </x-admin.collapsible-card>
         @endif
@@ -160,7 +160,7 @@
         @if($task->contracts->count())
         <x-admin.collapsible-card title="Verträge" :count="$task->contracts->count()">
             @foreach($task->contracts as $contract)
-                <a href="{{ route('admin.contracts.show', $contract) }}" class="block text-sm text-blue-600 hover:text-blue-800 py-1">{{ $contract->title }}</a>
+                <a href="{{ route('admin.contracts.show', $contract) }}" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-1">{{ $contract->title }}</a>
             @endforeach
         </x-admin.collapsible-card>
         @endif
@@ -168,7 +168,7 @@
         @if($task->tracks->count())
         <x-admin.collapsible-card title="Tracks" :count="$task->tracks->count()">
             @foreach($task->tracks as $track)
-                <a href="{{ route('admin.tracks.show', $track) }}" class="block text-sm text-blue-600 hover:text-blue-800 py-1">{{ $track->title }}</a>
+                <a href="{{ route('admin.tracks.show', $track) }}" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-1">{{ $track->title }}</a>
             @endforeach
         </x-admin.collapsible-card>
         @endif
@@ -176,7 +176,7 @@
         @if($task->releases->count())
         <x-admin.collapsible-card title="Releases" :count="$task->releases->count()">
             @foreach($task->releases as $release)
-                <a href="{{ route('admin.releases.show', $release) }}" class="block text-sm text-blue-600 hover:text-blue-800 py-1">{{ $release->title }}</a>
+                <a href="{{ route('admin.releases.show', $release) }}" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-1">{{ $release->title }}</a>
             @endforeach
         </x-admin.collapsible-card>
         @endif
@@ -184,7 +184,7 @@
         @if($task->projects->count())
         <x-admin.collapsible-card title="Projekte" :count="$task->projects->count()">
             @foreach($task->projects as $project)
-                <a href="{{ route('admin.projects.show', $project) }}" class="block text-sm text-blue-600 hover:text-blue-800 py-1">{{ $project->name }}</a>
+                <a href="{{ route('admin.projects.show', $project) }}" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-1">{{ $project->name }}</a>
             @endforeach
         </x-admin.collapsible-card>
         @endif
@@ -192,14 +192,14 @@
         @if($task->submissions->count())
         <x-admin.collapsible-card title="Submissions" :count="$task->submissions->count()">
             @foreach($task->submissions as $submission)
-                <a href="{{ route('admin.submissions.show', $submission) }}" class="block text-sm text-blue-600 hover:text-blue-800 py-1">{{ $submission->artist_name }}</a>
+                <a href="{{ route('admin.submissions.show', $submission) }}" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-1">{{ $submission->artist_name }}</a>
             @endforeach
         </x-admin.collapsible-card>
         @endif
     </div>
 
     <div class="mt-4">
-        <a href="{{ route('admin.tasks.index') }}" class="text-sm text-gray-500 hover:text-gray-700">&larr; Zurück zur Übersicht</a>
+        <a href="{{ route('admin.tasks.index') }}" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-300">&larr; Zurück zur Übersicht</a>
     </div>
 </div>
 @endsection

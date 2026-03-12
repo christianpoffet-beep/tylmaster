@@ -1,11 +1,11 @@
 @props(['name', 'id' => null, 'value' => '', 'label' => null, 'required' => false])
 
 @if($label)
-    <label for="{{ $id ?? $name }}" class="block text-sm font-medium text-gray-700 mb-1">{{ $label }}</label>
+    <label for="{{ $id ?? $name }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $label }}</label>
 @endif
 
 <select name="{{ $name }}" id="{{ $id ?? $name }}"
-    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
     {{ $required ? 'required' : '' }}>
     <option value="">— Bitte wählen —</option>
     <optgroup label="Häufig">

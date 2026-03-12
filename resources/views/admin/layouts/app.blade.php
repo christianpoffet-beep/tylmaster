@@ -10,11 +10,21 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+    <!-- Dark mode (before render to prevent flash) -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'system';
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body class="bg-gray-100 font-sans antialiased">
+<body class="bg-gray-100 dark:bg-gray-950 font-sans antialiased">
     <div x-data="{
         sidebarOpen: false,
         collapsed: localStorage.getItem('sidebar-collapsed') === 'true',
@@ -287,21 +297,21 @@
                     </div>
                 </div>
 
-                {{-- Benutzerverwaltung --}}
+                {{-- Einstellungen --}}
                 @php
-                    $userAdminActive = request()->routeIs('admin.help') || request()->routeIs('admin.changelog') || request()->routeIs('admin.activity-logs.*');
+                    $einstellungenActive = request()->routeIs('admin.settings.*') || request()->routeIs('admin.help') || request()->routeIs('admin.changelog') || request()->routeIs('admin.activity-logs.*');
 
-                    $userAdminItems = [
-                        ['route' => 'admin.help', 'label' => 'Benutzeranleitung', 'match' => 'admin.help', 'icon' => 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
-                        ['route' => 'admin.changelog', 'label' => 'Change Log', 'match' => 'admin.changelog', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'],
-                        ['route' => 'admin.activity-logs.index', 'label' => 'Logfile', 'match' => 'admin.activity-logs.*', 'icon' => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+                    $einstellungenItems = [
+                        ['route' => 'admin.settings.profile', 'label' => 'Profil', 'match' => 'admin.settings.profile', 'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
+                        ['route' => 'admin.settings.appearance', 'label' => 'Darstellung', 'match' => 'admin.settings.appearance', 'icon' => 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z'],
+                        ['route' => 'admin.settings.system', 'label' => 'System', 'match' => 'admin.settings.system||admin.help||admin.changelog||admin.activity-logs.*', 'icon' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z'],
                     ];
                 @endphp
                 <div class="pt-3 mt-3 border-t border-gray-700">
-                    <p x-show="!collapsed || sidebarOpen" x-cloak class="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">Benutzerverwaltung</p>
+                    <p x-show="!collapsed || sidebarOpen" x-cloak class="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">Einstellungen</p>
 
                     <div class="space-y-0.5">
-                        @foreach($userAdminItems as $item)
+                        @foreach($einstellungenItems as $item)
                             @php
                                 $matches = collect(explode('||', $item['match']))->contains(fn($p) => request()->routeIs($p));
                             @endphp
@@ -317,19 +327,6 @@
                                 </span>
                             </a>
                         @endforeach
-
-                        {{-- Passwort ändern (external link) --}}
-                        <a href="{{ url('/profile') }}"
-                           class="group relative flex items-center text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white"
-                           :class="collapsed && !sidebarOpen ? 'justify-center p-1.5 rounded' : 'px-3 py-2 rounded-lg'">
-                            <svg class="w-5 h-5 flex-shrink-0" :class="collapsed && !sidebarOpen ? '' : 'mr-3'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-                            </svg>
-                            <span x-show="!collapsed || sidebarOpen" x-cloak>Passwort ändern</span>
-                            <span :class="collapsed && !sidebarOpen ? 'absolute left-full ml-3 px-2.5 py-1.5 rounded-md bg-gray-900 text-white text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50 shadow-lg ring-1 ring-gray-700' : 'hidden'">
-                                Passwort ändern
-                            </span>
-                        </a>
                     </div>
                 </div>
             </nav>
@@ -369,27 +366,27 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Top bar -->
-            <header class="bg-white shadow-sm border-b border-gray-200">
+            <header class="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
                 <div class="flex items-center justify-between px-4 py-3 sm:px-6">
-                    <button @click="sidebarOpen = true" class="lg:hidden text-gray-500 hover:text-gray-700 focus:outline-none">
+                    <button @click="sidebarOpen = true" class="lg:hidden text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
                     </button>
-                    <h1 class="text-lg font-semibold text-gray-800">@yield('title', 'Dashboard')</h1>
+                    <h1 class="text-lg font-semibold text-gray-800 dark:text-gray-100">@yield('title', 'Dashboard')</h1>
                     <div></div>
                 </div>
             </header>
 
             <!-- Flash messages -->
             @if(session('success'))
-                <div class="mx-4 sm:mx-6 mt-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                <div class="mx-4 sm:mx-6 mt-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg">
                     {{ session('success') }}
                 </div>
             @endif
 
             @if(session('error'))
-                <div class="mx-4 sm:mx-6 mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                <div class="mx-4 sm:mx-6 mt-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
                     {{ session('error') }}
                 </div>
             @endif

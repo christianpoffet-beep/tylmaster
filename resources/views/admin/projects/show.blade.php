@@ -5,38 +5,38 @@
 @section('content')
 <div class="max-w-4xl">
     <!-- Project Header -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex justify-between items-start mb-6">
             <div>
-                <h2 class="text-xl font-bold text-gray-900">{{ $project->name }}</h2>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ $project->name }}</h2>
                 <div class="mt-2 flex flex-wrap gap-1.5">
                     @php
                         $typeLabels = $projectTypes->pluck('name', 'slug')->toArray();
                         $typeColors = $projectTypes->pluck('color', 'slug')->toArray();
                     @endphp
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $typeColors[$project->type] ?? 'bg-gray-100 text-gray-600' }}">{{ $typeLabels[$project->type] ?? $project->type }}</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $typeColors[$project->type] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300' }}">{{ $typeLabels[$project->type] ?? $project->type }}</span>
                     @switch($project->status)
                         @case('planned')
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Geplant</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">Geplant</span>
                             @break
                         @case('in_progress')
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">In Arbeit</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300">In Arbeit</span>
                             @break
                         @case('completed')
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Abgeschlossen</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300">Abgeschlossen</span>
                             @break
                         @case('paused')
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">Pausiert</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">Pausiert</span>
                             @break
                     @endswitch
                 </div>
             </div>
             <div class="flex gap-2">
-                <a href="{{ route('admin.projects.edit', $project) }}" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">Bearbeiten</a>
+                <a href="{{ route('admin.projects.edit', $project) }}" class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600">Bearbeiten</a>
                 <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" onsubmit="return confirm('Projekt wirklich löschen?')">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700">Löschen</button>
+                    <button type="submit" class="px-4 py-2 bg-red-600 dark:bg-red-700 text-white text-sm rounded-lg hover:bg-red-700 dark:hover:bg-red-600">Löschen</button>
                 </form>
             </div>
         </div>
@@ -51,19 +51,19 @@
         @if($project->genres->count())
         <div class="mb-4 flex flex-wrap gap-1.5">
             @foreach($project->genres as $genre)
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">{{ $genre->name }}</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">{{ $genre->name }}</span>
             @endforeach
         </div>
         @endif
 
         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
             <div>
-                <dt class="text-sm font-medium text-gray-500">Deadline</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ $project->deadline ? $project->deadline->format('d.m.Y') : '-' }}</dd>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Deadline</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $project->deadline ? $project->deadline->format('d.m.Y') : '-' }}</dd>
             </div>
             <div>
-                <dt class="text-sm font-medium text-gray-500">Erstellt am</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ $project->created_at->format('d.m.Y') }}</dd>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Erstellt am</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $project->created_at->format('d.m.Y') }}</dd>
             </div>
         </dl>
     </div>
@@ -73,7 +73,7 @@
         <x-admin.collapsible-card title="Kontakte" :count="$project->contacts->count()" class="mt-6">
             <div class="flex flex-wrap gap-2">
                 @foreach($project->contacts as $contact)
-                    <a href="{{ route('admin.contacts.show', $contact) }}" class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700 hover:bg-gray-200">{{ $contact->full_name }}</a>
+                    <a href="{{ route('admin.contacts.show', $contact) }}" class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">{{ $contact->full_name }}</a>
                 @endforeach
             </div>
         </x-admin.collapsible-card>
@@ -83,14 +83,14 @@
     @if($project->organizations->count())
         @php
             $orgTypeLabels = ['band' => 'Band', 'label' => 'Label', 'publishing' => 'Publishing', 'venue' => 'Location/Venue', 'event_festival' => 'Veranstalter/Event/Festival', 'media' => 'Media', 'oma' => 'OMA-Kontakt'];
-            $orgTypeColors = ['band' => 'bg-purple-100 text-purple-700', 'label' => 'bg-blue-100 text-blue-700', 'publishing' => 'bg-indigo-100 text-indigo-700', 'venue' => 'bg-green-100 text-green-700', 'event_festival' => 'bg-yellow-100 text-yellow-700', 'media' => 'bg-pink-100 text-pink-700', 'oma' => 'bg-gray-100 text-gray-600'];
+            $orgTypeColors = ['band' => 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300', 'label' => 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300', 'publishing' => 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300', 'venue' => 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300', 'event_festival' => 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300', 'media' => 'bg-pink-100 dark:bg-pink-900/50 text-pink-700 dark:text-pink-300', 'oma' => 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'];
         @endphp
         <x-admin.collapsible-card title="Organisationen" :count="$project->organizations->count()" class="mt-6">
             <div class="space-y-1">
                 @foreach($project->organizations as $org)
                     <div class="flex items-center gap-2 py-1">
-                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium {{ $orgTypeColors[$org->type] ?? 'bg-gray-100 text-gray-600' }}">{{ $orgTypeLabels[$org->type] ?? $org->type }}</span>
-                        <a href="{{ route('admin.organizations.show', $org) }}" class="text-sm text-blue-600 hover:text-blue-800">{{ $org->primary_name }}</a>
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium {{ $orgTypeColors[$org->type] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300' }}">{{ $orgTypeLabels[$org->type] ?? $org->type }}</span>
+                        <a href="{{ route('admin.organizations.show', $org) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $org->primary_name }}</a>
                     </div>
                 @endforeach
             </div>
@@ -103,8 +103,8 @@
             <div class="space-y-2">
                 @foreach($project->contracts as $contract)
                     <div class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                        <a href="{{ route('admin.contracts.show', $contract) }}" class="text-sm font-medium text-gray-900 hover:text-blue-600">{{ $contract->title }}</a>
-                        <span class="text-sm text-gray-500">{{ $contract->status ?? '' }}</span>
+                        <a href="{{ route('admin.contracts.show', $contract) }}" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $contract->title }}</a>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">{{ $contract->status ?? '' }}</span>
                     </div>
                 @endforeach
             </div>
@@ -117,8 +117,8 @@
             <div class="space-y-2">
                 @foreach($project->tracks as $track)
                     <div class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                        <a href="{{ route('admin.tracks.show', $track) }}" class="text-sm font-medium text-gray-900 hover:text-blue-600">{{ $track->title }}</a>
-                        <span class="text-sm text-gray-500">{{ $track->formatted_duration ?? '' }}</span>
+                        <a href="{{ route('admin.tracks.show', $track) }}" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $track->title }}</a>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">{{ $track->formatted_duration ?? '' }}</span>
                     </div>
                 @endforeach
             </div>
@@ -156,7 +156,7 @@
                 @endforeach
             </div>
         @else
-            <p class="text-sm text-gray-500">Keine Artworks vorhanden.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Keine Artworks vorhanden.</p>
         @endif
     </x-admin.collapsible-card>
     @endif
@@ -177,10 +177,10 @@
                                     @endif
                                 </button>
                             </form>
-                            <a href="{{ route('admin.tasks.show', $task) }}" class="text-sm {{ $task->is_completed ? 'line-through text-gray-400' : 'text-gray-900 hover:text-blue-600' }}">{{ $task->title }}</a>
+                            <a href="{{ route('admin.tasks.show', $task) }}" class="text-sm {{ $task->is_completed ? 'line-through text-gray-400' : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400' }}">{{ $task->title }}</a>
                         </div>
                         @if($task->due_date)
-                            <span class="text-xs text-gray-500">{{ $task->due_date->format('d.m.Y') }}</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">{{ $task->due_date->format('d.m.Y') }}</span>
                         @endif
                     </div>
                 @endforeach
@@ -192,15 +192,15 @@
         <!-- Add Task Form -->
         <form method="POST" action="{{ route('admin.projects.tasks.store', $project) }}" class="flex gap-2">
             @csrf
-            <input type="text" name="title" placeholder="Neue Aufgabe hinzufügen..." required class="flex-1 rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-            <input type="date" name="due_date" class="rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-            <button type="submit" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700 whitespace-nowrap">Hinzufügen</button>
+            <input type="text" name="title" placeholder="Neue Aufgabe hinzufügen..." required class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            <input type="date" name="due_date" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500 whitespace-nowrap">Hinzufügen</button>
         </form>
         @error('title') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </x-admin.collapsible-card>
 
     <div class="mt-4">
-        <a href="{{ route('admin.projects.index') }}" class="text-sm text-gray-500 hover:text-gray-700">&larr; Zurück zur Übersicht</a>
+        <a href="{{ route('admin.projects.index') }}" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-300">&larr; Zurück zur Übersicht</a>
     </div>
 </div>
 @endsection

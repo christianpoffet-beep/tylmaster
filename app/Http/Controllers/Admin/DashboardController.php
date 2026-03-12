@@ -24,9 +24,8 @@ class DashboardController extends Controller
         ];
 
         $recentContacts = Contact::latest()->take(5)->get();
-        $expiringContracts = Contract::where('status', 'active')
-            ->where('end_date', '<=', now()->addDays(30))
-            ->where('end_date', '>=', now())
+        $activeProjects = Project::whereIn('status', ['planned', 'in_progress'])
+            ->orderBy('deadline')
             ->get();
         $overdueInvoices = Invoice::where('status', 'open')
             ->where('due_date', '<', now())
@@ -41,23 +40,24 @@ class DashboardController extends Controller
             ->get();
 
         // Upcoming birthdays (next 21 days)
-        $today = now();
+        $today = now()->startOfDay();
+        $limit = $today->copy()->addDays(21);
         $upcomingBirthdays = Contact::whereNotNull('birth_date')
             ->whereNull('death_date')
             ->get()
             ->map(function ($contact) use ($today) {
-                $birthday = $contact->birth_date->copy()->year($today->year);
-                if ($birthday->lt($today->startOfDay())) {
+                $birthday = $contact->birth_date->copy()->year($today->year)->startOfDay();
+                if ($birthday->lt($today)) {
                     $birthday->addYear();
                 }
                 $contact->next_birthday = $birthday;
                 $contact->turns_age = $birthday->year - $contact->birth_date->year;
                 return $contact;
             })
-            ->filter(fn ($c) => $c->next_birthday->diffInDays($today) <= 21)
+            ->filter(fn ($c) => $c->next_birthday->between($today, $limit))
             ->sortBy('next_birthday')
             ->values();
 
-        return view('admin.dashboard', compact('stats', 'recentContacts', 'expiringContracts', 'overdueInvoices', 'upcomingTasks', 'upcomingBirthdays'));
+        return view('admin.dashboard', compact('stats', 'recentContacts', 'activeProjects', 'overdueInvoices', 'upcomingTasks', 'upcomingBirthdays'));
     }
 }

@@ -5,16 +5,16 @@
 @php
     $typeLabels = $contractTypes->pluck('name', 'slug')->toArray();
     $typeColors = $contractTypes->pluck('color', 'slug')->toArray();
-    $statusColors = ['draft' => 'bg-gray-100 text-gray-600', 'active' => 'bg-green-100 text-green-700', 'expired' => 'bg-red-100 text-red-700', 'terminated' => 'bg-orange-100 text-orange-700'];
+    $statusColors = ['draft' => 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300', 'active' => 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300', 'expired' => 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300', 'terminated' => 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300'];
     $statusLabels = ['draft' => 'Entwurf', 'active' => 'Aktiv', 'expired' => 'Ausgelaufen', 'terminated' => 'Gekündigt'];
 @endphp
 
 @section('content')
 <div class="flex flex-col lg:flex-row gap-6">
     <div class="flex-1">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex justify-between items-start mb-1">
-                <h2 class="text-xl font-bold text-gray-900">{{ $contract->title }}</h2>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ $contract->title }}</h2>
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $statusColors[$contract->status] ?? '' }}">{{ $statusLabels[$contract->status] ?? $contract->status }}</span>
             </div>
             @if($contract->contract_number)
@@ -24,25 +24,25 @@
             @endif
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div><span class="text-gray-500">Typ:</span> <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ml-1 {{ $typeColors[$contract->type] ?? 'bg-gray-100 text-gray-600' }}">{{ $typeLabels[$contract->type] ?? ucfirst($contract->type) }}</span></div>
-                <div><span class="text-gray-500">Laufzeit:</span> <span class="text-gray-900 ml-1">{{ $contract->start_date?->format('d.m.Y') ?? '-' }} — {{ $contract->end_date?->format('d.m.Y') ?? '-' }}</span></div>
+                <div><span class="text-gray-500 dark:text-gray-400">Typ:</span> <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ml-1 {{ $typeColors[$contract->type] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300' }}">{{ $typeLabels[$contract->type] ?? ucfirst($contract->type) }}</span></div>
+                <div><span class="text-gray-500 dark:text-gray-400">Laufzeit:</span> <span class="text-gray-900 ml-1">{{ $contract->start_date?->format('d.m.Y') ?? '-' }} — {{ $contract->end_date?->format('d.m.Y') ?? '-' }}</span></div>
             </div>
 
             @if($contract->parties->count())
-            <div class="mt-4 pt-4 border-t border-gray-200">
-                <h3 class="text-sm font-semibold text-gray-700 mb-2">Vertragsparteien</h3>
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Vertragsparteien</h3>
                 <div class="space-y-2">
                     @foreach($contract->parties as $party)
                         <div class="flex items-center justify-between py-1.5">
                             <div class="text-sm">
                                 @if($party->organization)
-                                    <a href="{{ route('admin.organizations.show', $party->organization) }}" class="text-blue-600 hover:text-blue-800">{{ $party->organization->primary_name }}</a>
+                                    <a href="{{ route('admin.organizations.show', $party->organization) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $party->organization->primary_name }}</a>
                                     @if($party->contact)
                                         <span class="text-gray-400 mx-1">&middot;</span>
-                                        <a href="{{ route('admin.contacts.show', $party->contact) }}" class="text-blue-600 hover:text-blue-800">{{ $party->contact->full_name }}</a>
+                                        <a href="{{ route('admin.contacts.show', $party->contact) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $party->contact->full_name }}</a>
                                     @endif
                                 @elseif($party->contact)
-                                    <a href="{{ route('admin.contacts.show', $party->contact) }}" class="text-blue-600 hover:text-blue-800">{{ $party->contact->full_name }}</a>
+                                    <a href="{{ route('admin.contacts.show', $party->contact) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $party->contact->full_name }}</a>
                                 @endif
                             </div>
                             <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{{ number_format($party->share, 2) }}%</span>
@@ -53,15 +53,15 @@
             @endif
 
             @if($contract->terms)
-            <div class="mt-4 pt-4 border-t border-gray-200">
-                <h3 class="text-sm font-semibold text-gray-700 mb-1">Bedingungen / Notizen</h3>
-                <p class="text-sm text-gray-600 whitespace-pre-line">{{ $contract->terms }}</p>
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Bedingungen / Notizen</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $contract->terms }}</p>
             </div>
             @endif
         </div>
 
         <div class="mt-4 flex gap-3">
-            <a href="{{ route('admin.contracts.edit', $contract) }}" class="px-4 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700">Bearbeiten</a>
+            <a href="{{ route('admin.contracts.edit', $contract) }}" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Bearbeiten</a>
         </div>
     </div>
 
@@ -70,7 +70,7 @@
         @if($contract->projects->count())
         <x-admin.collapsible-card title="Projekte" :count="$contract->projects->count()">
             @foreach($contract->projects as $project)
-                <a href="{{ route('admin.projects.show', $project) }}" class="block text-sm text-blue-600 hover:text-blue-800 py-1">{{ $project->name }}</a>
+                <a href="{{ route('admin.projects.show', $project) }}" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-1">{{ $project->name }}</a>
             @endforeach
         </x-admin.collapsible-card>
         @endif
@@ -79,7 +79,7 @@
         @if($contract->tracks->count())
         <x-admin.collapsible-card title="Tracks" :count="$contract->tracks->count()">
             @foreach($contract->tracks as $track)
-                <a href="{{ route('admin.tracks.show', $track) }}" class="block text-sm text-blue-600 hover:text-blue-800 py-1">{{ $track->title }}{{ $track->isrc ? ' (' . $track->isrc . ')' : '' }}</a>
+                <a href="{{ route('admin.tracks.show', $track) }}" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-1">{{ $track->title }}{{ $track->isrc ? ' (' . $track->isrc . ')' : '' }}</a>
             @endforeach
         </x-admin.collapsible-card>
         @endif
@@ -88,7 +88,7 @@
         @if($contract->releases->count())
         <x-admin.collapsible-card title="Releases" :count="$contract->releases->count()">
             @foreach($contract->releases as $release)
-                <a href="{{ route('admin.releases.show', $release) }}" class="block text-sm text-blue-600 hover:text-blue-800 py-1">{{ $release->title }}{{ $release->upc ? ' (' . $release->upc . ')' : '' }}</a>
+                <a href="{{ route('admin.releases.show', $release) }}" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-1">{{ $release->title }}{{ $release->upc ? ' (' . $release->upc . ')' : '' }}</a>
             @endforeach
         </x-admin.collapsible-card>
         @endif
@@ -113,7 +113,7 @@
                             @endif
                             <p class="text-xs text-red-400">Gelöscht am {{ $doc->deleted_at->format('d.m.Y H:i') }}</p>
                         @elseif($docPreviewable)
-                            <button type="button" class="text-sm text-blue-600 hover:text-blue-800 text-left truncate block"
+                            <button type="button" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-left truncate block"
                                 @click="$dispatch('open-doc-viewer', {
                                     url: '{{ route('admin.documents.preview', $doc) }}',
                                     title: '{{ e($doc->title) }}',
@@ -121,12 +121,12 @@
                                     downloadUrl: '{{ route('admin.documents.download', $doc) }}'
                                 })">{{ $doc->title }}</button>
                             @if($doc->notes)
-                                <p class="text-xs text-gray-400 truncate">{{ $doc->notes }}</p>
+                                <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ $doc->notes }}</p>
                             @endif
                         @else
-                            <a href="{{ route('admin.documents.download', $doc) }}" class="text-sm text-blue-600 hover:text-blue-800 truncate block">{{ $doc->title }}</a>
+                            <a href="{{ route('admin.documents.download', $doc) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 truncate block">{{ $doc->title }}</a>
                             @if($doc->notes)
-                                <p class="text-xs text-gray-400 truncate">{{ $doc->notes }}</p>
+                                <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ $doc->notes }}</p>
                             @endif
                         @endif
                     </div>
