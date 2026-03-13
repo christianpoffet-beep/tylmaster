@@ -66,11 +66,11 @@
                         :placeholder="debitAccountId ? accounts.find(a => String(a.id) === String(debitAccountId))?.number + ' ' + accounts.find(a => String(a.id) === String(debitAccountId))?.name : 'Konto suchen...'"
                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     <input type="hidden" name="debit_account_id" :value="debitAccountId">
-                    <div x-show="open" class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div x-show="open" class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                         <template x-for="acc in accounts.filter(a => !search || (a.number + ' ' + a.name).toLowerCase().includes(search.toLowerCase()))" :key="acc.id">
                             <button type="button" @click="debitAccountId = acc.id; search = ''; open = false"
-                                class="w-full text-left px-3 py-1.5 text-sm hover:bg-blue-50 flex justify-between"
-                                :class="String(acc.id) === String(debitAccountId) ? 'bg-blue-50 font-medium' : ''">
+                                class="w-full text-left px-3 py-1.5 text-sm hover:bg-blue-50 dark:hover:bg-gray-700/50 flex justify-between"
+                                :class="String(acc.id) === String(debitAccountId) ? 'bg-blue-50 dark:bg-gray-700 font-medium' : ''">
                                 <span x-text="acc.number + ' ' + acc.name"></span>
                                 <span class="text-xs text-gray-400" x-text="acc.type"></span>
                             </button>
@@ -91,11 +91,11 @@
                         :placeholder="creditAccountId ? accounts.find(a => String(a.id) === String(creditAccountId))?.number + ' ' + accounts.find(a => String(a.id) === String(creditAccountId))?.name : 'Konto suchen...'"
                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     <input type="hidden" name="credit_account_id" :value="creditAccountId">
-                    <div x-show="open" class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div x-show="open" class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                         <template x-for="acc in accounts.filter(a => !search || (a.number + ' ' + a.name).toLowerCase().includes(search.toLowerCase()))" :key="acc.id">
                             <button type="button" @click="creditAccountId = acc.id; search = ''; open = false"
-                                class="w-full text-left px-3 py-1.5 text-sm hover:bg-blue-50 flex justify-between"
-                                :class="String(acc.id) === String(creditAccountId) ? 'bg-blue-50 font-medium' : ''">
+                                class="w-full text-left px-3 py-1.5 text-sm hover:bg-blue-50 dark:hover:bg-gray-700/50 flex justify-between"
+                                :class="String(acc.id) === String(creditAccountId) ? 'bg-blue-50 dark:bg-gray-700 font-medium' : ''">
                                 <span x-text="acc.number + ' ' + acc.name"></span>
                                 <span class="text-xs text-gray-400" x-text="acc.type"></span>
                             </button>

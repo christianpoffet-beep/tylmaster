@@ -27,10 +27,10 @@
                 value="{{ $zipValue }}"
                 class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             <div x-show="showSuggestions && suggestions.length > 1" @click.away="showSuggestions = false" x-cloak
-                class="absolute z-20 w-64 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto mt-1">
+                class="absolute z-20 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-40 overflow-y-auto mt-1">
                 <template x-for="s in suggestions" :key="s.zip">
                     <button type="button" @click="selectSuggestion(s)"
-                        class="w-full text-left px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-sm border-b border-gray-100 last:border-0">
+                        class="w-full text-left px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-sm border-b border-gray-100 dark:border-gray-700 last:border-0">
                         <span class="font-medium text-gray-700 dark:text-gray-300" x-text="s.zip"></span>
                         <span class="text-gray-500 dark:text-gray-400" x-text="s.city"></span>
                     </button>
@@ -46,10 +46,10 @@
                 value="{{ $cityValue }}"
                 class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             <div x-show="showCitySuggestions && citySuggestions.length > 0" @click.away="showCitySuggestions = false" x-cloak
-                class="absolute z-20 w-64 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto mt-1">
+                class="absolute z-20 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-40 overflow-y-auto mt-1">
                 <template x-for="s in citySuggestions" :key="s.zip">
                     <button type="button" @click="selectSuggestion(s); showCitySuggestions = false"
-                        class="w-full text-left px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-sm border-b border-gray-100 last:border-0">
+                        class="w-full text-left px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-sm border-b border-gray-100 dark:border-gray-700 last:border-0">
                         <span class="font-medium text-gray-700 dark:text-gray-300" x-text="s.zip"></span>
                         <span class="text-gray-500 dark:text-gray-400" x-text="s.city"></span>
                     </button>

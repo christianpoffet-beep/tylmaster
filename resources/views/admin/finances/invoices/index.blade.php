@@ -25,10 +25,10 @@
         @if($accountings->count())
             <div x-data="{ open: false, selected: '' }" class="relative">
                 <button type="button" @click="open = !open" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 whitespace-nowrap">+ Neue Buchung</button>
-                <div x-show="open" @click.outside="open = false" x-transition class="absolute right-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-20 p-3">
-                    <p class="text-xs text-gray-500 mb-2">Buchhaltung wählen:</p>
+                <div x-show="open" @click.outside="open = false" x-transition class="absolute right-0 mt-1 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-20 p-3">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Buchhaltung wählen:</p>
                     @foreach($accountings as $acc)
-                        <a href="{{ route('admin.bookings.create', $acc) }}" class="block px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 rounded">{{ $acc->name }}</a>
+                        <a href="{{ route('admin.bookings.create', $acc) }}" class="block px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700/50 rounded">{{ $acc->name }}</a>
                     @endforeach
                 </div>
             </div>
