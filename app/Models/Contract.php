@@ -11,12 +11,59 @@ class Contract extends Model
 
     protected $fillable = [
         'contract_number', 'title', 'type', 'status', 'start_date', 'end_date', 'terms',
+        'has_zession', 'zession_amount', 'zession_currency', 'zession_notes',
+        'territory', 'rights', 'rights_label_a', 'rights_label_b',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'has_zession' => 'boolean',
+        'zession_amount' => 'decimal:2',
+        'territory' => 'array',
+        'rights' => 'array',
     ];
+
+    /**
+     * Territory presets for quick selection.
+     */
+    public const TERRITORY_PRESETS = [
+        'world' => ['label' => 'Weltweit', 'countries' => ['ALL']],
+        'europe' => ['label' => 'Europa', 'countries' => ['AL','AD','AT','BY','BE','BA','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IS','IE','IT','XK','LV','LI','LT','LU','MT','MD','MC','ME','NL','MK','NO','PL','PT','RO','RU','SM','RS','SK','SI','ES','SE','CH','UA','GB','VA']],
+        'usa' => ['label' => 'USA', 'countries' => ['US']],
+        'gsa' => ['label' => 'GSA (DACH)', 'countries' => ['DE','AT','CH']],
+        'uk' => ['label' => 'UK', 'countries' => ['GB']],
+        'nordics' => ['label' => 'Nordics', 'countries' => ['DK','FI','IS','NO','SE']],
+        'benelux' => ['label' => 'Benelux', 'countries' => ['BE','NL','LU']],
+    ];
+
+    /**
+     * Get human-readable territory display.
+     */
+    public function getTerritoryDisplayAttribute(): string
+    {
+        if (empty($this->territory)) {
+            return '';
+        }
+
+        if (in_array('ALL', $this->territory)) {
+            return 'Weltweit';
+        }
+
+        // Check if it matches a preset
+        foreach (self::TERRITORY_PRESETS as $key => $preset) {
+            if ($preset['countries'] === ['ALL']) continue;
+            $presetCountries = $preset['countries'];
+            sort($presetCountries);
+            $territory = $this->territory;
+            sort($territory);
+            if ($presetCountries === $territory) {
+                return $preset['label'];
+            }
+        }
+
+        return count($this->territory) . ' Länder';
+    }
 
     public function parties()
     {

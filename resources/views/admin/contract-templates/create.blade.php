@@ -104,8 +104,8 @@
                         </div>
 
                         <div class="mt-3">
-                            <label class="block text-xs text-gray-500 mb-1">Anteil (%)</label>
-                            <input type="number" :name="'parties['+index+'][share]'" x-model="party.share" step="0.01" min="0" max="100" required class="w-32 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            <label class="block text-xs text-gray-500 mb-1">Genereller Anteil (%)</label>
+                            <input type="number" :name="'parties['+index+'][share]'" x-model="party.share" @input="balanceShare(index)" step="0.01" min="0" max="100" required class="w-32 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
                     </div>
                 </template>
@@ -115,6 +115,12 @@
                     <span :class="Math.abs(totalShare - 100) < 0.01 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'" x-text="totalShare.toFixed(2) + '%'"></span>
                 </div>
             </div>
+
+            @include('admin.partials.rights-editor', [
+                'rightsLabelA' => old('rights_label_a', ''),
+                'rightsLabelB' => old('rights_label_b', ''),
+                'rightsData' => old('rights', []),
+            ])
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <label for="default_terms" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Standard-Bedingungen / Vertragstext</label>
@@ -134,9 +140,28 @@
 function templateForm() {
     return {
         orgContactsMap: @json($orgContactsMap),
+        orgNames: @json($organizations->pluck('primary_name', 'id')),
+        contactNames: @json($contacts->mapWithKeys(fn($c) => [$c->id => $c->full_name])),
         parties: @json($defaultParties),
         get totalShare() {
             return this.parties.reduce((sum, p) => sum + (parseFloat(p.share) || 0), 0);
+        },
+        init() {
+            this.$watch('parties', () => this.dispatchPartyNames());
+            this.$nextTick(() => this.dispatchPartyNames());
+        },
+        dispatchPartyNames() {
+            const names = this.parties.slice(0, 2).map(p => {
+                if (p.type === 'organization' && p.organization_id) {
+                    return this.orgNames[p.organization_id] || '';
+                } else if (p.type === 'contact' && p.contact_id) {
+                    return this.contactNames[p.contact_id] || '';
+                }
+                return '';
+            });
+            window.dispatchEvent(new CustomEvent('party-names-updated', {
+                detail: { party1: names[0] || '', party2: names[1] || '' }
+            }));
         },
         getOrgContacts(orgId) {
             return (orgId && this.orgContactsMap[orgId]) ? this.orgContactsMap[orgId] : [];
@@ -147,6 +172,12 @@ function templateForm() {
             const ids = contacts.map(c => String(c.id));
             if (!ids.includes(String(this.parties[index].contact_id))) {
                 this.parties[index].contact_id = '';
+            }
+        },
+        balanceShare(changedIndex) {
+            if (this.parties.length === 2) {
+                const otherIndex = changedIndex === 0 ? 1 : 0;
+                this.parties[otherIndex].share = Math.max(0, parseFloat((100 - (parseFloat(this.parties[changedIndex].share) || 0)).toFixed(2)));
             }
         },
         addParty() {

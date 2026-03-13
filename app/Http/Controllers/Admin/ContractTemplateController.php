@@ -57,12 +57,19 @@ class ContractTemplateController extends Controller
             'parties.*.organization_id' => 'nullable',
             'parties.*.contact_id' => 'nullable',
             'parties.*.share' => 'required|numeric|min:0|max:100',
+            'rights' => 'nullable|array',
+            'rights.*.label' => 'required|string|max:255',
+            'rights.*.mode' => 'required|in:split,custom',
+            'rights_label_a' => 'nullable|string|max:50',
+            'rights_label_b' => 'nullable|string|max:50',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
         $parties = $request->input('parties', []);
-        // Clean empty parties
         $parties = array_values(array_filter($parties, fn ($p) => !empty($p['organization_id']) || !empty($p['contact_id'])));
+
+        $rights = $request->input('rights', []);
+        $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
 
         ContractTemplate::create([
             'name' => $request->input('name'),
@@ -70,6 +77,9 @@ class ContractTemplateController extends Controller
             'default_status' => $request->input('default_status'),
             'default_terms' => $request->input('default_terms'),
             'default_parties' => !empty($parties) ? $parties : null,
+            'rights' => !empty($rights) ? $rights : null,
+            'rights_label_a' => $request->input('rights_label_a'),
+            'rights_label_b' => $request->input('rights_label_b'),
             'sort_order' => $request->input('sort_order', 0),
         ]);
 
@@ -104,11 +114,19 @@ class ContractTemplateController extends Controller
             'parties.*.organization_id' => 'nullable',
             'parties.*.contact_id' => 'nullable',
             'parties.*.share' => 'required|numeric|min:0|max:100',
+            'rights' => 'nullable|array',
+            'rights.*.label' => 'required|string|max:255',
+            'rights.*.mode' => 'required|in:split,custom',
+            'rights_label_a' => 'nullable|string|max:50',
+            'rights_label_b' => 'nullable|string|max:50',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
         $parties = $request->input('parties', []);
         $parties = array_values(array_filter($parties, fn ($p) => !empty($p['organization_id']) || !empty($p['contact_id'])));
+
+        $rights = $request->input('rights', []);
+        $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
 
         $contractTemplate->update([
             'name' => $request->input('name'),
@@ -116,6 +134,9 @@ class ContractTemplateController extends Controller
             'default_status' => $request->input('default_status'),
             'default_terms' => $request->input('default_terms'),
             'default_parties' => !empty($parties) ? $parties : null,
+            'rights' => !empty($rights) ? $rights : null,
+            'rights_label_a' => $request->input('rights_label_a'),
+            'rights_label_b' => $request->input('rights_label_b'),
             'sort_order' => $request->input('sort_order', 0),
         ]);
 
@@ -135,6 +156,9 @@ class ContractTemplateController extends Controller
             'default_status' => $contractTemplate->default_status,
             'default_terms' => $contractTemplate->default_terms,
             'default_parties' => $contractTemplate->default_parties,
+            'rights' => $contractTemplate->rights,
+            'rights_label_a' => $contractTemplate->rights_label_a,
+            'rights_label_b' => $contractTemplate->rights_label_b,
         ]);
     }
 }

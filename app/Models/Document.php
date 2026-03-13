@@ -12,7 +12,11 @@ class Document extends Model
 
     protected $fillable = [
         'title', 'category', 'file_path', 'file_size', 'mime_type', 'notes',
-        'documentable_id', 'documentable_type',
+        'documentable_id', 'documentable_type', 'is_archived',
+    ];
+
+    protected $casts = [
+        'is_archived' => 'boolean',
     ];
 
     public function documentable()

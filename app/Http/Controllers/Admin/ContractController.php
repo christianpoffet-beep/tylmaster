@@ -13,6 +13,7 @@ use App\Models\Organization;
 use App\Models\Project;
 use App\Models\Track;
 use App\Models\Release;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -69,7 +70,9 @@ class ContractController extends Controller
         $contractTypes = ContractType::orderBy('sort_order')->get();
         $templates = ContractTemplate::orderBy('sort_order')->get();
 
-        return view('admin.contracts.create', compact('contacts', 'organizations', 'projects', 'tracks', 'releases', 'orgContactsMap', 'contractTypes', 'templates'));
+        $territoryPresets = Contract::TERRITORY_PRESETS;
+
+        return view('admin.contracts.create', compact('contacts', 'organizations', 'projects', 'tracks', 'releases', 'orgContactsMap', 'contractTypes', 'templates', 'territoryPresets'));
     }
 
     public function store(Request $request)
@@ -81,11 +84,22 @@ class ContractController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'terms' => 'nullable|string',
+            'has_zession' => 'nullable|boolean',
+            'zession_amount' => 'nullable|numeric|min:0',
+            'zession_currency' => 'nullable|in:CHF,EUR,USD',
+            'zession_notes' => 'nullable|string',
+            'territory' => 'nullable|array',
+            'territory.*' => 'string|size:2',
             'parties' => 'required|array|min:2',
             'parties.*.type' => 'required|in:organization,contact',
             'parties.*.organization_id' => 'nullable|exists:organizations,id',
             'parties.*.contact_id' => 'nullable|exists:contacts,id',
             'parties.*.share' => 'required|numeric|min:0|max:100',
+            'rights' => 'nullable|array',
+            'rights.*.label' => 'required|string|max:255',
+            'rights.*.mode' => 'required|in:split,custom',
+            'rights_label_a' => 'nullable|string|max:50',
+            'rights_label_b' => 'nullable|string|max:50',
             'project_ids' => 'nullable|array',
             'project_ids.*' => 'exists:projects,id',
             'track_ids' => 'nullable|array',
@@ -100,7 +114,23 @@ class ContractController extends Controller
             return back()->withInput()->withErrors(['parties' => 'Die Summe der Anteile muss 100% ergeben (aktuell: ' . number_format($totalShare, 2) . '%).']);
         }
 
+        // Process rights
+        $rights = $request->input('rights', []);
+        $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
+        $validated['rights'] = !empty($rights) ? $rights : null;
+        $validated['rights_label_a'] = $request->input('rights_label_a');
+        $validated['rights_label_b'] = $request->input('rights_label_b');
+
         $validated['contract_number'] = Contract::generateNumber();
+        $validated['has_zession'] = $request->boolean('has_zession');
+        if (!$validated['has_zession']) {
+            $validated['zession_amount'] = null;
+            $validated['zession_notes'] = null;
+        }
+        // Handle territory: 'ALL' for worldwide or array of country codes
+        if ($request->boolean('territory_worldwide')) {
+            $validated['territory'] = ['ALL'];
+        }
         $parties = $validated['parties'];
         unset($validated['parties'], $validated['project_ids'], $validated['track_ids'], $validated['release_ids']);
 
@@ -168,7 +198,9 @@ class ContractController extends Controller
 
         $contractTypes = ContractType::orderBy('sort_order')->get();
 
-        return view('admin.contracts.edit', compact('contract', 'contacts', 'organizations', 'projects', 'tracks', 'releases', 'orgContactsMap', 'partiesData', 'contractTypes'));
+        $territoryPresets = Contract::TERRITORY_PRESETS;
+
+        return view('admin.contracts.edit', compact('contract', 'contacts', 'organizations', 'projects', 'tracks', 'releases', 'orgContactsMap', 'partiesData', 'contractTypes', 'territoryPresets'));
     }
 
     public function update(Request $request, Contract $contract)
@@ -180,11 +212,22 @@ class ContractController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'terms' => 'nullable|string',
+            'has_zession' => 'nullable|boolean',
+            'zession_amount' => 'nullable|numeric|min:0',
+            'zession_currency' => 'nullable|in:CHF,EUR,USD',
+            'zession_notes' => 'nullable|string',
+            'territory' => 'nullable|array',
+            'territory.*' => 'string|size:2',
             'parties' => 'required|array|min:2',
             'parties.*.type' => 'required|in:organization,contact',
             'parties.*.organization_id' => 'nullable|exists:organizations,id',
             'parties.*.contact_id' => 'nullable|exists:contacts,id',
             'parties.*.share' => 'required|numeric|min:0|max:100',
+            'rights' => 'nullable|array',
+            'rights.*.label' => 'required|string|max:255',
+            'rights.*.mode' => 'required|in:split,custom',
+            'rights_label_a' => 'nullable|string|max:50',
+            'rights_label_b' => 'nullable|string|max:50',
             'project_ids' => 'nullable|array',
             'project_ids.*' => 'exists:projects,id',
             'track_ids' => 'nullable|array',
@@ -197,6 +240,22 @@ class ContractController extends Controller
         $totalShare = collect($validated['parties'])->sum('share');
         if (abs($totalShare - 100) > 0.01) {
             return back()->withInput()->withErrors(['parties' => 'Die Summe der Anteile muss 100% ergeben (aktuell: ' . number_format($totalShare, 2) . '%).']);
+        }
+
+        // Process rights
+        $rights = $request->input('rights', []);
+        $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
+        $validated['rights'] = !empty($rights) ? $rights : null;
+        $validated['rights_label_a'] = $request->input('rights_label_a');
+        $validated['rights_label_b'] = $request->input('rights_label_b');
+
+        $validated['has_zession'] = $request->boolean('has_zession');
+        if (!$validated['has_zession']) {
+            $validated['zession_amount'] = null;
+            $validated['zession_notes'] = null;
+        }
+        if ($request->boolean('territory_worldwide')) {
+            $validated['territory'] = ['ALL'];
         }
 
         $parties = $validated['parties'];
@@ -240,9 +299,51 @@ class ContractController extends Controller
             abort(403);
         }
 
+        if ($document->is_archived) {
+            return redirect()->route('admin.contracts.edit', $contract)->with('error', 'Archivierte Dokumente können nicht gelöscht werden.');
+        }
+
         $document->delete();
 
         return redirect()->route('admin.contracts.edit', $contract)->with('success', 'Dokument archiviert.');
+    }
+
+    public function pdf(Request $request, Contract $contract)
+    {
+        $contract->load(['parties.organization', 'parties.contact', 'projects', 'tracks', 'releases']);
+
+        $contractTypes = ContractType::orderBy('sort_order')->get();
+        $typeLabels = $contractTypes->pluck('name', 'slug')->toArray();
+        $statusLabels = ['draft' => 'Entwurf', 'active' => 'Aktiv', 'expired' => 'Ausgelaufen', 'terminated' => 'Gekündigt'];
+
+        $pdf = Pdf::loadView('admin.contracts.pdf', compact('contract', 'typeLabels', 'statusLabels'));
+        $pdf->setPaper('A4', 'portrait');
+
+        $filename = ($contract->contract_number ?? 'Vertrag') . '_' . now()->format('Ymd_His') . '.pdf';
+
+        // Archive modes: 0 = download only, 1 = archive + download, 2 = archive only
+        $archiveMode = (int) $request->input('archive', 0);
+
+        if ($archiveMode >= 1) {
+            $path = 'contracts/archived/' . $filename;
+            Storage::disk('public')->put($path, $pdf->output());
+
+            $contract->documents()->create([
+                'title' => $filename,
+                'category' => 'contract',
+                'file_path' => $path,
+                'file_size' => Storage::disk('public')->size($path),
+                'mime_type' => 'application/pdf',
+                'notes' => 'Archiviertes Vertrags-PDF (generiert am ' . now()->format('d.m.Y H:i') . ')',
+                'is_archived' => true,
+            ]);
+
+            if ($archiveMode === 2) {
+                return redirect()->route('admin.contracts.show', $contract)->with('success', 'PDF wurde archiviert.');
+            }
+        }
+
+        return $pdf->download($filename);
     }
 
     public function search(Request $request)
