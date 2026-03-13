@@ -16,10 +16,10 @@
 
     {{-- Results dropdown --}}
     <div x-show="open && results.length > 0" @click.away="open = false" x-cloak
-        class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
         <template x-for="result in results" :key="result.id">
             <button type="button" @click="addContact(result)"
-                class="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between border-b border-gray-100 last:border-0"
+                class="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 last:border-0"
                 :class="isSelected(result.id) ? 'opacity-50 cursor-not-allowed' : ''"
                 :disabled="isSelected(result.id)">
                 <div>
@@ -31,7 +31,7 @@
     </div>
 
     {{-- No results --}}
-    <div x-show="open && results.length === 0 && query.length >= 1 && !loading" x-cloak class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-3">
+    <div x-show="open && results.length === 0 && query.length >= 1 && !loading" x-cloak class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3">
         <p class="text-sm text-gray-500 dark:text-gray-400">Keine Kontakte gefunden.</p>
     </div>
 
@@ -53,7 +53,7 @@
     </button>
 
     {{-- Inline create form --}}
-    <div x-show="showCreateForm" x-cloak class="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
+    <div x-show="showCreateForm" x-cloak class="mt-2 p-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg space-y-2">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input type="text" x-model="newFirstName" placeholder="Vorname *" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             <input type="text" x-model="newLastName" placeholder="Nachname *" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
@@ -66,7 +66,7 @@
                 <span x-show="creating">Wird erstellt...</span>
             </button>
             <button type="button" @click="showCreateForm = false; newFirstName = ''; newLastName = ''; createError = ''"
-                class="px-3 py-1.5 bg-white text-gray-700 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Abbrechen</button>
+                class="px-3 py-1.5 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500">Abbrechen</button>
         </div>
     </div>
 </div>

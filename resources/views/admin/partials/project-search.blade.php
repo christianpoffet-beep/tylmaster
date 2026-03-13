@@ -15,10 +15,10 @@
 
     {{-- Results dropdown --}}
     <div x-show="open && results.length > 0" @click.away="open = false" x-cloak
-        class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
         <template x-for="result in results" :key="result.id">
             <button type="button" @click="addProject(result)"
-                class="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between border-b border-gray-100 last:border-0"
+                class="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 last:border-0"
                 :class="isSelected(result.id) ? 'opacity-50 cursor-not-allowed' : ''"
                 :disabled="isSelected(result.id)">
                 <span class="text-sm text-gray-900 dark:text-gray-100" x-text="result.name"></span>
@@ -28,7 +28,7 @@
     </div>
 
     {{-- No results --}}
-    <div x-show="open && results.length === 0 && query.length >= 1 && !loading" x-cloak class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-3">
+    <div x-show="open && results.length === 0 && query.length >= 1 && !loading" x-cloak class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3">
         <p class="text-sm text-gray-500 dark:text-gray-400">Keine Projekte gefunden.</p>
     </div>
 

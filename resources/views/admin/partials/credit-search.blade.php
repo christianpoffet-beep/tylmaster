@@ -23,10 +23,10 @@
 
     {{-- Results dropdown --}}
     <div x-show="open && results.length > 0" @click.away="open = false" x-cloak
-        class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
         <template x-for="result in results" :key="result.type + ':' + result.id">
             <button type="button" @click="addCredit(result)"
-                class="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between border-b border-gray-100 last:border-0"
+                class="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 last:border-0"
                 :class="isSelected(result) ? 'opacity-50 cursor-not-allowed' : ''"
                 :disabled="isSelected(result)">
                 <div class="min-w-0">
@@ -42,11 +42,11 @@
 
     {{-- No results + quick create --}}
     <div x-show="open && results.length === 0 && query.length >= 2 && !loading" x-cloak
-        class="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-        <p class="text-sm text-gray-500 mb-2">Keine Ergebnisse gefunden.</p>
+        class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Keine Ergebnisse gefunden.</p>
         <div class="flex gap-2">
             <button type="button" @click="showCreateContact = true; open = false" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">+ Neuer Kontakt</button>
-            <button type="button" @click="showCreateOrg = true; open = false" class="text-sm text-purple-600 hover:text-purple-800">+ Neue Organisation</button>
+            <button type="button" @click="showCreateOrg = true; open = false" class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">+ Neue Organisation</button>
         </div>
     </div>
 
@@ -68,15 +68,15 @@
             <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
             Neuer Kontakt
         </button>
-        <button type="button" @click="showCreateOrg = true" class="inline-flex items-center text-xs text-purple-600 hover:text-purple-800">
+        <button type="button" @click="showCreateOrg = true" class="inline-flex items-center text-xs text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
             <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
             Neue Organisation
         </button>
     </div>
 
     {{-- Inline create contact --}}
-    <div x-show="showCreateContact" x-cloak class="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg space-y-2">
-        <p class="text-xs font-medium text-green-700">Neuer Kontakt</p>
+    <div x-show="showCreateContact" x-cloak class="mt-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg space-y-2">
+        <p class="text-xs font-medium text-green-700 dark:text-green-300">Neuer Kontakt</p>
         <div class="grid grid-cols-2 gap-2">
             <input type="text" x-model="newFirstName" placeholder="Vorname *" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-green-500 focus:ring-green-500">
             <input type="text" x-model="newLastName" placeholder="Nachname *" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-green-500 focus:ring-green-500">
@@ -89,13 +89,13 @@
                 <span x-show="creating">Wird erstellt...</span>
             </button>
             <button type="button" @click="showCreateContact = false; newFirstName = ''; newLastName = ''; createError = ''"
-                class="px-3 py-1.5 bg-white text-gray-700 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Abbrechen</button>
+                class="px-3 py-1.5 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500">Abbrechen</button>
         </div>
     </div>
 
     {{-- Inline create organization --}}
-    <div x-show="showCreateOrg" x-cloak class="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg space-y-2">
-        <p class="text-xs font-medium text-purple-700">Neue Organisation</p>
+    <div x-show="showCreateOrg" x-cloak class="mt-2 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg space-y-2">
+        <p class="text-xs font-medium text-purple-700 dark:text-purple-300">Neue Organisation</p>
         <div class="grid grid-cols-2 gap-2">
             <select x-model="newOrgType" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-purple-500 focus:ring-purple-500">
                 <option value="">Typ wählen *</option>
@@ -117,7 +117,7 @@
                 <span x-show="creating">Wird erstellt...</span>
             </button>
             <button type="button" @click="showCreateOrg = false; newOrgType = ''; newOrgName = ''; createError = ''"
-                class="px-3 py-1.5 bg-white text-gray-700 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Abbrechen</button>
+                class="px-3 py-1.5 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500">Abbrechen</button>
         </div>
     </div>
 </div>
