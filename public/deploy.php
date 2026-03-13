@@ -2,47 +2,50 @@
 /**
  * TYL Admin - Deployment Script
  *
- * Aufruf: https://dev.admin.theyellinglight.ch/deploy.php
+ * Aufruf: https://dev.admin.theyellinglight.ch/deploy.php?token=tyl-deploy-2026
  * Nach erfolgreichem Setup diese Datei vom Server löschen!
  */
 
-// Simple security - change this token before uploading
 $secret = 'tyl-deploy-2026';
 if (($_GET['token'] ?? '') !== $secret) {
     http_response_code(403);
     die('Forbidden. Use ?token=tyl-deploy-2026');
 }
 
+// Base path = project root (one level up from public/)
+$basePath = dirname(__DIR__);
+
 set_time_limit(300);
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 echo "<pre>\n";
-echo "=== TYL Admin Deploy ===\n\n";
+echo "=== TYL Admin Deploy ===\n";
+echo "Base path: $basePath\n\n";
 
 // Step 1: Check if .env exists
 echo "--- Step 1: .env Check ---\n";
-if (!file_exists(__DIR__ . '/.env')) {
-    if (file_exists(__DIR__ . '/.env.production')) {
-        copy(__DIR__ . '/.env.production', __DIR__ . '/.env');
+if (!file_exists($basePath . '/.env')) {
+    if (file_exists($basePath . '/.env.production')) {
+        copy($basePath . '/.env.production', $basePath . '/.env');
         echo "✓ .env.production kopiert nach .env\n";
-        echo "⚠ WICHTIG: Trage deine DB-Zugangsdaten in .env.production ein und deploye erneut!\n";
     } else {
         echo "✗ Keine .env und keine .env.production gefunden!\n";
+        echo "Lade .env.production per FTP nach: $basePath/\n";
         die("Abbruch.");
     }
 } else {
     echo "✓ .env existiert\n";
 }
 
-// Step 2: Check composer autoload
+// Step 2: Composer
 echo "\n--- Step 2: Composer ---\n";
-if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
+if (!file_exists($basePath . '/vendor/autoload.php')) {
     echo "Composer install läuft... (kann 1-2 Minuten dauern)\n";
     flush();
     $output = [];
     $exitCode = 0;
-    exec('cd ' . escapeshellarg(__DIR__) . ' && composer install --no-dev --optimize-autoloader 2>&1', $output, $exitCode);
+    exec('cd ' . escapeshellarg($basePath) . ' && composer install --no-dev --optimize-autoloader 2>&1', $output, $exitCode);
     echo implode("\n", $output) . "\n";
     if ($exitCode !== 0) {
         die("✗ Composer install fehlgeschlagen (Exit: $exitCode)");
@@ -53,22 +56,22 @@ if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
     echo "Update läuft...\n";
     flush();
     $output = [];
-    exec('cd ' . escapeshellarg(__DIR__) . ' && composer install --no-dev --optimize-autoloader 2>&1', $output, $exitCode);
+    exec('cd ' . escapeshellarg($basePath) . ' && composer install --no-dev --optimize-autoloader 2>&1', $output, $exitCode);
     echo implode("\n", array_slice($output, -5)) . "\n";
     echo "✓ Composer update erfolgreich\n";
 }
 
 // Step 3: Laravel Bootstrap
 echo "\n--- Step 3: Laravel Bootstrap ---\n";
-require __DIR__ . '/vendor/autoload.php';
-$app = require_once __DIR__ . '/bootstrap/app.php';
+require $basePath . '/vendor/autoload.php';
+$app = require_once $basePath . '/bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 echo "✓ Laravel gebootet\n";
 
 // Step 4: Storage link
 echo "\n--- Step 4: Storage Link ---\n";
-if (!file_exists(__DIR__ . '/public/storage')) {
+if (!is_link($basePath . '/public/storage')) {
     Illuminate\Support\Facades\Artisan::call('storage:link');
     echo Illuminate\Support\Facades\Artisan::output();
 }
