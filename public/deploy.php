@@ -21,7 +21,36 @@ ini_set('display_errors', 1);
 
 echo "<pre>\n";
 echo "=== TYL Admin Deploy ===\n";
-echo "Base path: $basePath\n\n";
+echo "Base path: $basePath\n";
+echo "PHP Version: " . PHP_VERSION . "\n";
+
+// Find the correct PHP CLI binary (Plesk/cPanel often have versioned binaries)
+$phpBin = PHP_BINARY; // Use the same PHP that runs this script
+echo "PHP Binary: $phpBin\n\n";
+
+// Step 0: Check if composer is available, try common paths
+$composerCmd = null;
+foreach (['composer', 'composer.phar', '/usr/local/bin/composer'] as $try) {
+    exec("which $try 2>/dev/null", $whichOut, $whichExit);
+    if ($whichExit === 0) {
+        $composerCmd = $try;
+        break;
+    }
+}
+// Fallback: use PHP binary to run composer.phar
+if (!$composerCmd) {
+    // Download composer if not present
+    if (!file_exists($basePath . '/composer.phar')) {
+        echo "Composer nicht gefunden, lade composer.phar herunter...\n";
+        flush();
+        copy('https://getcomposer.org/composer-stable.phar', $basePath . '/composer.phar');
+    }
+    $composerCmd = escapeshellarg($phpBin) . ' ' . escapeshellarg($basePath . '/composer.phar');
+} else {
+    // Force composer to use the correct PHP version
+    $composerCmd = escapeshellarg($phpBin) . ' ' . trim(implode('', $whichOut));
+}
+echo "Composer command: $composerCmd\n\n";
 
 // Step 1: Check if .env exists
 echo "--- Step 1: .env Check ---\n";
@@ -45,7 +74,7 @@ if (!file_exists($basePath . '/vendor/autoload.php')) {
     flush();
     $output = [];
     $exitCode = 0;
-    exec('cd ' . escapeshellarg($basePath) . ' && composer install --no-dev --optimize-autoloader 2>&1', $output, $exitCode);
+    exec('cd ' . escapeshellarg($basePath) . ' && ' . $composerCmd . ' install --no-dev --optimize-autoloader 2>&1', $output, $exitCode);
     echo implode("\n", $output) . "\n";
     if ($exitCode !== 0) {
         die("✗ Composer install fehlgeschlagen (Exit: $exitCode)");
@@ -56,7 +85,7 @@ if (!file_exists($basePath . '/vendor/autoload.php')) {
     echo "Update läuft...\n";
     flush();
     $output = [];
-    exec('cd ' . escapeshellarg($basePath) . ' && composer install --no-dev --optimize-autoloader 2>&1', $output, $exitCode);
+    exec('cd ' . escapeshellarg($basePath) . ' && ' . $composerCmd . ' install --no-dev --optimize-autoloader 2>&1', $output, $exitCode);
     echo implode("\n", array_slice($output, -5)) . "\n";
     echo "✓ Composer update erfolgreich\n";
 }
