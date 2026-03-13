@@ -71,6 +71,7 @@
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Benutzer</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Aktion</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Bereich</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Eintrag</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Feld</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Alter Wert</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Neuer Wert</th>
@@ -93,8 +94,11 @@
                         <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
                             {{ $log->model_type_label }}
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                            {{ $log->field ?? '—' }}
+                        <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200 max-w-[200px] truncate" title="{{ $log->model_label }}">
+                            {{ Str::limit($log->model_label, 40) }}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300" title="{{ $log->field }}">
+                            {{ $log->field_label ?? '—' }}
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 max-w-xs truncate" title="{{ $log->old_value }}">
                             {{ $log->old_value !== null ? Str::limit($log->old_value, 50) : 'null' }}
@@ -105,7 +109,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Keine Einträge gefunden.</td>
+                        <td colspan="8" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Keine Einträge gefunden.</td>
                     </tr>
                 @endforelse
             </tbody>

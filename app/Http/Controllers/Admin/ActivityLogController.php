@@ -35,7 +35,7 @@ class ActivityLogController extends Controller
             fwrite($handle, "\xEF\xBB\xBF");
 
             // Header
-            fputcsv($handle, ['Datum', 'Benutzer', 'Aktion', 'Bereich', 'Feld', 'Alter Wert', 'Neuer Wert'], ';');
+            fputcsv($handle, ['Datum', 'Benutzer', 'Aktion', 'Bereich', 'Eintrag', 'Feld', 'Alter Wert', 'Neuer Wert'], ';');
 
             // Data in chunks
             $query->chunk(500, function ($logs) use ($handle) {
@@ -45,7 +45,8 @@ class ActivityLogController extends Controller
                         $log->user_name,
                         $log->action_label,
                         $log->model_type_label,
-                        $log->field ?? '',
+                        $log->model_label ?? '',
+                        $log->field_label ?? '',
                         $log->old_value ?? 'null',
                         $log->new_value ?? 'null',
                     ], ';');
