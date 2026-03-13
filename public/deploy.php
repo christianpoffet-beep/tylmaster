@@ -24,32 +24,42 @@ echo "=== TYL Admin Deploy ===\n";
 echo "Base path: $basePath\n";
 echo "PHP Version: " . PHP_VERSION . "\n";
 
-// Find the correct PHP CLI binary (Plesk/cPanel often have versioned binaries)
-$phpBin = PHP_BINARY; // Use the same PHP that runs this script
-echo "PHP Binary: $phpBin\n\n";
+// Find the correct PHP CLI binary
+// PHP_BINARY returns php-fpm on Plesk, we need the CLI version
+$phpVersion = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+$phpCliCandidates = [
+    "/opt/plesk/php/{$phpVersion}/bin/php",
+    "/usr/local/php{$phpVersion}/bin/php",
+    "/usr/bin/php{$phpVersion}",
+    "/usr/bin/php",
+    "php",
+];
 
-// Step 0: Check if composer is available, try common paths
-$composerCmd = null;
-foreach (['composer', 'composer.phar', '/usr/local/bin/composer'] as $try) {
-    exec("which $try 2>/dev/null", $whichOut, $whichExit);
-    if ($whichExit === 0) {
-        $composerCmd = $try;
+$phpBin = null;
+foreach ($phpCliCandidates as $candidate) {
+    if (file_exists($candidate) && is_executable($candidate)) {
+        $phpBin = $candidate;
         break;
     }
 }
-// Fallback: use PHP binary to run composer.phar
-if (!$composerCmd) {
-    // Download composer if not present
-    if (!file_exists($basePath . '/composer.phar')) {
-        echo "Composer nicht gefunden, lade composer.phar herunter...\n";
-        flush();
-        copy('https://getcomposer.org/composer-stable.phar', $basePath . '/composer.phar');
-    }
-    $composerCmd = escapeshellarg($phpBin) . ' ' . escapeshellarg($basePath . '/composer.phar');
-} else {
-    // Force composer to use the correct PHP version
-    $composerCmd = escapeshellarg($phpBin) . ' ' . trim(implode('', $whichOut));
+if (!$phpBin) {
+    // Last resort: try to find via exec
+    exec("which php 2>/dev/null", $phpWhich);
+    $phpBin = !empty($phpWhich) ? trim($phpWhich[0]) : 'php';
 }
+echo "PHP CLI Binary: $phpBin\n";
+
+// Verify it's actually CLI
+exec(escapeshellarg($phpBin) . ' -v 2>&1', $phpVerOut);
+echo "PHP CLI Version: " . ($phpVerOut[0] ?? 'unknown') . "\n\n";
+
+// Step 0: Setup composer command
+if (!file_exists($basePath . '/composer.phar')) {
+    echo "Lade composer.phar herunter...\n";
+    flush();
+    copy('https://getcomposer.org/composer-stable.phar', $basePath . '/composer.phar');
+}
+$composerCmd = escapeshellarg($phpBin) . ' ' . escapeshellarg($basePath . '/composer.phar');
 echo "Composer command: $composerCmd\n\n";
 
 // Step 1: Check if .env exists
