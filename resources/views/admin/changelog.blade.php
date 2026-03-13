@@ -11,6 +11,116 @@
 
     <div class="space-y-6">
 
+        {{-- v1.5.0 --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">v1.5.0</h3>
+                <span class="text-sm text-gray-500 dark:text-gray-400">13.03.2026</span>
+            </div>
+            <div class="space-y-2">
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Dark Mode: Alle verbleibenden Dropdowns in Buchungen, Rechnungen und PLZ-Suche korrigiert</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Dark Mode: Search-Dropdowns und Inline-Formulare (Kontakte, Organisationen, Projekte, Verträge, Credits) korrigiert</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Aktivitätslog: Feldnamen werden jetzt auf Deutsch angezeigt (z.B. &laquo;Vorname&raquo; statt &laquo;first_name&raquo;)</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Aktivitätslog: Neue Spalte &laquo;Eintrag&raquo; zeigt den Namen des betroffenen Datensatzes</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Aktivitätslog: Alle Aktionen inkl. Adresskreise und Kampagnen werden protokolliert</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- v1.4.0 --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">v1.4.0</h3>
+                <span class="text-sm text-gray-500 dark:text-gray-400">13.03.2026</span>
+            </div>
+            <div class="space-y-2">
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Adresskreise: Erstelle wiederverwendbare Kontakt- und Organisationsgruppen f&uuml;r gezielte Kommunikation</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Adresskreise: Mitglieder per Filter (Name, E-Mail, Ort, Typ, Genre, Projekte) hinzuf&uuml;gen, E-Mail-Adressen pro Mitglied &uuml;berschreibbar</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Adresskreise: CSV/Excel-Export der Mitgliederliste</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Kampagnen-Bereich in der Navigation mit Adresskreisen als erstem Modul</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Excel-Export f&uuml;r Kontakte und Organisationen (gefilterte Listen exportierbar)</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Navigation: Horizontale Top-Navigation mit Dropdown-Men&uuml;s statt Sidebar</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Dark-Mode-Korrekturen f&uuml;r diverse Seitenelemente</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- v1.3.0 --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">v1.3.0</h3>
+                <span class="text-sm text-gray-500 dark:text-gray-400">13.03.2026</span>
+            </div>
+            <div class="space-y-2">
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Vertr&auml;ge: Zession (Vorschuss) mit Betrag, W&auml;hrung und Notizen</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Vertr&auml;ge: Territorium &ndash; Weltweit oder Einzell&auml;nder mit Preset-Buttons (Europa, USA, GSA, UK, Nordics, Benelux)</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Vertr&auml;ge: Verg&uuml;tungs- und Rechte-System mit Umsatzaufteilung pro Rechtetyp (Mechanical, Performance, Sync, etc.)</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Vertr&auml;ge: 7 Preset-Vorlagen f&uuml;r Verg&uuml;tung (Publishing, Label, Distribution, Management, Admin, Booking, Promotion)</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Vertr&auml;ge: PDF-Generierung f&uuml;r Vertragsdetails</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Dark Mode: Systemweite Unterst&uuml;tzung f&uuml;r helles, dunkles und automatisches Farbschema</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Einstellungen: Darstellung &ndash; Farbschema zwischen Hell, Dunkel und System w&auml;hlbar</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Dashboard: &Uuml;berarbeitetes Layout mit verbesserten Statistiken und Widgets</span>
+                </div>
+            </div>
+        </div>
+
         {{-- v1.2.0 --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center justify-between mb-3">

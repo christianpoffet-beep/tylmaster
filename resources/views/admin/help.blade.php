@@ -27,8 +27,10 @@
             <a href="#finanzen" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">12. Finanzen (Rechnungen)</a>
             <a href="#buchhaltung" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">13. Buchhaltung</a>
             <a href="#settings" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">14. Settings</a>
-            <a href="#navigation" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">15. Navigation & Sidebar</a>
-            <a href="#benutzerverwaltung" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">16. Benutzerverwaltung</a>
+            <a href="#adresskreise" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">15. Kampagnen & Adresskreise</a>
+            <a href="#darstellung" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">16. Darstellung (Dark Mode)</a>
+            <a href="#navigation" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">17. Navigation</a>
+            <a href="#benutzerverwaltung" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">18. Benutzerverwaltung</a>
         </div>
     </div>
 
@@ -207,6 +209,22 @@
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Vertragstypen</h4>
                     <p class="text-sm text-gray-600 dark:text-gray-300">Typen wie Label, Publishing, Management, Licensing etc. werden unter <strong>Settings &rarr; Labels &rarr; Vertragstypen</strong> verwaltet.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Zession (Vorschuss)</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Optional kannst du eine Zession (Vorschuss) aktivieren. Dabei wird ein Betrag, eine W&auml;hrung (CHF/EUR/USD) und optionale Notizen erfasst. Die Zession stellt einen Vorschuss gegen zuk&uuml;nftige Einnahmen dar.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Territorium</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Lege fest, f&uuml;r welches Gebiet der Vertrag gilt. Aktiviere <strong>Weltweit</strong> oder w&auml;hle einzelne L&auml;nder aus. Preset-Buttons erm&ouml;glichen eine schnelle Auswahl g&auml;ngiger Regionen: Europa, USA, GSA (DACH), UK, Nordics und Benelux.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Verg&uuml;tung & Rechte</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Definiere die Umsatzaufteilung pro Rechtetyp (Mechanical, Performance, Sync, Print, Grand, Neighbouring). F&uuml;r jeden Typ kann entweder eine prozentuale Aufteilung zwischen den Vertragsparteien oder ein benutzerdefinierter Text erfasst werden. 7 Preset-Vorlagen (Publishing, Label, Distribution, Management, Admin, Booking, Promotion) f&uuml;llen g&auml;ngige Konfigurationen automatisch aus.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">PDF-Export</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Auf der Vertragsdetailseite kannst du ein PDF mit allen Vertragsinformationen generieren und herunterladen.</p>
                 </div>
             </div>
         </div>
@@ -544,29 +562,74 @@
             </div>
         </div>
 
-        {{-- 15. Navigation --}}
-        <div id="navigation" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">15. Navigation & Sidebar</h3>
-            <p class="text-sm text-gray-600 mb-3">Tipps zur Nutzung der Sidebar-Navigation:</p>
+        {{-- 15. Kampagnen & Adresskreise --}}
+        <div id="adresskreise" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">15. Kampagnen & Adresskreise</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Unter <strong>Kampagnen &rarr; Adresskreise</strong> findest du das Werkzeug f&uuml;r gezielte Kommunikation mit Gruppen von Kontakten und Organisationen.</p>
             <div class="space-y-3">
                 <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Aufklappbare Bereiche</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300"><strong>Projekte</strong> und <strong>Finanzen</strong> sind aufklappbare Gruppen. Klicke auf den Namen, um zur Hauptseite zu navigieren. Klicke auf den <strong>Pfeil</strong> (Chevron), um die Untermenüpunkte ein-/auszuklappen. Die Gruppe öffnet sich automatisch, wenn du dich auf einer Unterseite befindest.</p>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Adresskreise erstellen</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Erstelle einen neuen Adresskreis mit <strong>Name</strong> und <strong>Beschreibung</strong>. Optional kannst du Organisationen und Projekte verkn&uuml;pfen.</p>
                 </div>
                 <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Sidebar einklappen</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Klicke auf die <strong>Doppelpfeile</strong> unten in der Sidebar, um sie einzuklappen. Im eingeklappten Modus siehst du nur die Icons. Fahre mit der Maus über ein Icon, um den Tooltip mit dem Namen zu sehen.</p>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Mitglieder hinzuf&uuml;gen</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Auf der Detailseite eines Adresskreises kannst du Kontakte und Organisationen als Mitglieder hinzuf&uuml;gen. Nutze die erweiterte Filterung nach Name, E-Mail, Ort, Typ, Genre oder Projekt, um gezielt Mitglieder auszuw&auml;hlen.</p>
                 </div>
                 <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Mobile Ansicht</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Auf mobilen Geräten öffnest du die Sidebar über das <strong>Hamburger-Menü</strong> (drei Striche) oben links. Tippe ausserhalb der Sidebar, um sie wieder zu schliessen.</p>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">E-Mail-Adressen &uuml;berschreiben</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Pro Mitglied kann eine alternative E-Mail-Adresse hinterlegt werden, die f&uuml;r Kampagnen anstelle der Standard-E-Mail verwendet wird.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">CSV/Excel-Export</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Exportiere die Mitgliederliste eines Adresskreises als CSV-Datei (Excel-kompatibel) mit Namen, E-Mails und Genres.</p>
                 </div>
             </div>
         </div>
 
-        {{-- 16. Benutzerverwaltung --}}
+        {{-- 16. Darstellung --}}
+        <div id="darstellung" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">16. Darstellung (Dark Mode)</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Unter <strong>Settings &rarr; Darstellung</strong> kannst du das Farbschema des Admin Panels anpassen.</p>
+            <div class="space-y-3">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Farbschema w&auml;hlen</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Drei Optionen stehen zur Verf&uuml;gung:</p>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside mt-1 space-y-0.5">
+                        <li><strong>Hell:</strong> Helles Design mit weissem Hintergrund</li>
+                        <li><strong>Dunkel:</strong> Dunkles Design mit dunklem Hintergrund &ndash; augenschonend bei wenig Licht</li>
+                        <li><strong>System:</strong> Passt sich automatisch an die Einstellung deines Betriebssystems an (Standard)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Speicherung</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Die Einstellung wird im Browser gespeichert und bleibt &uuml;ber Sitzungen hinweg erhalten.</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- 17. Navigation --}}
+        <div id="navigation" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">17. Navigation</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Die Navigation befindet sich als horizontale Leiste am oberen Bildschirmrand.</p>
+            <div class="space-y-3">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Hauptmen&uuml;</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Die Hauptnavigation enth&auml;lt: Dashboard, Kontakte, Organisationen, Dokumente. Diese sind direkt anklickbar.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Dropdown-Men&uuml;s</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Bereiche mit Untermen&uuml;s &ouml;ffnen sich als Dropdown: <strong>Projekte</strong> (Projekte, Aufgaben, Vertr&auml;ge, Musik, Submissions, Logos, Fotos), <strong>Finanzen</strong> (Rechnungen, Ausgaben, Buchhaltung), <strong>Kampagnen</strong> (Adresskreise) und <strong>Settings</strong> (Labels, Vorlagen, Profil, Darstellung, System).</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Mobile Ansicht</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Auf mobilen Ger&auml;ten &ouml;ffnest du die Navigation &uuml;ber das <strong>Hamburger-Men&uuml;</strong> (drei Striche) oben links.</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- 18. Benutzerverwaltung --}}
         <div id="benutzerverwaltung" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">16. Benutzerverwaltung</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">18. Benutzerverwaltung</h3>
             <p class="text-sm text-gray-600 mb-3">Unter <strong>Benutzerverwaltung</strong> in der Sidebar findest du verschiedene Werkzeuge und Informationen zur Systemverwaltung.</p>
             <div class="space-y-3">
                 <div>
@@ -583,17 +646,17 @@
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Logfile (Aktivitätslog)</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Das Logfile zeigt alle Änderungen im System in chronologischer Reihenfolge. Für jeden Eintrag siehst du:</p>
-                    <ul class="text-sm text-gray-600 list-disc list-inside mt-1 space-y-0.5">
-                        <li><strong>Datum:</strong> Zeitpunkt der Änderung</li>
-                        <li><strong>Benutzer:</strong> Wer die Änderung vorgenommen hat</li>
-                        <li><strong>Aktion:</strong> Erstellt, Geändert oder Gelöscht</li>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Das Logfile zeigt alle &Auml;nderungen im System in chronologischer Reihenfolge. F&uuml;r jeden Eintrag siehst du:</p>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside mt-1 space-y-0.5">
+                        <li><strong>Datum:</strong> Zeitpunkt der &Auml;nderung</li>
+                        <li><strong>Benutzer:</strong> Wer die &Auml;nderung vorgenommen hat</li>
+                        <li><strong>Aktion:</strong> Erstellt, Ge&auml;ndert oder Gel&ouml;scht</li>
                         <li><strong>Bereich:</strong> Welcher Datentyp betroffen ist (z.B. Kontakt, Vertrag, Rechnung)</li>
-                        <li><strong>Objekt:</strong> Name des betroffenen Datensatzes</li>
-                        <li><strong>Feld:</strong> Welches Feld geändert wurde (nur bei Änderungen)</li>
+                        <li><strong>Eintrag:</strong> Name des betroffenen Datensatzes</li>
+                        <li><strong>Feld:</strong> Welches Feld ge&auml;ndert wurde &ndash; wird auf Deutsch angezeigt (z.B. &laquo;Vorname&raquo; statt &laquo;first_name&raquo;)</li>
                         <li><strong>Alter / Neuer Wert:</strong> Der bisherige und der neue Wert des Felds</li>
                     </ul>
-                    <p class="text-sm text-gray-600 mt-2">Du kannst das Logfile nach Aktion, Bereich, Datum und Suchbegriff filtern.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">Du kannst das Logfile nach Aktion, Bereich, Datum und Suchbegriff filtern. Alle Aktionen &ndash; auch in Adresskreisen und Kampagnen &ndash; werden automatisch protokolliert.</p>
                 </div>
             </div>
         </div>
