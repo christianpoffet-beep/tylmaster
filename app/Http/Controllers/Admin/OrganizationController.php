@@ -16,9 +16,9 @@ use Illuminate\Support\Facades\Storage;
 
 class OrganizationController extends Controller
 {
-    public function index(Request $request)
+    private function applyFilters(Request $request)
     {
-        $query = Organization::query();
+        $query = Organization::with('genres');
 
         if ($search = $request->input('search')) {
             $query->where('names', 'like', "%{$search}%");
@@ -28,6 +28,25 @@ class OrganizationController extends Controller
             $query->where('type', $type);
         }
 
+        if ($city = $request->input('city')) {
+            $query->where('city', 'like', "%{$city}%");
+        }
+
+        if ($country = $request->input('country')) {
+            $query->where('country', $country);
+        }
+
+        if ($genreId = $request->input('genre')) {
+            $query->whereHas('genres', fn ($q) => $q->where('genres.id', $genreId));
+        }
+
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $query = $this->applyFilters($request);
+
         $sortField = $request->input('sort', 'created_at');
         $sortDir = $request->input('dir', 'desc');
         $allowedSorts = ['names', 'type', 'created_at'];
@@ -35,7 +54,51 @@ class OrganizationController extends Controller
         if (!in_array($sortDir, ['asc', 'desc'])) $sortDir = 'desc';
 
         $organizations = $query->withCount('contacts')->orderBy($sortField, $sortDir)->paginate(20)->withQueryString();
-        return view('admin.organizations.index', compact('organizations'));
+
+        $genres = Genre::orderBy('name')->get();
+        $orgTypes = \App\Models\OrganizationType::orderBy('sort_order')->get();
+        $countries = Organization::whereNotNull('country')->where('country', '!=', '')->distinct()->orderBy('country')->pluck('country');
+
+        return view('admin.organizations.index', compact('organizations', 'genres', 'orgTypes', 'countries'));
+    }
+
+    public function export(Request $request)
+    {
+        $organizations = $this->applyFilters($request)->withCount('contacts')->orderBy('names')->get();
+
+        $filename = 'organisationen_' . date('Y-m-d_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($organizations) {
+            $file = fopen('php://output', 'w');
+            fwrite($file, "\xEF\xBB\xBF"); // BOM for Excel
+
+            fputcsv($file, ['Ref', 'Name', 'Weitere Namen', 'Typ', 'Genre', 'E-Mail', 'Telefon', 'Strasse', 'PLZ', 'Ort', 'Land', 'Kontakte'], ';');
+
+            foreach ($organizations as $org) {
+                fputcsv($file, [
+                    $org->ref_nr,
+                    $org->primary_name,
+                    implode(', ', array_slice($org->names ?? [], 1)),
+                    $org->type,
+                    $org->genres->pluck('name')->implode(', '),
+                    $org->email,
+                    $org->phone,
+                    $org->street,
+                    $org->zip,
+                    $org->city,
+                    $org->country,
+                    $org->contacts_count,
+                ], ';');
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function create()

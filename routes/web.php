@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\ContractTemplateController;
 use App\Http\Controllers\Admin\ContractTypeController;
 use App\Http\Controllers\Admin\InvoiceTemplateController;
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\AddressCircleController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\PublicGalleryController;
 use Illuminate\Support\Facades\Route;
@@ -54,7 +55,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::view('help', 'admin.help')->name('help');
     Route::resource('contacts', ContactController::class);
+    Route::get('contacts-export', [ContactController::class, 'export'])->name('contacts.export');
     Route::resource('organizations', OrganizationController::class);
+    Route::get('organizations-export', [OrganizationController::class, 'export'])->name('organizations.export');
     Route::get('organizations-search', [OrganizationController::class, 'search'])->name('organizations.search');
     Route::post('organizations-quick', [OrganizationController::class, 'storeQuick'])->name('organizations.storeQuick');
     Route::resource('genres', GenreController::class)->except('show');
@@ -156,6 +159,14 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('activity-logs/export', [ActivityLogController::class, 'export'])->name('activity-logs.export');
     Route::view('changelog', 'admin.changelog')->name('changelog');
+
+    // Kampagnen: Adresskreise
+    Route::resource('address-circles', AddressCircleController::class);
+    Route::post('address-circles/{address_circle}/filter', [AddressCircleController::class, 'filter'])->name('address-circles.filter');
+    Route::post('address-circles/{address_circle}/add-members', [AddressCircleController::class, 'addMembers'])->name('address-circles.add-members');
+    Route::post('address-circles/{address_circle}/remove-members', [AddressCircleController::class, 'removeMembers'])->name('address-circles.remove-members');
+    Route::post('address-circles/{address_circle}/update-member-email', [AddressCircleController::class, 'updateMemberEmail'])->name('address-circles.update-member-email');
+    Route::get('address-circles/{address_circle}/export', [AddressCircleController::class, 'export'])->name('address-circles.export');
 
     // PLZ Lookup (by zip or city)
     Route::get('postal-codes/lookup', function (\Illuminate\Http\Request $request) {

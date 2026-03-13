@@ -45,7 +45,7 @@
                 @if($organization->phone)
                 <div>
                     <span class="text-gray-500 dark:text-gray-400">Telefon:</span>
-                    <span class="text-gray-900 ml-1">{{ $organization->phone }}</span>
+                    <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $organization->phone }}</span>
                 </div>
                 @endif
 
@@ -53,7 +53,7 @@
                 @if($organization->street || $organization->city)
                 <div>
                     <span class="text-gray-500 dark:text-gray-400">Adresse:</span>
-                    <span class="text-gray-900 ml-1">
+                    <span class="text-gray-900 dark:text-gray-100 ml-1">
                         {{ $organization->street }}{{ $organization->street && $organization->city ? ', ' : '' }}
                         {{ $organization->zip }} {{ $organization->city }}
                         {{ $organization->country ? '(' . $organization->country . ')' : '' }}
@@ -65,7 +65,7 @@
                 @if($organization->vat_number)
                 <div>
                     <span class="text-gray-500 dark:text-gray-400">UID/MWST-Nr.:</span>
-                    <span class="text-gray-900 ml-1 font-mono">{{ $organization->vat_number }}</span>
+                    <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $organization->vat_number }}</span>
                 </div>
                 @endif
             </div>
@@ -78,25 +78,25 @@
                     @if($organization->iban)
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">IBAN:</span>
-                        <span class="text-gray-900 ml-1 font-mono">{{ $organization->iban }}</span>
+                        <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $organization->iban }}</span>
                     </div>
                     @endif
                     @if($organization->bank_name)
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Bank:</span>
-                        <span class="text-gray-900 ml-1">{{ $organization->bank_name }}</span>
+                        <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $organization->bank_name }}</span>
                     </div>
                     @endif
                     @if($organization->bic)
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">BIC/SWIFT:</span>
-                        <span class="text-gray-900 ml-1 font-mono">{{ $organization->bic }}</span>
+                        <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $organization->bic }}</span>
                     </div>
                     @endif
                     @if($organization->bank_zip || $organization->bank_city || $organization->bank_country)
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Bankadresse:</span>
-                        <span class="text-gray-900 ml-1">
+                        <span class="text-gray-900 dark:text-gray-100 ml-1">
                             {{ $organization->bank_zip }} {{ $organization->bank_city }}
                             {{ $organization->bank_country ? '(' . $organization->bank_country . ')' : '' }}
                         </span>

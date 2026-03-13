@@ -44,7 +44,7 @@
         @if($project->description)
             <div class="mb-6">
                 <h3 class="text-sm font-medium text-gray-500 mb-1">Beschreibung</h3>
-                <p class="text-sm text-gray-900 whitespace-pre-line">{{ $project->description }}</p>
+                <p class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ $project->description }}</p>
             </div>
         @endif
 
@@ -102,7 +102,7 @@
         <x-admin.collapsible-card title="Verträge" :count="$project->contracts->count()" class="mt-6">
             <div class="space-y-2">
                 @foreach($project->contracts as $contract)
-                    <div class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <a href="{{ route('admin.contracts.show', $contract) }}" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $contract->title }}</a>
                         <span class="text-sm text-gray-500 dark:text-gray-400">{{ $contract->status ?? '' }}</span>
                     </div>
@@ -116,7 +116,7 @@
         <x-admin.collapsible-card title="Tracks" :count="$project->tracks->count()" class="mt-6">
             <div class="space-y-2">
                 @foreach($project->tracks as $track)
-                    <div class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <a href="{{ route('admin.tracks.show', $track) }}" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $track->title }}</a>
                         <span class="text-sm text-gray-500 dark:text-gray-400">{{ $track->formatted_duration ?? '' }}</span>
                     </div>
@@ -135,18 +135,18 @@
         @if($project->artworks->count())
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 @foreach($project->artworks as $artwork)
-                    <a href="{{ route('admin.artworks.show', $artwork) }}" class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <a href="{{ route('admin.artworks.show', $artwork) }}" class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                         @if($artwork->artwork_path && in_array($artwork->artwork_mime_type, ['image/jpeg', 'image/jpg']))
-                            <div class="w-12 h-12 rounded overflow-hidden bg-gray-200 flex-shrink-0">
+                            <div class="w-12 h-12 rounded overflow-hidden bg-gray-200 dark:bg-gray-600 flex-shrink-0">
                                 <img src="{{ $artwork->artwork_url }}" alt="{{ $artwork->title }}" class="w-full h-full object-cover">
                             </div>
                         @else
-                            <div class="w-12 h-12 rounded bg-gray-200 flex items-center justify-center flex-shrink-0">
+                            <div class="w-12 h-12 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
                                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             </div>
                         @endif
                         <div class="min-w-0">
-                            <p class="text-sm font-medium text-gray-900 truncate">{{ $artwork->title }}</p>
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ $artwork->title }}</p>
                             <p class="text-xs text-gray-400">
                                 {{ $artwork->yoc ? $artwork->yoc : '' }}
                                 {{ $artwork->logos->count() ? ($artwork->yoc ? '· ' : '') . $artwork->logos->count() . ' Logo' . ($artwork->logos->count() > 1 ? 's' : '') : '' }}
@@ -166,7 +166,7 @@
         @if($project->tasks->count())
             <div class="space-y-2 mb-6">
                 @foreach($project->tasks as $task)
-                    <div class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <div class="flex items-center gap-3">
                             <form method="POST" action="{{ route('admin.projects.tasks.toggle', [$project, $task]) }}">
                                 @csrf

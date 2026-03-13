@@ -9,7 +9,7 @@
             <div>
                 <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ $invoice->invoice_number }}</h2>
                 @if($invoice->title)
-                    <p class="text-sm text-gray-700 mt-1">{{ $invoice->title }}</p>
+                    <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">{{ $invoice->title }}</p>
                 @endif
                 <p class="text-sm text-gray-500 mt-1">{{ $invoice->type === 'incoming' ? 'Eingehende Rechnung' : 'Ausgehende Rechnung' }}</p>
                 <div class="mt-2 flex items-center gap-2">
@@ -144,14 +144,14 @@
                             <th class="text-right py-2 font-medium">Total</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                         @foreach($invoice->items as $i => $item)
                             <tr>
                                 <td class="py-2 text-sm text-gray-400">{{ $i + 1 }}</td>
                                 <td class="py-2 text-sm text-gray-900 dark:text-gray-100">{{ $item->description }}</td>
-                                <td class="py-2 text-sm text-gray-700 text-right font-mono">{{ rtrim(rtrim(number_format($item->quantity, 3, '.', ''), '0'), '.') }}</td>
-                                <td class="py-2 text-sm text-gray-700 text-right font-mono">{{ number_format($item->unit_price, 2, '.', "'") }}</td>
-                                <td class="py-2 text-sm text-gray-900 text-right font-mono font-medium">{{ number_format($item->total, 2, '.', "'") }}</td>
+                                <td class="py-2 text-sm text-gray-700 dark:text-gray-300 text-right font-mono">{{ rtrim(rtrim(number_format($item->quantity, 3, '.', ''), '0'), '.') }}</td>
+                                <td class="py-2 text-sm text-gray-700 dark:text-gray-300 text-right font-mono">{{ number_format($item->unit_price, 2, '.', "'") }}</td>
+                                <td class="py-2 text-sm text-gray-900 dark:text-gray-100 text-right font-mono font-medium">{{ number_format($item->total, 2, '.', "'") }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -159,20 +159,20 @@
                         @if($invoice->vat_rate && $invoice->vat_rate > 0)
                             <tr class="border-t border-gray-200 dark:border-gray-700">
                                 <td colspan="4" class="py-1.5 text-sm text-gray-500 text-right">Zwischensumme</td>
-                                <td class="py-1.5 text-sm text-gray-700 text-right font-mono">{{ number_format($invoice->subtotal, 2, '.', "'") }}</td>
+                                <td class="py-1.5 text-sm text-gray-700 dark:text-gray-300 text-right font-mono">{{ number_format($invoice->subtotal, 2, '.', "'") }}</td>
                             </tr>
                             <tr>
                                 <td colspan="4" class="py-1.5 text-sm text-gray-500 text-right">MWST {{ rtrim(rtrim(number_format($invoice->vat_rate, 2, '.', ''), '0'), '.') }}%</td>
-                                <td class="py-1.5 text-sm text-gray-700 text-right font-mono">{{ number_format($invoice->vat_amount, 2, '.', "'") }}</td>
+                                <td class="py-1.5 text-sm text-gray-700 dark:text-gray-300 text-right font-mono">{{ number_format($invoice->vat_amount, 2, '.', "'") }}</td>
                             </tr>
-                            <tr class="border-t border-gray-300">
+                            <tr class="border-t border-gray-300 dark:border-gray-600">
                                 <td colspan="4" class="py-2 text-sm font-medium text-gray-700 dark:text-gray-300 text-right">Total {{ $invoice->currency }}</td>
-                                <td class="py-2 text-sm font-bold text-gray-900 text-right font-mono">{{ number_format($invoice->amount, 2, '.', "'") }}</td>
+                                <td class="py-2 text-sm font-bold text-gray-900 dark:text-gray-100 text-right font-mono">{{ number_format($invoice->amount, 2, '.', "'") }}</td>
                             </tr>
                         @else
                             <tr class="border-t border-gray-200 dark:border-gray-700">
                                 <td colspan="4" class="py-2 text-sm font-medium text-gray-700 dark:text-gray-300 text-right">Total {{ $invoice->currency }}</td>
-                                <td class="py-2 text-sm font-bold text-gray-900 text-right font-mono">{{ number_format($invoice->amount, 2, '.', "'") }}</td>
+                                <td class="py-2 text-sm font-bold text-gray-900 dark:text-gray-100 text-right font-mono">{{ number_format($invoice->amount, 2, '.', "'") }}</td>
                             </tr>
                         @endif
                     </tfoot>
@@ -183,7 +183,7 @@
         @if($invoice->notes)
             <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <h3 class="text-sm font-medium text-gray-500 mb-1">Notizen</h3>
-                <p class="text-sm text-gray-900 whitespace-pre-line">{{ $invoice->notes }}</p>
+                <p class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ $invoice->notes }}</p>
             </div>
         @endif
     </div>

@@ -13,9 +13,9 @@ use Illuminate\Support\Facades\Storage;
 
 class ContactController extends Controller
 {
-    public function index(Request $request)
+    private function applyFilters(Request $request)
     {
-        $query = Contact::query();
+        $query = Contact::with('genres');
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -29,6 +29,29 @@ class ContactController extends Controller
             $query->whereJsonContains('types', $type);
         }
 
+        if ($city = $request->input('city')) {
+            $query->where('city', 'like', "%{$city}%");
+        }
+
+        if ($country = $request->input('country')) {
+            $query->where('country', $country);
+        }
+
+        if ($gender = $request->input('gender')) {
+            $query->where('gender', $gender);
+        }
+
+        if ($genreId = $request->input('genre')) {
+            $query->whereHas('genres', fn ($q) => $q->where('genres.id', $genreId));
+        }
+
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $query = $this->applyFilters($request);
+
         $sortField = $request->input('sort', 'last_name');
         $sortDir = $request->input('dir', 'asc');
         $allowedSorts = ['last_name', 'first_name', 'email', 'created_at'];
@@ -37,8 +60,49 @@ class ContactController extends Controller
 
         $contacts = $query->orderBy($sortField, $sortDir)->paginate(20)->withQueryString();
         $contactTypes = ContactType::orderBy('sort_order')->get();
+        $genres = Genre::orderBy('name')->get();
+        $countries = Contact::whereNotNull('country')->where('country', '!=', '')->distinct()->orderBy('country')->pluck('country');
 
-        return view('admin.contacts.index', compact('contacts', 'contactTypes'));
+        return view('admin.contacts.index', compact('contacts', 'contactTypes', 'genres', 'countries'));
+    }
+
+    public function export(Request $request)
+    {
+        $contacts = $this->applyFilters($request)->orderBy('last_name')->get();
+
+        $filename = 'kontakte_' . date('Y-m-d_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($contacts) {
+            $file = fopen('php://output', 'w');
+            fwrite($file, "\xEF\xBB\xBF"); // BOM for Excel
+
+            fputcsv($file, ['Ref', 'Nachname', 'Vorname', 'E-Mail', 'Telefon', 'Typ', 'Genre', 'Geschlecht', 'Strasse', 'PLZ', 'Ort', 'Land'], ';');
+
+            foreach ($contacts as $c) {
+                fputcsv($file, [
+                    $c->ref_nr,
+                    $c->last_name,
+                    $c->first_name,
+                    $c->email,
+                    $c->phone,
+                    implode(', ', $c->types ?? []),
+                    $c->genres->pluck('name')->implode(', '),
+                    $c->gender ? ucfirst($c->gender) : '',
+                    $c->street,
+                    $c->zip,
+                    $c->city,
+                    $c->country,
+                ], ';');
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function create()

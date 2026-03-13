@@ -25,7 +25,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div><span class="text-gray-500 dark:text-gray-400">Typ:</span> <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ml-1 {{ $typeColors[$contract->type] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300' }}">{{ $typeLabels[$contract->type] ?? ucfirst($contract->type) }}</span></div>
-                <div><span class="text-gray-500 dark:text-gray-400">Laufzeit:</span> <span class="text-gray-900 ml-1">{{ $contract->start_date?->format('d.m.Y') ?? '-' }} — {{ $contract->end_date?->format('d.m.Y') ?? '-' }}</span></div>
+                <div><span class="text-gray-500 dark:text-gray-400">Laufzeit:</span> <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $contract->start_date?->format('d.m.Y') ?? '-' }} — {{ $contract->end_date?->format('d.m.Y') ?? '-' }}</span></div>
             </div>
 
             @if($contract->parties->count())
@@ -45,7 +45,7 @@
                                     <a href="{{ route('admin.contacts.show', $party->contact) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $party->contact->full_name }}</a>
                                 @endif
                             </div>
-                            <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{{ number_format($party->share, 2) }}%</span>
+                            <span class="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{{ number_format($party->share, 2) }}%</span>
                         </div>
                     @endforeach
                 </div>

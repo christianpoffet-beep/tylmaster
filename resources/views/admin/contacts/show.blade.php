@@ -55,14 +55,14 @@
                 @if($contact->phone)
                 <div>
                     <span class="text-gray-500 dark:text-gray-400">Telefon:</span>
-                    <span class="text-gray-900 ml-1">{{ $contact->phone }}</span>
+                    <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $contact->phone }}</span>
                     <span class="text-xs text-gray-400 ml-1">(primär)</span>
                 </div>
                 @endif
                 @foreach($contact->secondary_phones ?? [] as $secPhone)
                 <div>
                     <span class="text-gray-500 dark:text-gray-400">Telefon:</span>
-                    <span class="text-gray-900 ml-1">{{ $secPhone }}</span>
+                    <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $secPhone }}</span>
                 </div>
                 @endforeach
 
@@ -70,7 +70,7 @@
                 @if($contact->street || $contact->city)
                 <div>
                     <span class="text-gray-500 dark:text-gray-400">Adresse:</span>
-                    <span class="text-gray-900 ml-1">
+                    <span class="text-gray-900 dark:text-gray-100 ml-1">
                         {{ $contact->street }}{{ $contact->street && $contact->city ? ', ' : '' }}
                         {{ $contact->zip }} {{ $contact->city }}
                         {{ $contact->country ? '(' . $contact->country . ')' : '' }}
@@ -87,25 +87,25 @@
                     @if($contact->iban)
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">IBAN:</span>
-                        <span class="text-gray-900 ml-1 font-mono">{{ $contact->iban }}</span>
+                        <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $contact->iban }}</span>
                     </div>
                     @endif
                     @if($contact->bank_name)
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Bank:</span>
-                        <span class="text-gray-900 ml-1">{{ $contact->bank_name }}</span>
+                        <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $contact->bank_name }}</span>
                     </div>
                     @endif
                     @if($contact->bic)
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">BIC/SWIFT:</span>
-                        <span class="text-gray-900 ml-1 font-mono">{{ $contact->bic }}</span>
+                        <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $contact->bic }}</span>
                     </div>
                     @endif
                     @if($contact->bank_zip || $contact->bank_city || $contact->bank_country)
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Bankadresse:</span>
-                        <span class="text-gray-900 ml-1">
+                        <span class="text-gray-900 dark:text-gray-100 ml-1">
                             {{ $contact->bank_zip }} {{ $contact->bank_city }}
                             {{ $contact->bank_country ? '(' . $contact->bank_country . ')' : '' }}
                         </span>
@@ -155,7 +155,7 @@
                     <tbody>
                         @foreach($contact->ipis as $ipi)
                         <tr>
-                            <td class="py-0.5 pr-4 text-gray-900 font-mono">{{ $ipi['number'] ?? '' }}</td>
+                            <td class="py-0.5 pr-4 text-gray-900 dark:text-gray-100 font-mono">{{ $ipi['number'] ?? '' }}</td>
                             <td class="py-0.5 pr-4 text-gray-900 dark:text-gray-100">{{ $ipi['name'] ?? '' }}</td>
                             <td class="py-0.5">
                                 @if(!empty($ipi['primary']))

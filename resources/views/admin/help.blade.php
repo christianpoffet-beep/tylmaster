@@ -340,7 +340,7 @@
                                     <th class="text-left py-1.5 font-medium">Haben-Konto</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                 <tr>
                                     <td class="py-1.5 text-gray-700 dark:text-gray-300">Ausgehend (du stellst Rechnung)</td>
                                     <td class="py-1.5 text-gray-600 dark:text-gray-300">Debitoren (1100)</td>
@@ -372,7 +372,7 @@
                         <strong>Soll-Konto</strong> = Wohin geht das Geld? (Empfänger-Konto, wird belastet)<br>
                         <strong>Haben-Konto</strong> = Woher kommt das Geld? (Quell-Konto, wird entlastet)
                     </p>
-                    <div class="mt-2 bg-gray-50 rounded-lg p-3">
+                    <div class="mt-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
                         <p class="text-sm text-gray-700 dark:text-gray-300"><strong>Beispiel:</strong> Du erhältst 500 CHF von einem Kunden auf dein Bankkonto.</p>
                         <p class="text-sm text-gray-600 mt-1">Soll: <em>Bank</em> (1020) &mdash; Geld kommt auf die Bank<br>Haben: <em>Debitoren</em> (1100) &mdash; Forderung wird aufgelöst</p>
                     </div>
@@ -389,7 +389,7 @@
                                     <th class="text-left py-1.5 font-medium">Beispiele</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                 <tr>
                                     <td class="py-1.5"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">Aktiven</span></td>
                                     <td class="py-1.5 text-gray-600 dark:text-gray-300">Was du <strong>besitzt</strong></td>
@@ -427,7 +427,7 @@
                                     <th class="text-left py-1.5 font-medium">Beispiel</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                 <tr>
                                     <td class="py-1.5 font-medium text-gray-700 dark:text-gray-300">Forderung</td>
                                     <td class="py-1.5 text-gray-600 dark:text-gray-300">Du hast eine Rechnung gestellt &ndash; Geld steht dir zu</td>
@@ -451,7 +451,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-2 bg-blue-50 rounded-lg p-3">
+                    <div class="mt-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
                         <p class="text-sm text-blue-800">
                             <strong>Zusammenhang:</strong> Forderung &rarr; Eingang = Ausgehende Rechnung gestellt, dann Geld erhalten.<br>
                             Verbindlichkeit &rarr; Zahlung = Eingehende Rechnung erhalten, dann bezahlt.
@@ -473,7 +473,7 @@
                     <p class="text-sm text-gray-600 dark:text-gray-300">
                         Für Buchungen, die nicht automatisch über Rechnungen entstehen, kannst du manuell buchen. Gib Datum, Soll-Konto, Haben-Konto, Betrag und eine kurze Beschreibung an. Den Betrag immer <strong>positiv</strong> eingeben &ndash; die Richtung wird durch Soll/Haben bestimmt.
                     </p>
-                    <div class="mt-2 bg-gray-50 rounded-lg p-3">
+                    <div class="mt-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
                         <p class="text-sm text-gray-700 dark:text-gray-300"><strong>Beispiel:</strong> Studiokosten 200 CHF bar bezahlt.</p>
                         <p class="text-sm text-gray-600 mt-1">Soll: <em>Studiokosten</em> (Aufwand) &mdash; Haben: <em>Kasse</em> (Aktiven) &mdash; 200.00 CHF</p>
                     </div>
@@ -502,7 +502,7 @@
 
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Zusammenspiel Rechnungen &amp; Buchhaltung</h4>
-                    <div class="mt-2 bg-green-50 rounded-lg p-3">
+                    <div class="mt-2 bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
                         <p class="text-sm text-green-800 font-medium mb-2">So funktioniert der automatische Ablauf:</p>
                         <ol class="text-sm text-green-800 list-decimal list-inside space-y-1">
                             <li>Du erstellst eine <strong>Rechnung</strong> und verknüpfst sie mit einer Buchhaltung + Konten</li>
