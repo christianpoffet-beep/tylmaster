@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AddressCircleController;
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CampaignTemplateController;
+use App\Http\Controllers\Admin\ContentPostController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\PublicGalleryController;
 use Illuminate\Support\Facades\Route;
@@ -172,6 +173,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('campaigns/{campaign}/send', [CampaignController::class, 'send'])->name('campaigns.send');
     Route::post('campaigns/{campaign}/test-send', [CampaignController::class, 'testSend'])->name('campaigns.testSend');
     Route::get('campaigns/{campaign}/send-log', [CampaignController::class, 'sendLog'])->name('campaigns.sendLog');
+
+    // Content-Planer
+    Route::resource('content-posts', ContentPostController::class);
+    Route::post('content-posts/{content_post}/duplicate', [ContentPostController::class, 'duplicate'])->name('content-posts.duplicate');
+    Route::patch('content-posts/{content_post}/mark-published', [ContentPostController::class, 'markPublished'])->name('content-posts.markPublished');
 
     // Kampagnen: Adresskreise
     Route::resource('address-circles', AddressCircleController::class);
