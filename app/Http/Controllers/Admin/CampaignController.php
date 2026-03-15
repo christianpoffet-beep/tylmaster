@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\SendCampaignJob;
 use App\Models\Campaign;
 use App\Models\CampaignSend;
 use App\Models\CampaignTemplate;
@@ -175,7 +174,7 @@ class CampaignController extends Controller
      */
     public function send(Campaign $campaign)
     {
-        if ($campaign->status !== 'draft') {
+        if (!in_array($campaign->status, ['draft', 'sending'])) {
             return back()->with('error', 'Nur Entwürfe können gesendet werden.');
         }
 
@@ -194,15 +193,115 @@ class CampaignController extends Controller
 
         // Clear previous sends if any (e.g. from a failed attempt)
         $campaign->sends()->delete();
-
-        // Set status to sending
         $campaign->update(['status' => 'sending']);
 
-        // Dispatch the job
-        SendCampaignJob::dispatch($campaign);
+        $addressCircle = $campaign->addressCircle;
+        $recipients = $this->collectRecipients($addressCircle);
 
-        return redirect()->route('admin.campaigns.show', $campaign)
-            ->with('success', 'Kampagne wird gesendet. Der Versand läuft im Hintergrund.');
+        if (empty($recipients)) {
+            $campaign->update(['status' => 'draft']);
+            return back()->with('error', 'Keine Empfänger im Adresskreis gefunden.');
+        }
+
+        set_time_limit(300);
+        $sentCount = 0;
+        $failCount = 0;
+
+        foreach ($recipients as $recipient) {
+            if (empty($recipient['email'])) continue;
+
+            $send = CampaignSend::create([
+                'campaign_id' => $campaign->id,
+                'recipient_type' => $recipient['type'],
+                'recipient_id' => $recipient['id'],
+                'email' => $recipient['email'],
+                'name' => $recipient['name'],
+                'status' => 'pending',
+            ]);
+
+            $subject = $brevo->replacePlaceholders($campaign->subject ?? '', $recipient);
+            $body = $brevo->replacePlaceholders($campaign->body ?? '', $recipient);
+
+            $result = $brevo->sendEmail(
+                toEmail: $recipient['email'],
+                toName: $recipient['name'],
+                subject: $subject,
+                htmlContent: $body,
+                senderName: $campaign->sender_name,
+                senderEmail: $campaign->sender_email,
+                replyTo: $campaign->reply_to,
+            );
+
+            if ($result['success']) {
+                $send->update([
+                    'status' => 'sent',
+                    'brevo_message_id' => $result['message_id'] ?? null,
+                    'sent_at' => now(),
+                ]);
+                $sentCount++;
+            } else {
+                $send->update([
+                    'status' => 'failed',
+                    'error' => $result['error'] ?? 'Unknown error',
+                ]);
+                $failCount++;
+            }
+
+            usleep(200000); // 200ms rate limit
+        }
+
+        $campaign->update([
+            'status' => 'sent',
+            'sent_at' => now(),
+            'recipients_count' => $sentCount,
+        ]);
+
+        $message = "{$sentCount} E-Mails gesendet.";
+        if ($failCount > 0) {
+            $message .= " {$failCount} fehlgeschlagen.";
+        }
+
+        return redirect()->route('admin.campaigns.show', $campaign)->with('success', $message);
+    }
+
+    protected function collectRecipients($addressCircle): array
+    {
+        $recipients = [];
+        $seenEmails = [];
+
+        foreach ($addressCircle->contactMembers as $contact) {
+            $email = $contact->pivot->email_override ?: $contact->email;
+            if ($email && !isset($seenEmails[$email])) {
+                $seenEmails[$email] = true;
+                $recipients[] = [
+                    'type' => 'contact',
+                    'id' => $contact->id,
+                    'email' => $email,
+                    'name' => $contact->full_name,
+                    'first_name' => $contact->first_name,
+                    'last_name' => $contact->last_name,
+                    'organization' => '',
+                ];
+            }
+        }
+
+        foreach ($addressCircle->organizationMembers as $org) {
+            $email = $org->pivot->email_override ?: $org->email;
+            if ($email && !isset($seenEmails[$email])) {
+                $seenEmails[$email] = true;
+                $recipients[] = [
+                    'type' => 'organization',
+                    'id' => $org->id,
+                    'email' => $email,
+                    'name' => $org->name,
+                    'first_name' => '',
+                    'last_name' => '',
+                    'organization' => $org->name,
+                ];
+            }
+        }
+
+        return $recipients;
     }
 
     /**
