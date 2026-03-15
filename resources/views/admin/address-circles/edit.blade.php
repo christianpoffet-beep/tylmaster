@@ -283,6 +283,27 @@
                                     <option value="{{ $g->id }}">{{ $g->name }}</option>
                                 @endforeach
                             </select>
+                            <select x-model="filters.f_project"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">Projekt</option>
+                                @foreach($projects as $p)
+                                    <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                @endforeach
+                            </select>
+                            <select x-model="filters.f_contract"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">Vertrag</option>
+                                @foreach($contracts as $ct)
+                                    <option value="{{ $ct->id }}">{{ $ct->title }}</option>
+                                @endforeach
+                            </select>
+                            <select x-model="filters.f_organization"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">Organisation</option>
+                                @foreach($allOrganizations as $org)
+                                    <option value="{{ $org->id }}">{{ $org->primary_name }}</option>
+                                @endforeach
+                            </select>
                             <input x-model="filters.f_notes" type="text" placeholder="Notizen enthalten..."
                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
                             <div>
@@ -333,6 +354,20 @@
                                 <option value="">Genre</option>
                                 @foreach($genres as $g)
                                     <option value="{{ $g->id }}">{{ $g->name }}</option>
+                                @endforeach
+                            </select>
+                            <select x-model="filters.f_project"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">Projekt</option>
+                                @foreach($projects as $p)
+                                    <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                @endforeach
+                            </select>
+                            <select x-model="filters.f_contract"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">Vertrag</option>
+                                @foreach($contracts as $ct)
+                                    <option value="{{ $ct->id }}">{{ $ct->title }}</option>
                                 @endforeach
                             </select>
                             <input x-model="filters.f_org_bio" type="text" placeholder="Biografie enthält..."
@@ -458,6 +493,7 @@ function addressCircleEditor() {
             f_zip: 'PLZ', f_city: 'Ort', f_country: 'Land', f_gender: 'Geschlecht',
             f_contact_type: 'Kontakt-Typ', f_genre: 'Genre', f_notes: 'Notizen',
             f_birth_from: 'Geb. von', f_birth_to: 'Geb. bis',
+            f_project: 'Projekt', f_contract: 'Vertrag', f_organization: 'Organisation',
             f_org_name: 'Name', f_org_type: 'Org-Typ', f_org_bio: 'Biografie'
         },
 

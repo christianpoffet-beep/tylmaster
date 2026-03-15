@@ -40,6 +40,14 @@ class OrganizationController extends Controller
             $query->whereHas('genres', fn ($q) => $q->where('genres.id', $genreId));
         }
 
+        if ($projectId = $request->input('project')) {
+            $query->whereHas('projects', fn ($q) => $q->where('projects.id', $projectId));
+        }
+
+        if ($contractId = $request->input('contract')) {
+            $query->whereHas('contracts', fn ($q) => $q->where('contracts.id', $contractId));
+        }
+
         return $query;
     }
 
@@ -58,8 +66,10 @@ class OrganizationController extends Controller
         $genres = Genre::orderBy('name')->get();
         $orgTypes = \App\Models\OrganizationType::orderBy('sort_order')->get();
         $countries = Organization::whereNotNull('country')->where('country', '!=', '')->distinct()->orderBy('country')->pluck('country');
+        $projects = Project::orderBy('name')->get();
+        $contracts = Contract::orderBy('title')->get();
 
-        return view('admin.organizations.index', compact('organizations', 'genres', 'orgTypes', 'countries'));
+        return view('admin.organizations.index', compact('organizations', 'genres', 'orgTypes', 'countries', 'projects', 'contracts'));
     }
 
     public function export(Request $request)

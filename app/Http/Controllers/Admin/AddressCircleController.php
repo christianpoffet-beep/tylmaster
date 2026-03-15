@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\AddressCircle;
 use App\Models\Contact;
 use App\Models\ContactType;
+use App\Models\Contract;
 use App\Models\Genre;
 use App\Models\Organization;
 use App\Models\OrganizationType;
+use App\Models\Project;
 use Illuminate\Http\Request;
 
 class AddressCircleController extends Controller
@@ -68,8 +70,11 @@ class AddressCircleController extends Controller
         $contactTypes = ContactType::orderBy('sort_order')->get();
         $organizationTypes = OrganizationType::orderBy('sort_order')->get();
         $genres = Genre::orderBy('name')->get();
+        $projects = Project::orderBy('name')->get();
+        $contracts = Contract::orderBy('title')->get();
+        $allOrganizations = Organization::orderBy('names')->get();
 
-        return view('admin.address-circles.edit', compact('addressCircle', 'contactTypes', 'organizationTypes', 'genres'));
+        return view('admin.address-circles.edit', compact('addressCircle', 'contactTypes', 'organizationTypes', 'genres', 'projects', 'contracts', 'allOrganizations'));
     }
 
     public function update(Request $request, AddressCircle $addressCircle)
@@ -122,6 +127,8 @@ class AddressCircleController extends Controller
             if ($v = $request->input('f_death_to')) $query->whereDate('death_date', '<=', $v);
             if ($v = $request->input('f_genre')) $query->whereHas('genres', fn ($q) => $q->where('genres.id', $v));
             if ($v = $request->input('f_project')) $query->whereHas('projects', fn ($q) => $q->where('projects.id', $v));
+            if ($v = $request->input('f_contract')) $query->whereHas('contracts', fn ($q) => $q->where('contracts.id', $v));
+            if ($v = $request->input('f_organization')) $query->whereHas('organizations', fn ($q) => $q->where('organizations.id', $v));
 
             $results = $query->orderBy('last_name')->limit(200)->get()->map(fn ($c) => [
                 'id' => $c->id,

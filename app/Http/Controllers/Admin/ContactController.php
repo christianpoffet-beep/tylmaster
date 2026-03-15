@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Models\ContactType;
+use App\Models\Contract;
 use App\Models\Genre;
+use App\Models\Organization;
 use App\Models\Project;
 use App\Models\Tag;
 use Illuminate\Http\Request;
@@ -45,6 +47,18 @@ class ContactController extends Controller
             $query->whereHas('genres', fn ($q) => $q->where('genres.id', $genreId));
         }
 
+        if ($projectId = $request->input('project')) {
+            $query->whereHas('projects', fn ($q) => $q->where('projects.id', $projectId));
+        }
+
+        if ($contractId = $request->input('contract')) {
+            $query->whereHas('contracts', fn ($q) => $q->where('contracts.id', $contractId));
+        }
+
+        if ($organizationId = $request->input('organization')) {
+            $query->whereHas('organizations', fn ($q) => $q->where('organizations.id', $organizationId));
+        }
+
         return $query;
     }
 
@@ -62,8 +76,11 @@ class ContactController extends Controller
         $contactTypes = ContactType::orderBy('sort_order')->get();
         $genres = Genre::orderBy('name')->get();
         $countries = Contact::whereNotNull('country')->where('country', '!=', '')->distinct()->orderBy('country')->pluck('country');
+        $projects = Project::orderBy('name')->get();
+        $contracts = Contract::orderBy('title')->get();
+        $organizations = Organization::orderBy('names')->get();
 
-        return view('admin.contacts.index', compact('contacts', 'contactTypes', 'genres', 'countries'));
+        return view('admin.contacts.index', compact('contacts', 'contactTypes', 'genres', 'countries', 'projects', 'contracts', 'organizations'));
     }
 
     public function export(Request $request)

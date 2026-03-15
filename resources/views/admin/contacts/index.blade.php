@@ -15,56 +15,91 @@
 </div>
 
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-    <form method="GET" action="{{ route('admin.contacts.index') }}" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 items-end">
-        <div>
-            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Suche</label>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, E-Mail..." class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+    <form method="GET" action="{{ route('admin.contacts.index') }}" class="space-y-3">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 items-end">
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Suche</label>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, E-Mail..." class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Typ</label>
+                <select name="type" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Alle Typen</option>
+                    @foreach($contactTypes as $ct)
+                        <option value="{{ $ct->slug }}" {{ request('type') === $ct->slug ? 'selected' : '' }}>{{ $ct->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Genre</label>
+                <select name="genre" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Alle Genres</option>
+                    @foreach($genres as $g)
+                        <option value="{{ $g->id }}" {{ request('genre') == $g->id ? 'selected' : '' }}>{{ $g->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Geschlecht</label>
+                <select name="gender" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Alle</option>
+                    <option value="male" {{ request('gender') === 'male' ? 'selected' : '' }}>Männlich</option>
+                    <option value="female" {{ request('gender') === 'female' ? 'selected' : '' }}>Weiblich</option>
+                    <option value="other" {{ request('gender') === 'other' ? 'selected' : '' }}>Andere</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Ort</label>
+                <input type="text" name="city" value="{{ request('city') }}" placeholder="Ort..." class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Land</label>
+                <select name="country" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Alle Länder</option>
+                    @foreach($countries as $c)
+                        <option value="{{ $c }}" {{ request('country') === $c ? 'selected' : '' }}>{{ $c }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div></div>
         </div>
-        <div>
-            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Typ</label>
-            <select name="type" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                <option value="">Alle Typen</option>
-                @foreach($contactTypes as $ct)
-                    <option value="{{ $ct->slug }}" {{ request('type') === $ct->slug ? 'selected' : '' }}>{{ $ct->name }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Genre</label>
-            <select name="genre" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                <option value="">Alle Genres</option>
-                @foreach($genres as $g)
-                    <option value="{{ $g->id }}" {{ request('genre') == $g->id ? 'selected' : '' }}>{{ $g->name }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Geschlecht</label>
-            <select name="gender" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                <option value="">Alle</option>
-                <option value="male" {{ request('gender') === 'male' ? 'selected' : '' }}>Männlich</option>
-                <option value="female" {{ request('gender') === 'female' ? 'selected' : '' }}>Weiblich</option>
-                <option value="other" {{ request('gender') === 'other' ? 'selected' : '' }}>Andere</option>
-            </select>
-        </div>
-        <div>
-            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Ort</label>
-            <input type="text" name="city" value="{{ request('city') }}" placeholder="Ort..." class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-        </div>
-        <div>
-            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Land</label>
-            <select name="country" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                <option value="">Alle Länder</option>
-                @foreach($countries as $c)
-                    <option value="{{ $c }}" {{ request('country') === $c ? 'selected' : '' }}>{{ $c }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="flex gap-2">
-            <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
-            @if(request()->hasAny(['search', 'type', 'genre', 'gender', 'city', 'country']))
-                <a href="{{ route('admin.contacts.index') }}" class="px-3 py-2 text-sm text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200" title="Zurücksetzen">&times;</a>
-            @endif
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 items-end">
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Projekt</label>
+                <select name="project" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Alle Projekte</option>
+                    @foreach($projects as $p)
+                        <option value="{{ $p->id }}" {{ request('project') == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Vertrag</label>
+                <select name="contract" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Alle Verträge</option>
+                    @foreach($contracts as $ct)
+                        <option value="{{ $ct->id }}" {{ request('contract') == $ct->id ? 'selected' : '' }}>{{ $ct->title }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Organisation</label>
+                <select name="organization" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Alle Organisationen</option>
+                    @foreach($organizations as $org)
+                        <option value="{{ $org->id }}" {{ request('organization') == $org->id ? 'selected' : '' }}>{{ $org->primary_name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div class="flex gap-2">
+                <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
+                @if(request()->hasAny(['search', 'type', 'genre', 'gender', 'city', 'country', 'project', 'contract', 'organization']))
+                    <a href="{{ route('admin.contacts.index') }}" class="px-3 py-2 text-sm text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200" title="Zurücksetzen">&times;</a>
+                @endif
+            </div>
         </div>
     </form>
 </div>
