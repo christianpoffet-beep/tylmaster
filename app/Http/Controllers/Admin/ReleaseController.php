@@ -41,11 +41,13 @@ class ReleaseController extends Controller
             'upc' => 'nullable|string|max:20',
             'release_date' => 'nullable|date',
             'label' => 'nullable|string|max:255',
+            'cover_image' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 
         if ($request->hasFile('cover_image')) {
             $validated['cover_image_path'] = $request->file('cover_image')->store('covers', 'public');
         }
+        unset($validated['cover_image']);
 
         $release = Release::create($validated);
 
@@ -78,11 +80,13 @@ class ReleaseController extends Controller
             'upc' => 'nullable|string|max:20',
             'release_date' => 'nullable|date',
             'label' => 'nullable|string|max:255',
+            'cover_image' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 
         if ($request->hasFile('cover_image')) {
             $validated['cover_image_path'] = $request->file('cover_image')->store('covers', 'public');
         }
+        unset($validated['cover_image']);
 
         $release->update($validated);
 

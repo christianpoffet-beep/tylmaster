@@ -63,6 +63,7 @@ class TaskController extends Controller
             'due_date' => 'nullable|date',
             'priority' => 'nullable|in:low,medium,high',
             'project_id' => 'nullable|exists:projects,id',
+            'doc_files.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,csv,txt,jpg,jpeg,png,zip|max:51200',
         ]);
 
         $task = Task::create($validated);
@@ -99,6 +100,7 @@ class TaskController extends Controller
             'due_date' => 'nullable|date',
             'priority' => 'nullable|in:low,medium,high',
             'project_id' => 'nullable|exists:projects,id',
+            'doc_files.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,csv,txt,jpg,jpeg,png,zip|max:51200',
         ]);
 
         $task->update($validated);

@@ -47,10 +47,11 @@ class BookingController extends Controller
             'contact_id' => 'nullable|exists:contacts,id',
             'organization_id' => 'nullable|exists:organizations,id',
             'documents' => 'nullable|array',
-            'documents.*' => 'file|max:51200',
+            'documents.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,csv,txt,jpg,jpeg,png|max:51200',
         ]);
 
         $validated['accounting_id'] = $accounting->id;
+        unset($validated['documents']);
 
         $booking = Booking::create($validated);
 
@@ -108,9 +109,10 @@ class BookingController extends Controller
             'contact_id' => 'nullable|exists:contacts,id',
             'organization_id' => 'nullable|exists:organizations,id',
             'documents' => 'nullable|array',
-            'documents.*' => 'file|max:51200',
+            'documents.*' => 'file|mimes:pdf,doc,docx,xls,xlsx,csv,txt,jpg,jpeg,png|max:51200',
         ]);
 
+        unset($validated['documents']);
         $booking->update($validated);
 
         if ($request->hasFile('documents')) {

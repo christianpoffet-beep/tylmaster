@@ -45,11 +45,13 @@ class TrackController extends Controller
             'duration_seconds' => 'nullable|integer|min:0',
             'status' => 'required|in:draft,released,archived',
             'release_id' => 'nullable|exists:releases,id',
+            'audio_file' => 'nullable|file|mimes:mp3,wav,flac,aac,m4a,ogg|max:51200',
         ]);
 
         if ($request->hasFile('audio_file')) {
             $validated['audio_file_path'] = $request->file('audio_file')->store('tracks', 'public');
         }
+        unset($validated['audio_file']);
 
         $track = Track::create($validated);
 
@@ -85,11 +87,13 @@ class TrackController extends Controller
             'duration_seconds' => 'nullable|integer|min:0',
             'status' => 'required|in:draft,released,archived',
             'release_id' => 'nullable|exists:releases,id',
+            'audio_file' => 'nullable|file|mimes:mp3,wav,flac,aac,m4a,ogg|max:51200',
         ]);
 
         if ($request->hasFile('audio_file')) {
             $validated['audio_file_path'] = $request->file('audio_file')->store('tracks', 'public');
         }
+        unset($validated['audio_file']);
 
         $track->update($validated);
 

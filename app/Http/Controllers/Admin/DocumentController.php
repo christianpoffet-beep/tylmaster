@@ -80,7 +80,7 @@ class DocumentController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'category' => 'required|in:contract,invoice,legal,music,other',
-            'file' => 'required|file|max:51200',
+            'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,csv,txt,zip,jpg,jpeg,png,gif,webp,mp3,wav,flac|max:51200',
             'notes' => 'nullable|string|max:1000',
         ]);
 
