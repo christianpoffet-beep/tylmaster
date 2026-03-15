@@ -34,18 +34,22 @@
             </div>
 
             <div class="space-y-3 text-sm">
-                {{-- Kontaktdaten --}}
-                @if($organization->email)
-                <div>
-                    <span class="text-gray-500 dark:text-gray-400">E-Mail:</span>
-                    <a href="mailto:{{ $organization->email }}" class="text-blue-600 dark:text-blue-400 ml-1">{{ $organization->email }}</a>
+                {{-- Genres --}}
+                @if($organization->genres->count())
+                <div class="flex flex-wrap gap-1.5">
+                    @foreach($organization->genres as $genre)
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">{{ $genre->name }}</span>
+                    @endforeach
                 </div>
                 @endif
 
-                @if($organization->phone)
+                {{-- Kontakte --}}
+                @if($organization->contacts->count())
                 <div>
-                    <span class="text-gray-500 dark:text-gray-400">Telefon:</span>
-                    <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $organization->phone }}</span>
+                    <span class="text-gray-500 dark:text-gray-400">Kontakte:</span>
+                    @foreach($organization->contacts as $contact)
+                        <a href="{{ route('admin.contacts.show', $contact) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 ml-1">{{ $contact->full_name }}</a>{{ !$loop->last ? ',' : '' }}
+                    @endforeach
                 </div>
                 @endif
 
@@ -61,73 +65,26 @@
                 </div>
                 @endif
 
-                {{-- UID/MWST --}}
-                @if($organization->vat_number)
+                {{-- E-Mail --}}
+                @if($organization->email)
                 <div>
-                    <span class="text-gray-500 dark:text-gray-400">UID/MWST-Nr.:</span>
-                    <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $organization->vat_number }}</span>
+                    <span class="text-gray-500 dark:text-gray-400">E-Mail:</span>
+                    <a href="mailto:{{ $organization->email }}" class="text-blue-600 dark:text-blue-400 ml-1">{{ $organization->email }}</a>
+                </div>
+                @endif
+
+                {{-- Websites --}}
+                @if($organization->websites && count($organization->websites))
+                <div>
+                    <span class="text-gray-500 dark:text-gray-400">Websites:</span>
+                    @foreach($organization->websites as $url)
+                        <a href="{{ $url }}" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 ml-1">{{ $url }}</a>{{ !$loop->last ? ',' : '' }}
+                    @endforeach
                 </div>
                 @endif
             </div>
 
-            {{-- Bankverbindung --}}
-            @if($organization->iban || $organization->bank_name)
-            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Bankverbindung</h3>
-                <div class="space-y-1 text-sm">
-                    @if($organization->iban)
-                    <div>
-                        <span class="text-gray-500 dark:text-gray-400">IBAN:</span>
-                        <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $organization->iban }}</span>
-                    </div>
-                    @endif
-                    @if($organization->bank_name)
-                    <div>
-                        <span class="text-gray-500 dark:text-gray-400">Bank:</span>
-                        <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $organization->bank_name }}</span>
-                    </div>
-                    @endif
-                    @if($organization->bic)
-                    <div>
-                        <span class="text-gray-500 dark:text-gray-400">BIC/SWIFT:</span>
-                        <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $organization->bic }}</span>
-                    </div>
-                    @endif
-                    @if($organization->bank_zip || $organization->bank_city || $organization->bank_country)
-                    <div>
-                        <span class="text-gray-500 dark:text-gray-400">Bankadresse:</span>
-                        <span class="text-gray-900 dark:text-gray-100 ml-1">
-                            {{ $organization->bank_zip }} {{ $organization->bank_city }}
-                            {{ $organization->bank_country ? '(' . $organization->bank_country . ')' : '' }}
-                        </span>
-                    </div>
-                    @endif
-                </div>
-            </div>
-            @endif
-
-            @if($organization->websites && count($organization->websites))
-            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Websites</h3>
-                <div class="space-y-1">
-                    @foreach($organization->websites as $url)
-                        <a href="{{ $url }}" target="_blank" rel="noopener" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $url }}</a>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-
-            @if($organization->genres->count())
-            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Genres</h3>
-                <div class="flex flex-wrap gap-1.5">
-                    @foreach($organization->genres as $genre)
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">{{ $genre->name }}</span>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-
+            {{-- Biografie --}}
             @if($organization->biography)
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Biografie</h3>
@@ -135,13 +92,79 @@
             </div>
             @endif
 
-            @if($organization->contacts->count())
+            {{-- Notizen (intern) --}}
+            @if($organization->notes)
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Kontakte</h3>
-                <div class="space-y-1">
-                    @foreach($organization->contacts as $contact)
-                        <a href="{{ route('admin.contacts.show', $contact) }}" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $contact->full_name }}</a>
-                    @endforeach
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Notizen <span class="text-gray-400 font-normal">(intern)</span></h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $organization->notes }}</p>
+            </div>
+            @endif
+
+            {{-- Weitere Angaben (zugeklappt, aufgeklappt wenn Projekt-Verbindung) --}}
+            @php
+                $hasSecondaryData = $organization->phone || $organization->iban || $organization->bank_name || $organization->vat_number;
+                $hasProjects = $organization->projects->count() > 0;
+            @endphp
+            @if($hasSecondaryData)
+            <div x-data="{ open: {{ $hasProjects ? 'true' : 'false' }} }" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" @click="open = !open" class="flex items-center justify-between w-full">
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Weitere Angaben</h3>
+                    <svg :class="open && 'rotate-180'" class="w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open" class="space-y-3 text-sm mt-3">
+                    {{-- Bankverbindung --}}
+                    @if($organization->iban || $organization->bank_name)
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Bankverbindung</h4>
+                        <div class="space-y-1">
+                            @if($organization->iban)
+                            <div>
+                                <span class="text-gray-500 dark:text-gray-400">IBAN:</span>
+                                <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $organization->iban }}</span>
+                            </div>
+                            @endif
+                            @if($organization->bank_name)
+                            <div>
+                                <span class="text-gray-500 dark:text-gray-400">Bank:</span>
+                                <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $organization->bank_name }}</span>
+                            </div>
+                            @endif
+                            @if($organization->bic)
+                            <div>
+                                <span class="text-gray-500 dark:text-gray-400">BIC/SWIFT:</span>
+                                <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $organization->bic }}</span>
+                            </div>
+                            @endif
+                            @if($organization->bank_zip || $organization->bank_city || $organization->bank_country)
+                            <div>
+                                <span class="text-gray-500 dark:text-gray-400">Bankadresse:</span>
+                                <span class="text-gray-900 dark:text-gray-100 ml-1">
+                                    {{ $organization->bank_zip }} {{ $organization->bank_city }}
+                                    {{ $organization->bank_country ? '(' . $organization->bank_country . ')' : '' }}
+                                </span>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- UID/MWST --}}
+                    @if($organization->vat_number)
+                    <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
+                        <span class="text-gray-500 dark:text-gray-400">UID/MWST-Nr.:</span>
+                        <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $organization->vat_number }}</span>
+                    </div>
+                    @endif
+
+                    {{-- Telefon --}}
+                    @if($organization->phone)
+                    <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
+                        <span class="text-gray-500 dark:text-gray-400">Telefon:</span>
+                        <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $organization->phone }}</span>
+                    </div>
+                    @endif
                 </div>
             </div>
             @endif

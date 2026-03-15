@@ -24,55 +24,21 @@
                 @error('avatar') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
+            {{-- Name, Vorname --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="last_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
+                    <input type="text" name="last_name" id="last_name" value="{{ old('last_name', $contact->last_name) }}" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    @error('last_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
                 <div>
                     <label for="first_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vorname *</label>
                     <input type="text" name="first_name" id="first_name" value="{{ old('first_name', $contact->first_name) }}" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     @error('first_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
-                <div>
-                    <label for="last_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nachname *</label>
-                    <input type="text" name="last_name" id="last_name" value="{{ old('last_name', $contact->last_name) }}" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    @error('last_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                    <label for="gender" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Geschlecht</label>
-                    <select name="gender" id="gender" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                        <option value="">— Bitte wählen —</option>
-                        <option value="male" {{ old('gender', $contact->gender) === 'male' ? 'selected' : '' }}>Männlich</option>
-                        <option value="female" {{ old('gender', $contact->gender) === 'female' ? 'selected' : '' }}>Weiblich</option>
-                        <option value="other" {{ old('gender', $contact->gender) === 'other' ? 'selected' : '' }}>Nicht definiert</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="birth_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Geburtsdatum</label>
-                    <input type="date" name="birth_date" id="birth_date" value="{{ old('birth_date', $contact->birth_date?->format('Y-m-d')) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    @error('birth_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
-                <div>
-                    <label for="death_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Todesdatum</label>
-                    <input type="date" name="death_date" id="death_date" value="{{ old('death_date', $contact->death_date?->format('Y-m-d')) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    @error('death_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    @include('admin.partials.country-select', ['name' => 'nationality', 'label' => 'Nationalität', 'value' => old('nationality', $contact->nationality ?? '')])
-                </div>
-                <div>
-                    <label for="ahv_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">AHV-Nr.</label>
-                    <input type="text" name="ahv_number" id="ahv_number" value="{{ old('ahv_number', $contact->ahv_number) }}" placeholder="756.XXXX.XXXX.XX"
-                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm font-mono focus:border-blue-500 focus:ring-blue-500"
-                        x-data x-mask="756.9999.9999.99">
-                    @error('ahv_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
-            </div>
-
-            {{-- Typ: Checkboxen (Mehrfachauswahl) --}}
+            {{-- Typ --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Typ *</label>
                 <div class="flex flex-wrap gap-3">
@@ -88,137 +54,7 @@
                 @error('types') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
-            {{-- E-Mail: Primär + Sekundäre --}}
-            <div x-data="{ emails: {{ json_encode(old('secondary_emails', $contact->secondary_emails ?? [])) }} }">
-                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-Mail</label>
-                <input type="email" name="email" id="email" value="{{ old('email', $contact->email) }}" placeholder="Primäre E-Mail" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-
-                <template x-for="(email, index) in emails" :key="index">
-                    <div class="flex gap-2 mt-2">
-                        <input type="email" :name="'secondary_emails[' + index + ']'" x-model="emails[index]" placeholder="Weitere E-Mail" class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                        <button type="button" @click="emails.splice(index, 1)" class="px-2 py-1 text-red-500 hover:text-red-700 text-lg" title="Entfernen">&times;</button>
-                    </div>
-                </template>
-                <button type="button" @click="emails.push('')" class="mt-2 inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                    E-Mail hinzufügen
-                </button>
-            </div>
-
-            {{-- Telefon: Primär + Sekundäre --}}
-            <div x-data="{ phones: {{ json_encode(old('secondary_phones', $contact->secondary_phones ?? [])) }} }">
-                <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telefon</label>
-                <input type="text" name="phone" id="phone" value="{{ old('phone', $contact->phone) }}" placeholder="Primäre Telefonnummer" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                @error('phone') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-
-                <template x-for="(phone, index) in phones" :key="index">
-                    <div class="flex gap-2 mt-2">
-                        <input type="text" :name="'secondary_phones[' + index + ']'" x-model="phones[index]" placeholder="Weitere Telefonnummer" class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                        <button type="button" @click="phones.splice(index, 1)" class="px-2 py-1 text-red-500 hover:text-red-700 text-lg" title="Entfernen">&times;</button>
-                    </div>
-                </template>
-                <button type="button" @click="phones.push('')" class="mt-2 inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                    Telefon hinzufügen
-                </button>
-            </div>
-
-            <hr class="border-gray-200 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Adresse</h3>
-
-            <div>
-                <label for="street" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Strasse</label>
-                <input type="text" name="street" id="street" value="{{ old('street', $contact->street) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                @include('admin.partials.postal-code-input', [
-                    'zipName' => 'zip', 'cityName' => 'city',
-                    'zipValue' => old('zip', $contact->zip), 'cityValue' => old('city', $contact->city),
-                ])
-                <div>
-                    @include('admin.partials.country-select', ['name' => 'country', 'label' => 'Land', 'value' => old('country', $contact->country ?? '')])
-                </div>
-            </div>
-
-            <hr class="border-gray-200 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Bankverbindung</h3>
-
-            <div>
-                <label for="iban" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IBAN</label>
-                <input type="text" name="iban" id="iban" value="{{ old('iban', $contact->iban) }}" placeholder="CH00 0000 0000 0000 0000 0" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm font-mono focus:border-blue-500 focus:ring-blue-500">
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="bank_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name Bank</label>
-                    <input type="text" name="bank_name" id="bank_name" value="{{ old('bank_name', $contact->bank_name) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="bic" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">BIC/SWIFT</label>
-                    <input type="text" name="bic" id="bic" value="{{ old('bic', $contact->bic) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                @include('admin.partials.postal-code-input', [
-                    'zipName' => 'bank_zip', 'cityName' => 'bank_city',
-                    'zipValue' => old('bank_zip', $contact->bank_zip), 'cityValue' => old('bank_city', $contact->bank_city),
-                    'zipLabel' => 'PLZ Bank', 'cityLabel' => 'Ort Bank',
-                    'zipId' => 'bank_zip', 'cityId' => 'bank_city',
-                ])
-                <div>
-                    @include('admin.partials.country-select', ['name' => 'bank_country', 'id' => 'bank_country', 'label' => 'Land Bank', 'value' => old('bank_country', $contact->bank_country ?? '')])
-                </div>
-            </div>
-
-            <div>
-                <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notizen</label>
-                <textarea name="notes" id="notes" rows="3" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('notes', $contact->notes) }}</textarea>
-            </div>
-
-            {{-- IPI --}}
-            @php
-                $existingIpis = old('ipis', $contact->ipis ?? []);
-            @endphp
-            <div x-data="{ ipis: {{ json_encode(array_values($existingIpis)) }}.length ? {{ json_encode(array_values($existingIpis)) }} : [] }">
-                <hr class="border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">IPI <span class="text-gray-400 font-normal">(Interested Parties Information)</span></h3>
-                </div>
-                <template x-for="(ipi, index) in ipis" :key="index">
-                    <div class="flex gap-2 mt-2 items-center">
-                        <input type="text" :name="'ipis[' + index + '][number]'" x-model="ipi.number" placeholder="IPI-Nr." class="w-36 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                        <input type="text" :name="'ipis[' + index + '][name]'" x-model="ipi.name" placeholder="IPI Name" class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                        <label class="inline-flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap">
-                            <input type="radio" :name="'ipis_primary'" :value="index" :checked="ipi.primary" @change="ipis.forEach((item, i) => item.primary = i === index)" class="text-blue-600 focus:ring-blue-500">
-                            <input type="hidden" :name="'ipis[' + index + '][primary]'" :value="ipi.primary ? '1' : '0'">
-                            Primär
-                        </label>
-                        <button type="button" @click="ipis.splice(index, 1)" class="px-2 py-1 text-red-500 hover:text-red-700 text-lg" title="Entfernen">&times;</button>
-                    </div>
-                </template>
-                <button type="button" @click="ipis.push({number: '', name: '', primary: ipis.length === 0})" class="mt-2 inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                    IPI hinzufügen
-                </button>
-            </div>
-
-            @if($tags->count())
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tags</label>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($tags as $tag)
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="tags[]" value="{{ $tag->id }}" {{ $contact->tags->contains($tag->id) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">{{ $tag->name }}</span>
-                        </label>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-
+            {{-- Genres --}}
             @if($genres->count())
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Genres</label>
@@ -233,6 +69,24 @@
                 </div>
             </div>
             @endif
+
+            {{-- Geschlecht, Geburtsdatum --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="gender" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Geschlecht</label>
+                    <select name="gender" id="gender" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">— Bitte wählen —</option>
+                        <option value="male" {{ old('gender', $contact->gender) === 'male' ? 'selected' : '' }}>Männlich</option>
+                        <option value="female" {{ old('gender', $contact->gender) === 'female' ? 'selected' : '' }}>Weiblich</option>
+                        <option value="other" {{ old('gender', $contact->gender) === 'other' ? 'selected' : '' }}>Nicht definiert</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="birth_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Geburtsdatum</label>
+                    <input type="date" name="birth_date" id="birth_date" value="{{ old('birth_date', $contact->birth_date?->format('Y-m-d')) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    @error('birth_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+            </div>
 
             {{-- Projekte --}}
             @if($projects->count())
@@ -253,6 +107,183 @@
 
             {{-- Organisationen --}}
             @include('admin.partials.organization-search', ['selected' => $contact->organizations])
+
+            {{-- Adresse --}}
+            <hr class="border-gray-200 dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Adresse</h3>
+
+            <div>
+                <label for="street" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Strasse</label>
+                <input type="text" name="street" id="street" value="{{ old('street', $contact->street) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                @include('admin.partials.postal-code-input', [
+                    'zipName' => 'zip', 'cityName' => 'city',
+                    'zipValue' => old('zip', $contact->zip), 'cityValue' => old('city', $contact->city),
+                ])
+                <div>
+                    @include('admin.partials.country-select', ['name' => 'country', 'label' => 'Land', 'value' => old('country', $contact->country ?? '')])
+                </div>
+            </div>
+
+            {{-- E-Mail --}}
+            <div x-data="{ emails: {{ json_encode(old('secondary_emails', $contact->secondary_emails ?? [])) }} }">
+                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-Mail</label>
+                <input type="email" name="email" id="email" value="{{ old('email', $contact->email) }}" placeholder="Primäre E-Mail" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+
+                <template x-for="(email, index) in emails" :key="index">
+                    <div class="flex gap-2 mt-2">
+                        <input type="email" :name="'secondary_emails[' + index + ']'" x-model="emails[index]" placeholder="Weitere E-Mail" class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <button type="button" @click="emails.splice(index, 1)" class="px-2 py-1 text-red-500 hover:text-red-700 text-lg" title="Entfernen">&times;</button>
+                    </div>
+                </template>
+                <button type="button" @click="emails.push('')" class="mt-2 inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    E-Mail hinzufügen
+                </button>
+            </div>
+
+            {{-- Tags --}}
+            @if($tags->count())
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tags</label>
+                <div class="flex flex-wrap gap-2">
+                    @foreach($tags as $tag)
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="tags[]" value="{{ $tag->id }}" {{ $contact->tags->contains($tag->id) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">{{ $tag->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            {{-- Biografie --}}
+            <div>
+                <label for="biography" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Biografie</label>
+                <textarea name="biography" id="biography" rows="4" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('biography', $contact->biography) }}</textarea>
+            </div>
+
+            {{-- Notizen (intern) --}}
+            <div>
+                <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notizen <span class="text-gray-400 font-normal">(intern)</span></label>
+                <textarea name="notes" id="notes" rows="3" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('notes', $contact->notes) }}</textarea>
+            </div>
+
+            {{-- Weitere Angaben (zugeklappt, aufgeklappt wenn Projekt-Verbindung) --}}
+            @php $hasProjects = $contact->projects->count() > 0; @endphp
+            <div x-data="{ open: {{ $hasProjects ? 'true' : 'false' }} }">
+                <hr class="border-gray-200 dark:border-gray-700">
+                <button type="button" @click="open = !open" class="flex items-center justify-between w-full py-2">
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Weitere Angaben</h3>
+                    <svg :class="open && 'rotate-180'" class="w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open" class="space-y-6 pt-2">
+                    {{-- IPI --}}
+                    @php
+                        $existingIpis = old('ipis', $contact->ipis ?? []);
+                    @endphp
+                    <div x-data="{ ipis: {{ json_encode(array_values($existingIpis)) }}.length ? {{ json_encode(array_values($existingIpis)) }} : [] }">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">IPI <span class="text-gray-400 font-normal">(Interested Parties Information)</span></h4>
+                        </div>
+                        <template x-for="(ipi, index) in ipis" :key="index">
+                            <div class="flex gap-2 mt-2 items-center">
+                                <input type="text" :name="'ipis[' + index + '][number]'" x-model="ipi.number" placeholder="IPI-Nr." class="w-36 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                <input type="text" :name="'ipis[' + index + '][name]'" x-model="ipi.name" placeholder="IPI Name" class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                <label class="inline-flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap">
+                                    <input type="radio" :name="'ipis_primary'" :value="index" :checked="ipi.primary" @change="ipis.forEach((item, i) => item.primary = i === index)" class="text-blue-600 focus:ring-blue-500">
+                                    <input type="hidden" :name="'ipis[' + index + '][primary]'" :value="ipi.primary ? '1' : '0'">
+                                    Primär
+                                </label>
+                                <button type="button" @click="ipis.splice(index, 1)" class="px-2 py-1 text-red-500 hover:text-red-700 text-lg" title="Entfernen">&times;</button>
+                            </div>
+                        </template>
+                        <button type="button" @click="ipis.push({number: '', name: '', primary: ipis.length === 0})" class="mt-2 inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            IPI hinzufügen
+                        </button>
+                    </div>
+
+                    {{-- Bankverbindung --}}
+                    <hr class="border-gray-200 dark:border-gray-700">
+                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Bankverbindung</h4>
+
+                    <div>
+                        <label for="iban" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IBAN</label>
+                        <input type="text" name="iban" id="iban" value="{{ old('iban', $contact->iban) }}" placeholder="CH00 0000 0000 0000 0000 0" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm font-mono focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="bank_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name Bank</label>
+                            <input type="text" name="bank_name" id="bank_name" value="{{ old('bank_name', $contact->bank_name) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="bic" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">BIC/SWIFT</label>
+                            <input type="text" name="bic" id="bic" value="{{ old('bic', $contact->bic) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        @include('admin.partials.postal-code-input', [
+                            'zipName' => 'bank_zip', 'cityName' => 'bank_city',
+                            'zipValue' => old('bank_zip', $contact->bank_zip), 'cityValue' => old('bank_city', $contact->bank_city),
+                            'zipLabel' => 'PLZ Bank', 'cityLabel' => 'Ort Bank',
+                            'zipId' => 'bank_zip', 'cityId' => 'bank_city',
+                        ])
+                        <div>
+                            @include('admin.partials.country-select', ['name' => 'bank_country', 'id' => 'bank_country', 'label' => 'Land Bank', 'value' => old('bank_country', $contact->bank_country ?? '')])
+                        </div>
+                    </div>
+
+                    {{-- Nationalität, AHV --}}
+                    <hr class="border-gray-200 dark:border-gray-700">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            @include('admin.partials.country-select', ['name' => 'nationality', 'label' => 'Nationalität', 'value' => old('nationality', $contact->nationality ?? '')])
+                        </div>
+                        <div>
+                            <label for="ahv_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">AHV-Nr.</label>
+                            <input type="text" name="ahv_number" id="ahv_number" value="{{ old('ahv_number', $contact->ahv_number) }}" placeholder="756.XXXX.XXXX.XX"
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm font-mono focus:border-blue-500 focus:ring-blue-500"
+                                x-data x-mask="756.9999.9999.99">
+                            @error('ahv_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    {{-- Telefon --}}
+                    <hr class="border-gray-200 dark:border-gray-700">
+                    <div x-data="{ phones: {{ json_encode(old('secondary_phones', $contact->secondary_phones ?? [])) }} }">
+                        <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telefon</label>
+                        <input type="text" name="phone" id="phone" value="{{ old('phone', $contact->phone) }}" placeholder="Primäre Telefonnummer" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        @error('phone') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+
+                        <template x-for="(phone, index) in phones" :key="index">
+                            <div class="flex gap-2 mt-2">
+                                <input type="text" :name="'secondary_phones[' + index + ']'" x-model="phones[index]" placeholder="Weitere Telefonnummer" class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                <button type="button" @click="phones.splice(index, 1)" class="px-2 py-1 text-red-500 hover:text-red-700 text-lg" title="Entfernen">&times;</button>
+                            </div>
+                        </template>
+                        <button type="button" @click="phones.push('')" class="mt-2 inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            Telefon hinzufügen
+                        </button>
+                    </div>
+
+                    {{-- Todesdatum --}}
+                    <hr class="border-gray-200 dark:border-gray-700">
+                    <div>
+                        <label for="death_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Todesdatum</label>
+                        <input type="date" name="death_date" id="death_date" value="{{ old('death_date', $contact->death_date?->format('Y-m-d')) }}" class="w-full sm:w-1/3 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        @error('death_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="mt-4 flex gap-3">

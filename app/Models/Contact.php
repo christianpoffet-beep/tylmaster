@@ -24,7 +24,7 @@ class Contact extends Model
         'phone', 'secondary_phones', 'street', 'zip', 'city', 'country',
         'nationality', 'ahv_number',
         'iban', 'bank_name', 'bank_zip', 'bank_city', 'bank_country', 'bic',
-        'avatar_path', 'types', 'notes', 'ipis',
+        'avatar_path', 'types', 'notes', 'biography', 'ipis',
     ];
 
     protected $casts = [

@@ -34,7 +34,8 @@
 
             {{-- PDF --}}
             <iframe x-show="type === 'pdf'" :src="type === 'pdf' ? url : ''"
-                    style="width: 100%; height: 100%; border: 0; display: none;"></iframe>
+                    style="width: 100%; height: 100%; border: 0; display: none;"
+                    x-bind:style="type === 'pdf' ? 'width:100%;height:100%;border:0;display:block' : 'display:none'"></iframe>
 
             {{-- Image --}}
             <div x-show="type === 'image'"

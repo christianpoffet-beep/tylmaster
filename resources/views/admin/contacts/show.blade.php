@@ -17,12 +17,12 @@
                         </div>
                     @endif
                     <div>
-                        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ $contact->full_name }}
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ $contact->last_name }}, {{ $contact->first_name }}
                             <span class="text-sm font-normal text-gray-400 ml-2">{{ $contact->ref_nr }}</span>
                         </h2>
-                        @if($contact->birth_date || $contact->death_date)
+                        @if($contact->birth_date)
                             <p class="text-sm text-gray-500 dark:text-gray-400">
-                                @if($contact->birth_date)* {{ $contact->birth_date->format('d.m.Y') }}@endif
+                                * {{ $contact->birth_date->format('d.m.Y') }}
                                 @if($contact->death_date) &dagger; {{ $contact->death_date->format('d.m.Y') }}@endif
                             </p>
                         @endif
@@ -36,6 +36,35 @@
             </div>
 
             <div class="space-y-3 text-sm">
+                {{-- Genres --}}
+                @if($contact->genres->count())
+                <div class="flex flex-wrap gap-1.5">
+                    @foreach($contact->genres as $genre)
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">{{ $genre->name }}</span>
+                    @endforeach
+                </div>
+                @endif
+
+                {{-- Geschlecht --}}
+                @if($contact->gender)
+                <div>
+                    <span class="text-gray-500 dark:text-gray-400">Geschlecht:</span>
+                    <span class="text-gray-900 dark:text-gray-100 ml-1">{{ match($contact->gender) { 'male' => 'Männlich', 'female' => 'Weiblich', 'other' => 'Nicht definiert', default => $contact->gender } }}</span>
+                </div>
+                @endif
+
+                {{-- Adresse --}}
+                @if($contact->street || $contact->city)
+                <div>
+                    <span class="text-gray-500 dark:text-gray-400">Adresse:</span>
+                    <span class="text-gray-900 dark:text-gray-100 ml-1">
+                        {{ $contact->street }}{{ $contact->street && $contact->city ? ', ' : '' }}
+                        {{ $contact->zip }} {{ $contact->city }}
+                        {{ $contact->country ? '(' . $contact->country . ')' : '' }}
+                    </span>
+                </div>
+                @endif
+
                 {{-- E-Mails --}}
                 @if($contact->email)
                 <div>
@@ -50,71 +79,9 @@
                     <a href="mailto:{{ $secEmail }}" class="text-blue-600 dark:text-blue-400 ml-1">{{ $secEmail }}</a>
                 </div>
                 @endforeach
-
-                {{-- Telefone --}}
-                @if($contact->phone)
-                <div>
-                    <span class="text-gray-500 dark:text-gray-400">Telefon:</span>
-                    <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $contact->phone }}</span>
-                    <span class="text-xs text-gray-400 ml-1">(primär)</span>
-                </div>
-                @endif
-                @foreach($contact->secondary_phones ?? [] as $secPhone)
-                <div>
-                    <span class="text-gray-500 dark:text-gray-400">Telefon:</span>
-                    <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $secPhone }}</span>
-                </div>
-                @endforeach
-
-                {{-- Adresse --}}
-                @if($contact->street || $contact->city)
-                <div>
-                    <span class="text-gray-500 dark:text-gray-400">Adresse:</span>
-                    <span class="text-gray-900 dark:text-gray-100 ml-1">
-                        {{ $contact->street }}{{ $contact->street && $contact->city ? ', ' : '' }}
-                        {{ $contact->zip }} {{ $contact->city }}
-                        {{ $contact->country ? '(' . $contact->country . ')' : '' }}
-                    </span>
-                </div>
-                @endif
             </div>
 
-            {{-- Bankverbindung --}}
-            @if($contact->iban || $contact->bank_name)
-            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Bankverbindung</h3>
-                <div class="space-y-1 text-sm">
-                    @if($contact->iban)
-                    <div>
-                        <span class="text-gray-500 dark:text-gray-400">IBAN:</span>
-                        <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $contact->iban }}</span>
-                    </div>
-                    @endif
-                    @if($contact->bank_name)
-                    <div>
-                        <span class="text-gray-500 dark:text-gray-400">Bank:</span>
-                        <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $contact->bank_name }}</span>
-                    </div>
-                    @endif
-                    @if($contact->bic)
-                    <div>
-                        <span class="text-gray-500 dark:text-gray-400">BIC/SWIFT:</span>
-                        <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $contact->bic }}</span>
-                    </div>
-                    @endif
-                    @if($contact->bank_zip || $contact->bank_city || $contact->bank_country)
-                    <div>
-                        <span class="text-gray-500 dark:text-gray-400">Bankadresse:</span>
-                        <span class="text-gray-900 dark:text-gray-100 ml-1">
-                            {{ $contact->bank_zip }} {{ $contact->bank_city }}
-                            {{ $contact->bank_country ? '(' . $contact->bank_country . ')' : '' }}
-                        </span>
-                    </div>
-                    @endif
-                </div>
-            </div>
-            @endif
-
+            {{-- Tags --}}
             @if($contact->tags->count())
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Tags</h3>
@@ -126,46 +93,144 @@
             </div>
             @endif
 
-            @if($contact->genres->count())
-            <div class="mt-3 flex flex-wrap gap-1.5">
-                @foreach($contact->genres as $genre)
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">{{ $genre->name }}</span>
-                @endforeach
+            {{-- Biografie --}}
+            @if($contact->biography)
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Biografie</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $contact->biography }}</p>
             </div>
             @endif
 
+            {{-- Notizen (intern) --}}
             @if($contact->notes)
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Notizen</h3>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Notizen <span class="text-gray-400 font-normal">(intern)</span></h3>
                 <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $contact->notes }}</p>
             </div>
             @endif
 
-            @if($contact->ipis && count($contact->ipis))
-            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">IPI</h3>
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="text-left text-xs text-gray-500 dark:text-gray-400 uppercase">
-                            <th class="pb-1 pr-4">IPI-Nr.</th>
-                            <th class="pb-1 pr-4">IPI Name</th>
-                            <th class="pb-1"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($contact->ipis as $ipi)
-                        <tr>
-                            <td class="py-0.5 pr-4 text-gray-900 dark:text-gray-100 font-mono">{{ $ipi['number'] ?? '' }}</td>
-                            <td class="py-0.5 pr-4 text-gray-900 dark:text-gray-100">{{ $ipi['name'] ?? '' }}</td>
-                            <td class="py-0.5">
-                                @if(!empty($ipi['primary']))
-                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">primär</span>
-                                @endif
-                            </td>
-                        </tr>
+            {{-- Weitere Angaben (zugeklappt, aufgeklappt wenn Projekt-Verbindung) --}}
+            @php
+                $hasSecondaryData = $contact->phone || count($contact->secondary_phones ?? []) || ($contact->ipis && count($contact->ipis)) || $contact->iban || $contact->bank_name || $contact->nationality || $contact->ahv_number || $contact->death_date;
+                $hasProjects = $contact->projects->count() > 0;
+            @endphp
+            @if($hasSecondaryData)
+            <div x-data="{ open: {{ $hasProjects ? 'true' : 'false' }} }" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" @click="open = !open" class="flex items-center justify-between w-full">
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Weitere Angaben</h3>
+                    <svg :class="open && 'rotate-180'" class="w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open" class="space-y-3 text-sm mt-3">
+                    {{-- IPI --}}
+                    @if($contact->ipis && count($contact->ipis))
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">IPI</h4>
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-xs text-gray-500 dark:text-gray-400 uppercase">
+                                    <th class="pb-1 pr-4">IPI-Nr.</th>
+                                    <th class="pb-1 pr-4">IPI Name</th>
+                                    <th class="pb-1"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($contact->ipis as $ipi)
+                                <tr>
+                                    <td class="py-0.5 pr-4 text-gray-900 dark:text-gray-100 font-mono">{{ $ipi['number'] ?? '' }}</td>
+                                    <td class="py-0.5 pr-4 text-gray-900 dark:text-gray-100">{{ $ipi['name'] ?? '' }}</td>
+                                    <td class="py-0.5">
+                                        @if(!empty($ipi['primary']))
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">primär</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @endif
+
+                    {{-- Bankverbindung --}}
+                    @if($contact->iban || $contact->bank_name)
+                    <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
+                        <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Bankverbindung</h4>
+                        <div class="space-y-1">
+                            @if($contact->iban)
+                            <div>
+                                <span class="text-gray-500 dark:text-gray-400">IBAN:</span>
+                                <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $contact->iban }}</span>
+                            </div>
+                            @endif
+                            @if($contact->bank_name)
+                            <div>
+                                <span class="text-gray-500 dark:text-gray-400">Bank:</span>
+                                <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $contact->bank_name }}</span>
+                            </div>
+                            @endif
+                            @if($contact->bic)
+                            <div>
+                                <span class="text-gray-500 dark:text-gray-400">BIC/SWIFT:</span>
+                                <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $contact->bic }}</span>
+                            </div>
+                            @endif
+                            @if($contact->bank_zip || $contact->bank_city || $contact->bank_country)
+                            <div>
+                                <span class="text-gray-500 dark:text-gray-400">Bankadresse:</span>
+                                <span class="text-gray-900 dark:text-gray-100 ml-1">
+                                    {{ $contact->bank_zip }} {{ $contact->bank_city }}
+                                    {{ $contact->bank_country ? '(' . $contact->bank_country . ')' : '' }}
+                                </span>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- Nationalität / AHV --}}
+                    @if($contact->nationality || $contact->ahv_number)
+                    <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
+                        @if($contact->nationality)
+                        <div>
+                            <span class="text-gray-500 dark:text-gray-400">Nationalität:</span>
+                            <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $contact->nationality }}</span>
+                        </div>
+                        @endif
+                        @if($contact->ahv_number)
+                        <div>
+                            <span class="text-gray-500 dark:text-gray-400">AHV-Nr.:</span>
+                            <span class="text-gray-900 dark:text-gray-100 ml-1 font-mono">{{ $contact->ahv_number }}</span>
+                        </div>
+                        @endif
+                    </div>
+                    @endif
+
+                    {{-- Telefone --}}
+                    @if($contact->phone)
+                    <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
+                        <div>
+                            <span class="text-gray-500 dark:text-gray-400">Telefon:</span>
+                            <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $contact->phone }}</span>
+                            <span class="text-xs text-gray-400 ml-1">(primär)</span>
+                        </div>
+                        @foreach($contact->secondary_phones ?? [] as $secPhone)
+                        <div>
+                            <span class="text-gray-500 dark:text-gray-400">Telefon:</span>
+                            <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $secPhone }}</span>
+                        </div>
                         @endforeach
-                    </tbody>
-                </table>
+                    </div>
+                    @endif
+
+                    {{-- Todesdatum (nur wenn separat angezeigt, ohne Geburtsdatum-Kontext) --}}
+                    @if($contact->death_date && !$contact->birth_date)
+                    <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
+                        <span class="text-gray-500 dark:text-gray-400">Todesdatum:</span>
+                        <span class="text-gray-900 dark:text-gray-100 ml-1">&dagger; {{ $contact->death_date->format('d.m.Y') }}</span>
+                    </div>
+                    @endif
+                </div>
             </div>
             @endif
         </div>

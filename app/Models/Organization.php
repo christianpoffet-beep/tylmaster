@@ -22,7 +22,7 @@ class Organization extends Model
         'type', 'legal_form', 'names', 'biography', 'websites',
         'street', 'zip', 'city', 'country', 'email', 'phone',
         'iban', 'bank_name', 'bank_zip', 'bank_city', 'bank_country', 'bic',
-        'vat_number', 'avatar_path',
+        'vat_number', 'avatar_path', 'notes',
     ];
 
     protected $casts = [
