@@ -162,6 +162,7 @@ class ContractTemplateController extends Controller
         return response()->json([
             'contract_type_slug' => $contractTemplate->contract_type_slug,
             'default_status' => $contractTemplate->default_status,
+            'language' => $contractTemplate->language ?? 'de',
             'default_terms' => $contractTemplate->default_terms,
             'default_parties' => $contractTemplate->default_parties,
             'rights' => $contractTemplate->rights,

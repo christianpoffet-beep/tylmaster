@@ -22,7 +22,7 @@
                 @error('title') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                     <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Typ *</label>
                     <select name="type" id="type" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
@@ -37,6 +37,13 @@
                         @foreach(['draft' => 'Entwurf', 'active' => 'Aktiv', 'expired' => 'Ausgelaufen', 'terminated' => 'Gekündigt'] as $v => $l)
                             <option value="{{ $v }}" {{ old('status', $contract->status) === $v ? 'selected' : '' }}>{{ $l }}</option>
                         @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sprache</label>
+                    <select name="language" id="language" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="de" {{ old('language', $contract->language ?? 'de') === 'de' ? 'selected' : '' }}>Deutsch</option>
+                        <option value="en" {{ old('language', $contract->language ?? 'de') === 'en' ? 'selected' : '' }}>English</option>
                     </select>
                 </div>
             </div>

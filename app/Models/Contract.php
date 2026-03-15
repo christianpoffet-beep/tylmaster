@@ -10,7 +10,7 @@ class Contract extends Model
     use LogsActivity;
 
     protected $fillable = [
-        'contract_number', 'title', 'type', 'status', 'start_date', 'end_date', 'terms',
+        'contract_number', 'title', 'type', 'status', 'language', 'start_date', 'end_date', 'terms',
         'has_zession', 'zession_amount', 'zession_currency', 'zession_notes',
         'territory', 'rights', 'rights_label_a', 'rights_label_b',
     ];
