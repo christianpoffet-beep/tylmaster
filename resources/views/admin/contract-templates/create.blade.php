@@ -20,12 +20,20 @@
                 @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
                     <label for="contract_type_slug" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vertragstyp *</label>
                     <select name="contract_type_slug" id="contract_type_slug" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         @foreach($contractTypes as $ct)
                             <option value="{{ $ct->slug }}" {{ old('contract_type_slug') === $ct->slug ? 'selected' : '' }}>{{ $ct->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sprache *</label>
+                    <select name="language" id="language" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        @foreach(['de' => 'Deutsch', 'en' => 'English', 'fr' => 'Français'] as $code => $label)
+                            <option value="{{ $code }}" {{ old('language', 'de') === $code ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>

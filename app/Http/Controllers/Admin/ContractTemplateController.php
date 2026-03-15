@@ -19,9 +19,13 @@ class ContractTemplateController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
+        if ($language = $request->input('language')) {
+            $query->where('language', $language);
+        }
+
         $sortField = $request->input('sort', 'sort_order');
         $sortDir = $request->input('dir', 'asc');
-        $allowedSorts = ['name', 'sort_order', 'contract_type_slug', 'created_at'];
+        $allowedSorts = ['name', 'sort_order', 'contract_type_slug', 'language', 'created_at'];
         if (!in_array($sortField, $allowedSorts)) $sortField = 'sort_order';
         if (!in_array($sortDir, ['asc', 'desc'])) $sortDir = 'asc';
 
@@ -50,6 +54,7 @@ class ContractTemplateController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:contract_templates,name',
             'contract_type_slug' => 'required|exists:contract_types,slug',
+            'language' => 'required|in:de,en,fr',
             'default_status' => 'nullable|in:draft,active,expired,terminated',
             'default_terms' => 'nullable|string',
             'parties' => 'nullable|array',
@@ -74,6 +79,7 @@ class ContractTemplateController extends Controller
         ContractTemplate::create([
             'name' => $request->input('name'),
             'contract_type_slug' => $request->input('contract_type_slug'),
+            'language' => $request->input('language', 'de'),
             'default_status' => $request->input('default_status'),
             'default_terms' => $request->input('default_terms'),
             'default_parties' => !empty($parties) ? $parties : null,
@@ -107,6 +113,7 @@ class ContractTemplateController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:contract_templates,name,' . $contractTemplate->id,
             'contract_type_slug' => 'required|exists:contract_types,slug',
+            'language' => 'required|in:de,en,fr',
             'default_status' => 'nullable|in:draft,active,expired,terminated',
             'default_terms' => 'nullable|string',
             'parties' => 'nullable|array',
@@ -131,6 +138,7 @@ class ContractTemplateController extends Controller
         $contractTemplate->update([
             'name' => $request->input('name'),
             'contract_type_slug' => $request->input('contract_type_slug'),
+            'language' => $request->input('language', 'de'),
             'default_status' => $request->input('default_status'),
             'default_terms' => $request->input('default_terms'),
             'default_parties' => !empty($parties) ? $parties : null,

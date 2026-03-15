@@ -11,7 +11,7 @@ class ContractTemplate extends Model
     use LogsActivity;
 
     protected $fillable = [
-        'name', 'slug', 'contract_type_slug', 'default_terms', 'default_status',
+        'name', 'slug', 'contract_type_slug', 'language', 'default_terms', 'default_status',
         'default_parties', 'sort_order', 'rights', 'rights_label_a', 'rights_label_b',
     ];
 

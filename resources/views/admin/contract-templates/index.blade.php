@@ -11,8 +11,14 @@
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
     <form method="GET" action="{{ route('admin.contract-templates.index') }}" class="flex gap-2">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Vorlage suchen..." class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500 w-48">
-        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Suchen</button>
-        @if(request('search'))
+        <select name="language" onchange="this.form.submit()" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            <option value="">Alle Sprachen</option>
+            @foreach(['de' => 'Deutsch', 'en' => 'English', 'fr' => 'Français'] as $code => $label)
+                <option value="{{ $code }}" {{ request('language') === $code ? 'selected' : '' }}>{{ $label }}</option>
+            @endforeach
+        </select>
+        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Suchen</button>
+        @if(request('search') || request('language'))
             <a href="{{ route('admin.contract-templates.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-100">Zurücksetzen</a>
         @endif
     </form>
@@ -26,6 +32,7 @@
                 <tr>
                     <x-admin.sortable-header column="sort_order" :default="true">Reihenfolge</x-admin.sortable-header>
                     <x-admin.sortable-header column="name">Name</x-admin.sortable-header>
+                    <x-admin.sortable-header column="language">Sprache</x-admin.sortable-header>
                     <x-admin.sortable-header column="contract_type_slug">Vertragstyp</x-admin.sortable-header>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Vorschau</th>
                     <th class="px-4 py-3"></th>
@@ -36,6 +43,7 @@
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $template->sort_order }}</td>
                         <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">{{ $template->name }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 uppercase">{{ $template->language }}</td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $typeColors[$template->contract_type_slug] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300' }}">{{ $typeLabels[$template->contract_type_slug] ?? ucfirst($template->contract_type_slug) }}</span>
                         </td>
@@ -50,7 +58,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Keine Vertragsvorlagen gefunden.</td>
+                        <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Keine Vertragsvorlagen gefunden.</td>
                     </tr>
                 @endforelse
             </tbody>
