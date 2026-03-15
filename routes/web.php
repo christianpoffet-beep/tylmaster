@@ -27,6 +27,8 @@ use App\Http\Controllers\Admin\ContractTypeController;
 use App\Http\Controllers\Admin\InvoiceTemplateController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AddressCircleController;
+use App\Http\Controllers\Admin\CampaignController;
+use App\Http\Controllers\Admin\CampaignTemplateController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\PublicGalleryController;
 use Illuminate\Support\Facades\Route;
@@ -142,6 +144,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::resource('contract-templates', ContractTemplateController::class)->except('show');
     Route::get('contract-templates/{contractTemplate}/data', [ContractTemplateController::class, 'data'])->name('contract-templates.data');
 
+    // Settings: Kampagnenvorlagen
+    Route::resource('campaign-templates', CampaignTemplateController::class)->except('show');
+    Route::get('campaign-templates/{campaignTemplate}/data', [CampaignTemplateController::class, 'data'])->name('campaign-templates.data');
+
     // Settings: Kontoplan-Vorlagen
     Route::resource('chart-templates', ChartTemplateController::class);
     Route::post('chart-templates/{chartTemplate}/accounts', [ChartTemplateController::class, 'storeAccount'])->name('chart-templates.accounts.store');
@@ -159,6 +165,13 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('activity-logs/export', [ActivityLogController::class, 'export'])->name('activity-logs.export');
     Route::view('changelog', 'admin.changelog')->name('changelog');
+
+    // Kampagnen
+    Route::resource('campaigns', CampaignController::class);
+    Route::post('campaigns/{campaign}/duplicate', [CampaignController::class, 'duplicate'])->name('campaigns.duplicate');
+    Route::post('campaigns/{campaign}/send', [CampaignController::class, 'send'])->name('campaigns.send');
+    Route::post('campaigns/{campaign}/test-send', [CampaignController::class, 'testSend'])->name('campaigns.testSend');
+    Route::get('campaigns/{campaign}/send-log', [CampaignController::class, 'sendLog'])->name('campaigns.sendLog');
 
     // Kampagnen: Adresskreise
     Route::resource('address-circles', AddressCircleController::class);

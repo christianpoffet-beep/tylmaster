@@ -120,8 +120,9 @@
 
                         {{-- Kampagnen Dropdown --}}
                         @php
-                            $kampagnenActive = request()->routeIs('admin.address-circles.*');
+                            $kampagnenActive = request()->routeIs('admin.address-circles.*') || request()->routeIs('admin.campaigns.*');
                             $kampagnenItems = [
+                                ['route' => 'admin.campaigns.index', 'label' => 'Kampagnen', 'match' => 'admin.campaigns.*', 'icon' => 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'],
                                 ['route' => 'admin.address-circles.index', 'label' => 'Adresskreise', 'match' => 'admin.address-circles.*', 'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'],
                             ];
                         @endphp
@@ -148,7 +149,7 @@
 
                         {{-- Settings Dropdown --}}
                         @php
-                            $settingsActive = request()->routeIs('admin.settings.*') || request()->routeIs('admin.help') || request()->routeIs('admin.changelog') || request()->routeIs('admin.activity-logs.*') || request()->routeIs('admin.genres.*') || request()->routeIs('admin.contact-types.*') || request()->routeIs('admin.organization-types.*') || request()->routeIs('admin.project-types.*') || request()->routeIs('admin.contract-types.*') || request()->routeIs('admin.chart-templates.*') || request()->routeIs('admin.invoice-templates.*') || request()->routeIs('admin.contract-templates.*');
+                            $settingsActive = request()->routeIs('admin.settings.*') || request()->routeIs('admin.help') || request()->routeIs('admin.changelog') || request()->routeIs('admin.activity-logs.*') || request()->routeIs('admin.genres.*') || request()->routeIs('admin.contact-types.*') || request()->routeIs('admin.organization-types.*') || request()->routeIs('admin.project-types.*') || request()->routeIs('admin.contract-types.*') || request()->routeIs('admin.chart-templates.*') || request()->routeIs('admin.invoice-templates.*') || request()->routeIs('admin.contract-templates.*') || request()->routeIs('admin.campaign-templates.*');
                             $settingsItems = [
                                 ['route' => 'admin.genres.index', 'label' => 'Genres', 'match' => 'admin.genres.*', 'icon' => 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'],
                                 ['route' => 'admin.contact-types.index', 'label' => 'Kontakt-Typen', 'match' => 'admin.contact-types.*', 'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z'],
@@ -159,6 +160,7 @@
                                 ['route' => 'admin.chart-templates.index', 'label' => 'Kontopläne', 'match' => 'admin.chart-templates.*', 'icon' => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
                                 ['route' => 'admin.invoice-templates.index', 'label' => 'Rechnungsvorlagen', 'match' => 'admin.invoice-templates.*', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
                                 ['route' => 'admin.contract-templates.index', 'label' => 'Vertragsvorlagen', 'match' => 'admin.contract-templates.*', 'icon' => 'M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2'],
+                                ['route' => 'admin.campaign-templates.index', 'label' => 'Kampagnenvorlagen', 'match' => 'admin.campaign-templates.*', 'icon' => 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'],
                                 'divider',
                                 ['route' => 'admin.settings.profile', 'label' => 'Profil', 'match' => 'admin.settings.profile', 'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
                                 ['route' => 'admin.settings.appearance', 'label' => 'Darstellung', 'match' => 'admin.settings.appearance', 'icon' => 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z'],
