@@ -123,10 +123,14 @@
                     </div>
                 @endif
             @elseif($campaign->status === 'sending')
-                <div class="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-400">
-                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                    Versand läuft...
-                </div>
+                <p class="text-sm text-yellow-600 dark:text-yellow-400 mb-3">Versand hängt — erneut versuchen:</p>
+                <form method="POST" action="{{ route('admin.campaigns.send', $campaign) }}"
+                      onsubmit="return confirm('Versand erneut starten?')">
+                    @csrf
+                    <button type="submit" class="w-full px-4 py-2.5 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium">
+                        Erneut senden
+                    </button>
+                </form>
             @elseif($campaign->status === 'sent')
                 <p class="text-sm text-green-600 dark:text-green-400">Kampagne wurde am {{ $campaign->sent_at?->format('d.m.Y H:i') }} gesendet.</p>
             @endif
