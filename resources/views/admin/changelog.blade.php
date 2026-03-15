@@ -11,6 +11,44 @@
 
     <div class="space-y-6">
 
+        {{-- v1.6.0 --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">v1.6.0</h3>
+                <span class="text-sm text-gray-500 dark:text-gray-400">15.03.2026</span>
+            </div>
+            <div class="space-y-2">
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Kampagnen: E-Mail-Kampagnen erstellen, bearbeiten, duplizieren und an Adresskreise versenden</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Kampagnenvorlagen: Wiederverwendbare E-Mail-Vorlagen mit Platzhaltern ({name}, {email}, {organization}) unter Settings</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Brevo-Integration: E-Mail-Versand &uuml;ber Brevo API mit Absender-Konfiguration, Reply-To und Mehrsprachigkeit (DE/EN/FR/IT)</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Test-Versand: Einzelne Test-E-Mail an beliebige Adresse senden (mit [TEST]-Prefix im Betreff)</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Versandprotokoll: Detaillierte &Uuml;bersicht aller gesendeten E-Mails pro Kampagne mit Status (Gesendet/Fehler)</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Kampagnen-Vorschau: HTML-Inhalt wird als Live-Vorschau im iFrame angezeigt</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Filter: Kontakte, Organisationen und Adresskreise k&ouml;nnen jetzt auch nach Projekt, Vertrag und Organisation gefiltert werden</span>
+                </div>
+            </div>
+        </div>
+
         {{-- v1.5.0 --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center justify-between mb-3">

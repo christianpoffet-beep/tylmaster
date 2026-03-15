@@ -565,23 +565,99 @@
         {{-- 15. Kampagnen & Adresskreise --}}
         <div id="adresskreise" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">15. Kampagnen & Adresskreise</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Unter <strong>Kampagnen &rarr; Adresskreise</strong> findest du das Werkzeug f&uuml;r gezielte Kommunikation mit Gruppen von Kontakten und Organisationen.</p>
-            <div class="space-y-3">
-                <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Adresskreise erstellen</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Erstelle einen neuen Adresskreis mit <strong>Name</strong> und <strong>Beschreibung</strong>. Optional kannst du Organisationen und Projekte verkn&uuml;pfen.</p>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Das Kampagnen-Modul erm&ouml;glicht den Versand von E-Mail-Kampagnen an Gruppen von Kontakten und Organisationen. Der Bereich besteht aus drei Teilen: <strong>Kampagnen</strong>, <strong>Kampagnenvorlagen</strong> und <strong>Adresskreise</strong>.</p>
+
+            <div class="space-y-4">
+                {{-- Kampagnen --}}
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-3">
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Kampagnen</h4>
+                    <div class="space-y-2">
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Kampagne erstellen</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Erstelle eine neue Kampagne mit <strong>Name</strong>, <strong>Typ</strong> (E-Mail oder Brief), <strong>Sprache</strong> (DE/FR/EN), <strong>Betreff</strong> und <strong>Inhalt</strong> (HTML). Optional kannst du Absendername, Absender-E-Mail und Reply-To-Adresse angeben.</p>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Vorlage verwenden</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">W&auml;hle beim Erstellen eine <strong>Kampagnenvorlage</strong> aus, um Betreff und Inhalt automatisch zu &uuml;bernehmen. Die Inhalte k&ouml;nnen danach frei angepasst werden.</p>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Adresskreis zuweisen</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Weise der Kampagne einen <strong>Adresskreis</strong> zu, um die Empf&auml;nger festzulegen. Die Kampagne wird an alle Mitglieder des Adresskreises gesendet, die eine E-Mail-Adresse haben.</p>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Platzhalter</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Im Betreff und Inhalt k&ouml;nnen Platzhalter verwendet werden, die beim Versand automatisch pro Empf&auml;nger ersetzt werden: <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">{name}</code>, <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">{first_name}</code>, <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">{last_name}</code>, <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">{email}</code>, <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">{organization}</code>.</p>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Duplizieren</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Eine bestehende Kampagne kann &uuml;ber die Detailseite dupliziert werden, um eine &auml;hnliche Kampagne schnell zu erstellen.</p>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Mitglieder hinzuf&uuml;gen</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Auf der Detailseite eines Adresskreises kannst du Kontakte und Organisationen als Mitglieder hinzuf&uuml;gen. Nutze die erweiterte Filterung nach Name, E-Mail, Ort, Typ, Genre oder Projekt, um gezielt Mitglieder auszuw&auml;hlen.</p>
+
+                {{-- E-Mail-Versand --}}
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-3">
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">E-Mail-Versand (Brevo)</h4>
+                    <div class="space-y-2">
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Voraussetzungen</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">F&uuml;r den Versand wird ein <strong>Brevo-Konto</strong> mit g&uuml;ltigem API-Key ben&ouml;tigt (Einrichtung in der <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">.env</code>-Datei). Die Kampagne muss einen <strong>Adresskreis</strong>, <strong>Betreff</strong> und <strong>Inhalt</strong> haben.</p>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Test-Versand</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Auf der Detailseite einer Kampagne kannst du eine <strong>Test-E-Mail</strong> an eine beliebige Adresse senden. Der Betreff wird mit <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">[TEST]</code> markiert. Platzhalter werden mit Beispielwerten gef&uuml;llt.</p>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Kampagne senden</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">&Uuml;ber den <strong>&laquo;Kampagne senden&raquo;</strong>-Button auf der Detailseite wird die Kampagne an alle Empf&auml;nger im zugewiesenen Adresskreis gesendet. Der Versand erfolgt synchron &mdash; die Seite l&auml;dt, sobald alle E-Mails verarbeitet sind.</p>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Versandprotokoll</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Nach dem Versand zeigt das <strong>Versandprotokoll</strong> den Status jeder einzelnen E-Mail: zugestellt, fehlgeschlagen oder ausstehend. Fehler werden mit der Fehlermeldung angezeigt.</p>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Status</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Eine Kampagne durchl&auml;uft die Status: <strong>Entwurf</strong> &rarr; <strong>Wird gesendet</strong> &rarr; <strong>Gesendet</strong>. Falls der Versand unterbrochen wird, kann er &uuml;ber &laquo;Erneut senden&raquo; fortgesetzt werden.</p>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">E-Mail-Adressen &uuml;berschreiben</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Pro Mitglied kann eine alternative E-Mail-Adresse hinterlegt werden, die f&uuml;r Kampagnen anstelle der Standard-E-Mail verwendet wird.</p>
+
+                {{-- Kampagnenvorlagen --}}
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-3">
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Kampagnenvorlagen</h4>
+                    <div class="space-y-2">
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Vorlage erstellen</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Unter <strong>Settings &rarr; Kampagnenvorlagen</strong> k&ouml;nnen wiederverwendbare E-Mail-Vorlagen erstellt werden. Jede Vorlage hat einen <strong>Namen</strong>, <strong>Betreff</strong> und <strong>HTML-Inhalt</strong>.</p>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Vorlagen verwenden</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Beim Erstellen oder Bearbeiten einer Kampagne kann eine Vorlage ausgew&auml;hlt werden, deren Betreff und Inhalt automatisch &uuml;bernommen werden.</p>
+                        </div>
+                    </div>
                 </div>
+
+                {{-- Adresskreise --}}
                 <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">CSV/Excel-Export</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Exportiere die Mitgliederliste eines Adresskreises als CSV-Datei (Excel-kompatibel) mit Namen, E-Mails und Genres.</p>
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Adresskreise</h4>
+                    <div class="space-y-2">
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Adresskreis erstellen</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Erstelle einen neuen Adresskreis mit <strong>Name</strong> und <strong>Beschreibung</strong>. Optional kannst du Organisationen und Projekte verkn&uuml;pfen.</p>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">Mitglieder hinzuf&uuml;gen</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Auf der Detailseite eines Adresskreises kannst du Kontakte und Organisationen als Mitglieder hinzuf&uuml;gen. Nutze die erweiterte Filterung nach Name, E-Mail, Ort, Typ, Genre oder Projekt, um gezielt Mitglieder auszuw&auml;hlen.</p>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">E-Mail-Adressen &uuml;berschreiben</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Pro Mitglied kann eine alternative E-Mail-Adresse hinterlegt werden, die f&uuml;r Kampagnen anstelle der Standard-E-Mail verwendet wird.</p>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-medium text-gray-800 dark:text-gray-100">CSV/Excel-Export</h5>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Exportiere die Mitgliederliste eines Adresskreises als CSV-Datei (Excel-kompatibel) mit Namen, E-Mails und Genres.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -618,7 +694,7 @@
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Dropdown-Men&uuml;s</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Bereiche mit Untermen&uuml;s &ouml;ffnen sich als Dropdown: <strong>Projekte</strong> (Projekte, Aufgaben, Vertr&auml;ge, Musik, Submissions, Logos, Fotos), <strong>Finanzen</strong> (Rechnungen, Ausgaben, Buchhaltung), <strong>Kampagnen</strong> (Adresskreise) und <strong>Settings</strong> (Labels, Vorlagen, Profil, Darstellung, System).</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Bereiche mit Untermen&uuml;s &ouml;ffnen sich als Dropdown: <strong>Projekte</strong> (Projekte, Aufgaben, Vertr&auml;ge, Musik, Submissions, Logos, Fotos), <strong>Finanzen</strong> (Rechnungen, Ausgaben, Buchhaltung), <strong>Kampagnen</strong> (Kampagnen, Adresskreise) und <strong>Settings</strong> (Labels, Vorlagen, Profil, Darstellung, System).</p>
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Mobile Ansicht</h4>
