@@ -241,16 +241,19 @@ class ArtworkController extends Controller
         $contacts = Contact::where(function ($query) use ($q) {
             $query->where('first_name', 'like', "%{$q}%")
                   ->orWhere('last_name', 'like', "%{$q}%")
-                  ->orWhere('company', 'like', "%{$q}%");
-        })->limit(10)->get()->map(fn ($c) => [
+                  ->orWhere('email', 'like', "%{$q}%")
+                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$q}%"]);
+        })->limit(50)->get()->map(fn ($c) => [
             'id' => $c->id,
             'type' => 'contact',
             'name' => $c->full_name,
-            'detail' => $c->company,
+            'detail' => $c->email,
         ]);
 
-        $organizations = Organization::where('names', 'like', "%{$q}%")
-            ->limit(10)->get()->map(fn ($o) => [
+        $organizations = Organization::where(function ($query) use ($q) {
+            $query->whereRaw('LOWER(CAST(names AS CHAR)) LIKE ?', ['%' . mb_strtolower($q) . '%'])
+                  ->orWhere('email', 'like', "%{$q}%");
+        })->limit(50)->get()->map(fn ($o) => [
             'id' => $o->id,
             'type' => 'organization',
             'name' => $o->primary_name,
