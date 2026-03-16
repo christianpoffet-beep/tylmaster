@@ -256,7 +256,7 @@
 
             @if($releases->count())
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Releases</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Produkte</label>
                 <select name="release_ids[]" multiple class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" size="4">
                     @foreach($releases as $release)
                         <option value="{{ $release->id }}" {{ in_array($release->id, old('release_ids', [])) ? 'selected' : '' }}>{{ $release->title }}{{ $release->upc ? ' (' . $release->upc . ')' : '' }}</option>

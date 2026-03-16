@@ -78,7 +78,7 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        $project->load(['contacts', 'contracts', 'tracks', 'tasks', 'artworks.logos', 'organizations', 'genres']);
+        $project->load(['contacts', 'contracts', 'tracks', 'releases', 'tasks', 'artworks.logos', 'organizations', 'genres']);
         $projectTypes = ProjectType::orderBy('sort_order')->get();
         return view('admin.projects.show', compact('project', 'projectTypes'));
     }

@@ -1,24 +1,32 @@
-{{-- Organization search component for contact forms --}}
-{{-- Usage: @include('admin.partials.organization-search', ['selected' => $contact->organizations ?? collect()]) --}}
+{{-- Organization search component --}}
+{{-- Usage: @include('admin.partials.organization-search', ['selected' => $model->organizations ?? collect(), 'inputName' => 'band_ids[]', 'orgSearchLabel' => 'Band', 'orgTypeFilter' => 'band']) --}}
+{{-- Set orgTypeFilter to lock the search to a specific type. Leave empty to show the type dropdown. --}}
 
 @php
+    $inputName = $inputName ?? 'organization_ids[]';
+    $label = $orgSearchLabel ?? 'Organisationen';
+    $orgTypeFilter = $orgTypeFilter ?? '';
+    $componentId = preg_replace('/[^a-zA-Z0-9]/', '', Str::camel($inputName));
+
     $orgTypeLabelsSearch = ['band' => 'Band', 'label' => 'Label', 'publishing' => 'Publishing', 'venue' => 'Location/Venue', 'event_festival' => 'Veranstalter/Event/Festival', 'media' => 'Media', 'oma' => 'OMA-Kontakt'];
     $orgTypeColorsSearch = ['band' => 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300', 'label' => 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300', 'publishing' => 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300', 'venue' => 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300', 'event_festival' => 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300', 'media' => 'bg-pink-100 dark:bg-pink-900/50 text-pink-700 dark:text-pink-300', 'oma' => 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'];
 @endphp
 
-<div x-data="organizationSearch()" class="relative">
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organisationen</label>
+<div x-data="orgSearch_{{ $componentId }}()" class="relative">
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $label }}</label>
 
     {{-- Search input --}}
     <div class="flex gap-2 mb-2">
-        <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="if(results.length) open = true; else search()"
-            placeholder="Organisation suchen..." class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+        <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="if(query.length >= 1 || results.length) open = true; else { search(); }"
+            placeholder="{{ $label }} suchen..." class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+        @if(!$orgTypeFilter)
         <select x-model="typeFilter" @change="search()" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             <option value="">Alle Typen</option>
             @foreach($orgTypeLabelsSearch as $v => $l)
                 <option value="{{ $v }}">{{ $l }}</option>
             @endforeach
         </select>
+        @endif
     </div>
 
     {{-- Results dropdown --}}
@@ -40,7 +48,7 @@
 
     {{-- No results --}}
     <div x-show="open && results.length === 0 && !loading" x-cloak class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Keine Organisationen gefunden.</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Keine {{ $label }} gefunden.</p>
     </div>
 
     {{-- Selected organizations --}}
@@ -49,7 +57,7 @@
             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium" :class="typeColorMap[org.type] || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'">
                 <span x-text="org.primary_name"></span>
                 <button type="button" @click="removeOrganization(org.id)" class="hover:text-red-600">&times;</button>
-                <input type="hidden" name="organization_ids[]" :value="org.id">
+                <input type="hidden" name="{{ $inputName }}" :value="org.id">
             </span>
         </template>
     </div>
@@ -63,13 +71,18 @@
     {{-- Inline create form --}}
     <div x-show="showCreateForm" x-cloak class="mt-2 p-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg space-y-2">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <select x-model="newType" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                <option value="">Typ wählen *</option>
-                @foreach($orgTypeLabelsSearch as $v => $l)
-                    <option value="{{ $v }}">{{ $l }}</option>
-                @endforeach
-            </select>
-            <input type="text" x-model="newName" placeholder="Name *" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            @if($orgTypeFilter)
+                <input type="hidden" x-model="newType">
+                <input type="text" x-model="newName" placeholder="Name *" class="col-span-2 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            @else
+                <select x-model="newType" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Typ wählen *</option>
+                    @foreach($orgTypeLabelsSearch as $v => $l)
+                        <option value="{{ $v }}">{{ $l }}</option>
+                    @endforeach
+                </select>
+                <input type="text" x-model="newName" placeholder="Name *" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            @endif
         </div>
         <div x-show="createError" x-cloak class="text-xs text-red-500" x-text="createError"></div>
         <div class="flex gap-2">
@@ -78,7 +91,7 @@
                 <span x-show="!creating">Erstellen</span>
                 <span x-show="creating">Wird erstellt...</span>
             </button>
-            <button type="button" @click="showCreateForm = false; newType = ''; newName = ''; createError = ''"
+            <button type="button" @click="showCreateForm = false; newType = '{{ $orgTypeFilter }}'; newName = ''; createError = ''"
                 class="px-3 py-1.5 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500">Abbrechen</button>
         </div>
     </div>
@@ -86,14 +99,14 @@
 
 @php
     $selectedJson = ($selected ?? collect())->map(function ($o) {
-        return ['id' => $o->id, 'primary_name' => $o->primary_name, 'all_names' => $o->all_names, 'type' => $o->type];
+        return ['id' => $o->id, 'primary_name' => $o->primary_name, 'all_names' => $o->all_names ?? $o->primary_name, 'type' => $o->type];
     })->values();
 @endphp
 <script>
-function organizationSearch() {
+function orgSearch_{{ $componentId }}() {
     return {
         query: '',
-        typeFilter: '',
+        typeFilter: '{{ $orgTypeFilter }}',
         results: [],
         selected: @json($selectedJson),
         open: false,
@@ -102,7 +115,7 @@ function organizationSearch() {
         typeColorMap: @json($orgTypeColorsSearch),
 
         showCreateForm: false,
-        newType: '',
+        newType: '{{ $orgTypeFilter }}',
         newName: '',
         creating: false,
         createError: '',
@@ -146,7 +159,7 @@ function organizationSearch() {
                 }
                 const org = await response.json();
                 this.selected.push(org);
-                this.newType = '';
+                this.newType = '{{ $orgTypeFilter }}';
                 this.newName = '';
                 this.showCreateForm = false;
             } catch (e) {

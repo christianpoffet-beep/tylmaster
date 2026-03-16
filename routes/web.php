@@ -31,6 +31,8 @@ use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CampaignTemplateController;
 use App\Http\Controllers\Admin\ContentPostController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\MusicSettingsController;
+use App\Http\Controllers\Admin\ProductTemplateController;
 use App\Http\Controllers\PublicGalleryController;
 use Illuminate\Support\Facades\Route;
 
@@ -149,6 +151,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::resource('campaign-templates', CampaignTemplateController::class)->except('show');
     Route::get('campaign-templates/{campaignTemplate}/data', [CampaignTemplateController::class, 'data'])->name('campaign-templates.data');
 
+    // Settings: Produktvorlagen
+    Route::resource('product-templates', ProductTemplateController::class)->except('show');
+    Route::get('product-templates/{productTemplate}/data', [ProductTemplateController::class, 'data'])->name('product-templates.data');
+
     // Settings: Kontoplan-Vorlagen
     Route::resource('chart-templates', ChartTemplateController::class);
     Route::post('chart-templates/{chartTemplate}/accounts', [ChartTemplateController::class, 'storeAccount'])->name('chart-templates.accounts.store');
@@ -161,6 +167,14 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
     Route::get('settings/appearance', [SettingsController::class, 'appearance'])->name('settings.appearance');
     Route::get('settings/system', [SettingsController::class, 'system'])->name('settings.system');
+
+    // Musik-Settings
+    Route::get('settings/credit-roles', [MusicSettingsController::class, 'creditRoles'])->name('settings.credit-roles');
+    Route::post('settings/credit-roles', [MusicSettingsController::class, 'updateCreditRoles'])->name('settings.credit-roles.update');
+    Route::get('settings/instruments', [MusicSettingsController::class, 'instruments'])->name('settings.instruments');
+    Route::post('settings/instruments', [MusicSettingsController::class, 'updateInstruments'])->name('settings.instruments.update');
+    Route::get('settings/product-types', [MusicSettingsController::class, 'productTypes'])->name('settings.product-types');
+    Route::post('settings/product-types', [MusicSettingsController::class, 'updateProductTypes'])->name('settings.product-types.update');
 
     // System (Logs, Changelog)
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');

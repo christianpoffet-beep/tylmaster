@@ -1,63 +1,316 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Neues Release')
+@section('title', 'Neues Produkt')
+
+@php
+    $allProductTypes = \App\Models\Setting::productTypes();
+    // Classify groups as music or merch
+    $musicGroups = [];
+    $merchGroups = [];
+    foreach ($allProductTypes as $group => $types) {
+        if (str_contains(strtolower($group), 'merchan')) {
+            $merchGroups[$group] = $types;
+        } else {
+            $musicGroups[$group] = $types;
+        }
+    }
+    $allMusicTypes = collect($musicGroups)->flatten()->toArray();
+    $allMerchTypes = collect($merchGroups)->flatten()->toArray();
+@endphp
 
 @section('content')
-<div class="max-w-3xl">
+<div class="max-w-4xl" x-data="{
+    selectedTypes: @json(old('product_type', [])),
+    musicTypes: @json($allMusicTypes),
+    merchTypes: @json($allMerchTypes),
+    get isMusic() { return this.selectedTypes.some(t => this.musicTypes.includes(t)); },
+    get isMerch() { return this.selectedTypes.some(t => this.merchTypes.includes(t)); },
+    toggleType(type) {
+        const idx = this.selectedTypes.indexOf(type);
+        if (idx > -1) { this.selectedTypes.splice(idx, 1); } else { this.selectedTypes.push(type); }
+    }
+}">
     <form method="POST" action="{{ route('admin.releases.store') }}" enctype="multipart/form-data">
         @csrf
 
+        {{-- Vorlage --}}
+        @if($templates->count())
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vorlage</label>
+            <select id="template_selector" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" onchange="loadTemplate(this.value)">
+                <option value="">-- Vorlage wählen --</option>
+                @foreach($templates as $t)
+                    <option value="{{ $t->id }}">{{ $t->name }} ({{ $t->language }})</option>
+                @endforeach
+            </select>
+        </div>
+        @endif
+
+        {{-- Grunddaten --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Grunddaten</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="sm:col-span-2">
                     <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Titel *</label>
                     <input type="text" name="title" id="title" value="{{ old('title') }}" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     @error('title') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label for="upc" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">UPC</label>
-                    <input type="text" name="upc" id="upc" value="{{ old('upc') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    @error('upc') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <label for="title_language" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sprache des Titels</label>
+                    <select name="title_language" id="title_language" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">--</option>
+                        @foreach(['de' => 'DE', 'en' => 'EN', 'fr' => 'FR', 'it' => 'IT', 'es' => 'ES'] as $code => $label)
+                            <option value="{{ $code }}" {{ old('title_language') === $code ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="release_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Release-Datum</label>
-                    <input type="date" name="release_date" id="release_date" value="{{ old('release_date') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    @error('release_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
-                <div>
-                    <label for="label" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Label</label>
-                    <input type="text" name="label" id="label" value="{{ old('label') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    @error('label') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
-            </div>
-
+            {{-- Produkt-Typ (scrollbare Tabellen pro Gruppe) --}}
             <div>
-                <label for="cover_image" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cover-Bild</label>
-                <input type="file" name="cover_image" id="cover_image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
-                @error('cover_image') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Artists</label>
-                <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
-                    @foreach($contacts as $contact)
-                        <label class="flex items-center">
-                            <input type="checkbox" name="artists[]" value="{{ $contact->id }}" {{ in_array($contact->id, old('artists', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $contact->full_name }}</span>
-                        </label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Typ</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    @foreach($allProductTypes as $group => $types)
+                        <div class="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+                            <div class="bg-gray-50 dark:bg-gray-700/50 px-3 py-2">
+                                <span class="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">{{ $group }}</span>
+                            </div>
+                            <div class="max-h-40 overflow-y-auto p-2 space-y-1">
+                                @foreach($types as $type)
+                                    <label class="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer">
+                                        <input type="checkbox" name="product_type[]" value="{{ $type }}"
+                                            {{ in_array($type, old('product_type', [])) ? 'checked' : '' }}
+                                            @change="toggleType('{{ addslashes($type) }}')"
+                                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0">
+                                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ $type }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
                     @endforeach
                 </div>
-                @error('artists') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Gemeinsame Felder --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="release_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Datum der Erstveröffentlichung</label>
+                    <input type="date" name="release_date" id="release_date" value="{{ old('release_date') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="ean_upc" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">EAN / UPC</label>
+                    <input type="text" name="ean_upc" id="ean_upc" value="{{ old('ean_upc') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+            </div>
+
+            {{-- Musik-spezifische Felder --}}
+            <div x-show="isMusic" x-transition x-cloak class="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Musik-Felder</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="main_artist" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hauptkünstler</label>
+                        <input type="text" name="main_artist" id="main_artist" value="{{ old('main_artist') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="label_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Label Name</label>
+                        <input type="text" name="label_name" id="label_name" value="{{ old('label_name') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label for="catalog_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Katalognummer</label>
+                    <input type="text" name="catalog_number" id="catalog_number" value="{{ old('catalog_number') }}" class="w-full sm:w-1/2 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+            </div>
+
+            {{-- Release Info (immer sichtbar) --}}
+            <div>
+                <label for="release_info" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Release Info</label>
+                <textarea name="release_info" id="release_info" rows="3" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Öffentliche Release-Informationen...">{{ old('release_info') }}</textarea>
+            </div>
+            <div>
+                <label for="release_info_internal" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Release Info (intern)</label>
+                <textarea name="release_info_internal" id="release_info_internal" rows="3" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Interne Notizen...">{{ old('release_info_internal') }}</textarea>
             </div>
         </div>
 
-        <div class="mt-4 flex gap-3">
-            <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Release erstellen</button>
+        {{-- Tracklist --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6" x-data="{ trackFilter: '' }">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Tracklist</h3>
+            @if($allTracks->count())
+                <input type="text" x-model="trackFilter" placeholder="Tracks durchsuchen..." class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500 mb-3">
+                <div class="max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
+                    @foreach($allTracks as $track)
+                        <label class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer"
+                            x-show="!trackFilter || '{{ strtolower(addslashes($track->display_title)) }}'.includes(trackFilter.toLowerCase())" x-cloak>
+                            <input type="checkbox" name="track_ids[]" value="{{ $track->id }}"
+                                {{ in_array($track->id, old('track_ids', [])) ? 'checked' : '' }}
+                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0">
+                            <input type="number" name="track_numbers[{{ $track->id }}]"
+                                value="{{ old('track_numbers.' . $track->id, '') }}"
+                                min="1" placeholder="#"
+                                class="w-16 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm text-center focus:border-blue-500 focus:ring-blue-500 flex-shrink-0">
+                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ $track->display_title }}</span>
+                            @if($track->isrc)
+                                <span class="text-xs text-gray-400 font-mono ml-auto">{{ $track->isrc_formatted }}</span>
+                            @endif
+                        </label>
+                    @endforeach
+                </div>
+            @else
+                <p class="text-sm text-gray-400">Keine Tracks vorhanden. <a href="{{ route('admin.tracks.create') }}" class="text-blue-600 hover:text-blue-800">Track erstellen</a></p>
+            @endif
+        </div>
+
+        {{-- Musik: Territory --}}
+        <div x-show="isMusic" x-transition x-cloak>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6"
+            x-data="{
+                worldwide: {{ json_encode(in_array('ALL', old('territory', ['ALL']))) }},
+                selected: {{ json_encode(old('territory', ['ALL'])) }},
+                presets: {{ json_encode($territoryPresets) }},
+                countries: [
+                    {code:'DE',name:'Deutschland'},{code:'AT',name:'Österreich'},{code:'CH',name:'Schweiz'},
+                    {code:'US',name:'USA'},{code:'GB',name:'Grossbritannien'},{code:'FR',name:'Frankreich'},
+                    {code:'IT',name:'Italien'},{code:'ES',name:'Spanien'},{code:'NL',name:'Niederlande'},
+                    {code:'BE',name:'Belgien'},{code:'LU',name:'Luxemburg'},{code:'SE',name:'Schweden'},
+                    {code:'NO',name:'Norwegen'},{code:'DK',name:'Dänemark'},{code:'FI',name:'Finnland'},
+                    {code:'IS',name:'Island'},{code:'JP',name:'Japan'},{code:'KR',name:'Südkorea'},
+                    {code:'AU',name:'Australien'},{code:'CA',name:'Kanada'},{code:'BR',name:'Brasilien'},
+                    {code:'PL',name:'Polen'},{code:'PT',name:'Portugal'},{code:'IE',name:'Irland'},
+                    {code:'CZ',name:'Tschechien'},{code:'HU',name:'Ungarn'},{code:'GR',name:'Griechenland'},
+                    {code:'TR',name:'Türkei'},{code:'IN',name:'Indien'},{code:'CN',name:'China'},
+                    {code:'ZA',name:'Südafrika'},{code:'NZ',name:'Neuseeland'}
+                ],
+                toggleWorldwide() { this.worldwide = !this.worldwide; this.selected = this.worldwide ? ['ALL'] : []; },
+                applyPreset(key) { this.worldwide = false; this.selected = [...this.presets[key].countries]; if (this.selected.includes('ALL')) { this.worldwide = true; } },
+                toggleCountry(code) { if (this.worldwide) return; const idx = this.selected.indexOf(code); if (idx > -1) { this.selected.splice(idx, 1); } else { this.selected.push(code); } },
+                isChecked(code) { return this.selected.includes(code); }
+            }">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Territory</h3>
+            <label class="flex items-center gap-2 mb-4">
+                <input type="checkbox" :checked="worldwide" @change="toggleWorldwide()" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Weltweit</span>
+            </label>
+            <div class="flex flex-wrap gap-2 mb-4">
+                <template x-for="(preset, key) in presets" :key="key">
+                    <button type="button" @click="applyPreset(key)" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" x-text="preset.label"></button>
+                </template>
+            </div>
+            <div x-show="!worldwide" x-cloak class="max-h-56 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    <template x-for="country in countries" :key="country.code">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" :checked="isChecked(country.code)" @change="toggleCountry(country.code)" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm text-gray-700 dark:text-gray-300"><span class="font-mono text-xs text-gray-400" x-text="country.code"></span> <span x-text="country.name"></span></span>
+                        </label>
+                    </template>
+                </div>
+            </div>
+            <template x-for="code in selected" :key="'t_' + code"><input type="hidden" name="territory[]" :value="code"></template>
+        </div>
+        </div>
+
+        {{-- Musik: Band --}}
+        <div x-show="isMusic" x-transition x-cloak class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Band</h3>
+            @include('admin.partials.organization-search', ['selected' => collect(), 'inputName' => 'band_ids[]', 'orgSearchLabel' => 'Band', 'orgTypeFilter' => 'band'])
+        </div>
+
+        {{-- Musik: Credits --}}
+        <div x-show="isMusic" x-transition x-cloak class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Credits</h3>
+            @include('admin.partials.music-credits', ['selectedCredits' => collect()])
+        </div>
+
+        {{-- Musik: Label --}}
+        <div x-show="isMusic" x-transition x-cloak class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Label</h3>
+            @include('admin.partials.organization-search', ['selected' => collect(), 'inputName' => 'label_ids[]', 'orgSearchLabel' => 'Label', 'orgTypeFilter' => 'label'])
+        </div>
+
+        {{-- Musik: Publisher --}}
+        <div x-show="isMusic" x-transition x-cloak class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Publisher</h3>
+            @include('admin.partials.organization-search', ['selected' => collect(), 'inputName' => 'publisher_ids[]', 'orgSearchLabel' => 'Publisher', 'orgTypeFilter' => 'publishing'])
+        </div>
+
+        {{-- Projekte (immer) --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Projekte</h3>
+            <div class="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3 space-y-2">
+                @foreach($projects as $project)
+                    <label class="flex items-center">
+                        <input type="checkbox" name="project_ids[]" value="{{ $project->id }}" {{ in_array($project->id, old('project_ids', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $project->name }}</span>
+                    </label>
+                @endforeach
+            </div>
+            @if($projects->isEmpty()) <p class="text-sm text-gray-400">Keine Projekte vorhanden.</p> @endif
+        </div>
+
+        {{-- Verträge (immer) --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Verträge</h3>
+            <div class="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3 space-y-2">
+                @foreach($contracts as $contract)
+                    <label class="flex items-center">
+                        <input type="checkbox" name="contract_ids[]" value="{{ $contract->id }}" {{ in_array($contract->id, old('contract_ids', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $contract->title }}</span>
+                    </label>
+                @endforeach
+            </div>
+            @if($contracts->isEmpty()) <p class="text-sm text-gray-400">Keine Verträge vorhanden.</p> @endif
+        </div>
+
+        {{-- Artworks (immer) --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Artworks</h3>
+            @if(isset($artworks) && $artworks->count())
+                <div class="space-y-3" x-data="{ primaryId: '{{ old('primary_artwork_id', '') }}' }">
+                    @foreach($artworks as $artwork)
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" name="artwork_ids[]" value="{{ $artwork->id }}"
+                                {{ in_array($artwork->id, old('artwork_ids', [])) ? 'checked' : '' }}
+                                x-ref="cb{{ $artwork->id }}"
+                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <input type="radio" name="primary_artwork_id" value="{{ $artwork->id }}"
+                                {{ old('primary_artwork_id') == $artwork->id ? 'checked' : '' }}
+                                @change="primaryId = '{{ $artwork->id }}'; $refs.cb{{ $artwork->id }}.checked = true"
+                                class="text-yellow-500">
+                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ $artwork->title }}</span>
+                            <span x-show="primaryId === '{{ $artwork->id }}'" class="text-xs text-yellow-500">(Haupt-Artwork)</span>
+                        </label>
+                    @endforeach
+                </div>
+            @else
+                <p class="text-sm text-gray-400">Keine Artworks vorhanden.</p>
+            @endif
+        </div>
+
+        {{-- Notizen (immer) --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Notizen</h3>
+            <textarea name="description" id="description" rows="4" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Beschreibung, Anmerkungen...">{{ old('description') }}</textarea>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+            <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Produkt erstellen</button>
             <a href="{{ route('admin.releases.index') }}" class="px-5 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Abbrechen</a>
         </div>
     </form>
 </div>
+
+<script>
+async function loadTemplate(id) {
+    if (!id) return;
+    try {
+        const res = await fetch(`/admin/product-templates/${id}/data`);
+        const data = await res.json();
+        if (data.default_release_info) {
+            document.getElementById('release_info').value = data.default_release_info;
+        }
+    } catch (e) { console.error(e); }
+}
+</script>
 @endsection

@@ -21,6 +21,13 @@ class Artwork extends Model
         return $this->belongsToMany(Project::class);
     }
 
+    public function releases()
+    {
+        return $this->belongsToMany(Release::class, 'artwork_release')
+            ->withPivot('is_primary')
+            ->withTimestamps();
+    }
+
     public function logos()
     {
         return $this->hasMany(ArtworkLogo::class);

@@ -6,7 +6,28 @@
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
     <form method="GET" action="{{ route('admin.tracks.index') }}" class="flex flex-wrap gap-2">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Titel oder ISRC suchen..." class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+        <select name="status" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            <option value="">Alle Status</option>
+            @foreach(['draft' => 'Draft', 'released' => 'Released', 'archived' => 'Archived'] as $v => $l)
+                <option value="{{ $v }}" {{ request('status') === $v ? 'selected' : '' }}>{{ $l }}</option>
+            @endforeach
+        </select>
+        <select name="genre" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            <option value="">Alle Genres</option>
+            @foreach($genres as $genre)
+                <option value="{{ $genre->id }}" {{ request('genre') == $genre->id ? 'selected' : '' }}>{{ $genre->name }}</option>
+            @endforeach
+        </select>
+        <select name="release" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            <option value="">Alle Produkte</option>
+            @foreach($releases as $release)
+                <option value="{{ $release->id }}" {{ request('release') == $release->id ? 'selected' : '' }}>{{ $release->title }}</option>
+            @endforeach
+        </select>
         <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Filtern</button>
+        @if(request('search') || request('status') || request('genre') || request('release'))
+            <a href="{{ route('admin.tracks.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-100">Zurücksetzen</a>
+        @endif
     </form>
     <a href="{{ route('admin.tracks.create') }}" class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 whitespace-nowrap">+ Neuer Track</a>
 </div>
@@ -17,10 +38,12 @@
             <thead class="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                     <x-admin.sortable-header column="title">Titel</x-admin.sortable-header>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Artist(s)</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Band</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Produkt(e)</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Genre</th>
                     <x-admin.sortable-header column="isrc">ISRC</x-admin.sortable-header>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Dauer</th>
+                    <x-admin.sortable-header column="bpm">BPM</x-admin.sortable-header>
                     <x-admin.sortable-header column="status">Status</x-admin.sortable-header>
                     <th class="px-4 py-3"></th>
                 </tr>
@@ -30,13 +53,20 @@
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
                         <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
                             <a href="{{ route('admin.tracks.show', $track) }}" class="hover:text-blue-600">{{ $track->title }}</a>
+                            @if($track->version)
+                                <p class="text-xs text-gray-400 font-normal">{{ $track->version }}</p>
+                            @endif
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                            {{ $track->contacts->where('pivot.role', 'artist')->pluck('full_name')->join(', ') ?: '-' }}
+                            {{ $track->organizations->where('type', 'band')->map->primary_name->join(', ') ?: '-' }}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                            {{ $track->releases->pluck('title')->join(', ') ?: '-' }}
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $track->genre ?? '-' }}</td>
-                        <td class="px-4 py-3 text-sm text-gray-500 font-mono">{{ $track->isrc ?? '-' }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">{{ $track->isrc_formatted ?? $track->isrc ?? '-' }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $track->formatted_duration ?? '-' }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $track->bpm ?? '-' }}</td>
                         <td class="px-4 py-3">
                             @switch($track->status)
                                 @case('draft')
@@ -56,7 +86,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Keine Tracks gefunden.</td>
+                        <td colspan="9" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Keine Tracks gefunden.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -64,5 +94,8 @@
     </div>
 </div>
 
-<div class="mt-4">{{ $tracks->links() }}</div>
+<div class="mt-4 flex items-center justify-between">
+    <p class="text-sm text-gray-500 dark:text-gray-400">{{ $tracks->total() }} {{ Str::plural('Track', $tracks->total()) }} gesamt</p>
+    {{ $tracks->links() }}
+</div>
 @endsection

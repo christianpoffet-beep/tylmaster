@@ -111,14 +111,34 @@
         </x-admin.collapsible-card>
     @endif
 
-    <!-- Tracks (nur Release + Administration) -->
-    @if($project->type !== 'event' && $project->tracks && $project->tracks->count())
+    <!-- Tracks -->
+    @if($project->tracks->count())
         <x-admin.collapsible-card title="Tracks" :count="$project->tracks->count()" class="mt-6">
             <div class="space-y-2">
                 @foreach($project->tracks as $track)
-                    <div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <a href="{{ route('admin.tracks.show', $track) }}" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $track->title }}</a>
-                        <span class="text-sm text-gray-500 dark:text-gray-400">{{ $track->formatted_duration ?? '' }}</span>
+                    <div class="flex items-center justify-between py-1">
+                        <a href="{{ route('admin.tracks.show', $track) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                            {{ $track->display_title }}
+                        </a>
+                        <span class="text-xs text-gray-400">{{ $track->isrc_formatted ?? '' }}</span>
+                    </div>
+                @endforeach
+            </div>
+        </x-admin.collapsible-card>
+    @endif
+
+    <!-- Releases -->
+    @if($project->releases->count())
+        <x-admin.collapsible-card title="Produkte" :count="$project->releases->count()" class="mt-6">
+            <div class="space-y-2">
+                @foreach($project->releases as $release)
+                    <div class="flex items-center justify-between py-1">
+                        <a href="{{ route('admin.releases.show', $release) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                            {{ $release->title }}
+                        </a>
+                        @if($release->product_type)
+                            <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{{ $release->product_type }}</span>
+                        @endif
                     </div>
                 @endforeach
             </div>

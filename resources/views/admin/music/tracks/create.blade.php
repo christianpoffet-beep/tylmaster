@@ -3,11 +3,14 @@
 @section('title', 'Neuer Track')
 
 @section('content')
-<div class="max-w-3xl">
+<div class="max-w-4xl">
     <form method="POST" action="{{ route('admin.tracks.store') }}" enctype="multipart/form-data">
         @csrf
 
+        {{-- Grunddaten --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Grunddaten</h3>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Titel *</label>
@@ -15,16 +18,38 @@
                     @error('title') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
+                    <label for="version" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Version</label>
+                    <input type="text" name="version" id="version" value="{{ old('version') }}" placeholder="z.B. Radio Edit, Remix" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    @error('version') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
                     <label for="isrc" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ISRC</label>
-                    <input type="text" name="isrc" id="isrc" value="{{ old('isrc') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <input type="text" name="isrc" id="isrc" value="{{ old('isrc') }}" placeholder="CC-XXX-YY-NNNNN" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     @error('isrc') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status *</label>
+                    <select name="status" id="status" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        @foreach(['draft' => 'Draft', 'released' => 'Released', 'archived' => 'Archived'] as $value => $label)
+                            <option value="{{ $value }}" {{ old('status', 'draft') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('status') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="genre" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Genre</label>
-                    <input type="text" name="genre" id="genre" value="{{ old('genre') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <input type="text" name="genre" id="genre" value="{{ old('genre') }}" list="genre-list" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <datalist id="genre-list">
+                        @foreach($genres as $genre)
+                            <option value="{{ $genre->name }}">
+                        @endforeach
+                    </datalist>
                     @error('genre') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
@@ -33,50 +58,188 @@
                     @error('duration_seconds') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
+        </div>
+
+        {{-- Musik-Details --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 mt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Musik-Details</h3>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                    <select name="status" id="status" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                        @foreach(['draft' => 'Draft', 'released' => 'Released', 'archived' => 'Archived'] as $value => $label)
-                            <option value="{{ $value }}" {{ old('status', 'draft') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    @error('status') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <label for="bpm" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">BPM</label>
+                    <input type="number" name="bpm" id="bpm" value="{{ old('bpm') }}" min="20" max="300" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    @error('bpm') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label for="release_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Release</label>
-                    <select name="release_id" id="release_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                        <option value="">-- Kein Release --</option>
-                        @foreach($releases as $release)
-                            <option value="{{ $release->id }}" {{ old('release_id') == $release->id ? 'selected' : '' }}>{{ $release->title }}</option>
+                    <label for="musical_key" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tonart</label>
+                    <select name="musical_key" id="musical_key" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">-- Keine --</option>
+                        @foreach(\App\Models\Track::MUSICAL_KEYS as $key)
+                            <option value="{{ $key }}" {{ old('musical_key') === $key ? 'selected' : '' }}>{{ $key }}</option>
                         @endforeach
                     </select>
-                    @error('release_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    @error('musical_key') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sprache</label>
+                    <select name="language" id="language" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">-- Keine --</option>
+                        @foreach(['de' => 'Deutsch', 'en' => 'English', 'fr' => 'Français', 'it' => 'Italiano', 'es' => 'Español', 'pt' => 'Português', 'ja' => '日本語', 'ko' => '한국어', 'zh' => '中文'] as $code => $name)
+                            <option value="{{ $code }}" {{ old('language') === $code ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                    @error('language') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+                <div></div>
+            </div>
+        </div>
+
+        {{-- Audio --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Audio</h3>
 
             <div>
                 <label for="audio_file" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Audio-Datei</label>
                 <input type="file" name="audio_file" id="audio_file" accept="audio/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
                 @error('audio_file') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
+        </div>
+
+        {{-- Band --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Band</h3>
+
+            @include('admin.partials.organization-search', ['selected' => collect(), 'inputName' => 'band_ids[]', 'orgSearchLabel' => 'Band', 'orgTypeFilter' => 'band'])
+            @error('band_ids') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+        </div>
+
+        {{-- Credits --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Credits</h3>
+
+            @include('admin.partials.music-credits', ['selectedCredits' => collect()])
+        </div>
+
+        {{-- Label --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Label</h3>
+
+            @include('admin.partials.organization-search', ['selected' => collect(), 'inputName' => 'label_ids[]', 'orgSearchLabel' => 'Label', 'orgTypeFilter' => 'label'])
+            @error('label_ids') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+        </div>
+
+        {{-- Publisher --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Publisher</h3>
+
+            @include('admin.partials.organization-search', ['selected' => collect(), 'inputName' => 'publisher_ids[]', 'orgSearchLabel' => 'Publisher', 'orgTypeFilter' => 'publishing'])
+            @error('publisher_ids') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+        </div>
+
+        {{-- Releases --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Produkte</h3>
+
+            <div x-data="{
+                rows: [],
+                addRow() {
+                    this.rows.push({ release_id: '', track_number: '', disc_number: 1, role: 'main' });
+                },
+                removeRow(index) {
+                    this.rows.splice(index, 1);
+                }
+            }">
+                <template x-for="(row, index) in rows" :key="index">
+                    <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-3 items-end">
+                        <div class="sm:col-span-2">
+                            <label x-show="index === 0" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Produkt</label>
+                            <select :name="'releases[' + index + '][release_id]'" x-model="row.release_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">-- Produkt wählen --</option>
+                                @foreach($releases as $release)
+                                    <option value="{{ $release->id }}">{{ $release->title }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label x-show="index === 0" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Track-Nr.</label>
+                            <input type="number" :name="'releases[' + index + '][track_number]'" x-model="row.track_number" min="1" placeholder="#" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label x-show="index === 0" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Disc-Nr.</label>
+                            <input type="number" :name="'releases[' + index + '][disc_number]'" x-model="row.disc_number" min="1" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div class="flex gap-2 items-end">
+                            <div class="flex-1">
+                                <label x-show="index === 0" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rolle</label>
+                                <select :name="'releases[' + index + '][role]'" x-model="row.role" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="main">Main</option>
+                                    <option value="bonus_track">Bonus Track</option>
+                                    <option value="hidden_track">Hidden Track</option>
+                                    <option value="remix">Remix</option>
+                                </select>
+                            </div>
+                            <button type="button" @click="removeRow(index)" class="px-2 py-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Entfernen">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <button type="button" @click="addRow()" class="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    Produkt hinzufügen
+                </button>
+            </div>
+            @error('releases') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+        </div>
+
+        {{-- Projekte --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Projekte</h3>
+            <div class="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3 space-y-2">
+                @foreach($projects as $project)
+                    <label class="flex items-center">
+                        <input type="checkbox" name="project_ids[]" value="{{ $project->id }}" {{ in_array($project->id, old('project_ids', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $project->name }}</span>
+                    </label>
+                @endforeach
+            </div>
+            @if($projects->isEmpty())
+                <p class="text-sm text-gray-400">Keine Projekte vorhanden.</p>
+            @endif
+        </div>
+
+        {{-- Verträge --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Verträge</h3>
+            <div class="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3 space-y-2">
+                @foreach($contracts as $contract)
+                    <label class="flex items-center">
+                        <input type="checkbox" name="contract_ids[]" value="{{ $contract->id }}" {{ in_array($contract->id, old('contract_ids', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $contract->title }}</span>
+                    </label>
+                @endforeach
+            </div>
+            @if($contracts->isEmpty())
+                <p class="text-sm text-gray-400">Keine Verträge vorhanden.</p>
+            @endif
+        </div>
+
+        {{-- Notizen --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Notizen</h3>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Artists</label>
-                <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
-                    @foreach($contacts as $contact)
-                        <label class="flex items-center">
-                            <input type="checkbox" name="artists[]" value="{{ $contact->id }}" {{ in_array($contact->id, old('artists', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $contact->full_name }}</span>
-                        </label>
-                    @endforeach
-                </div>
-                @error('artists') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Beschreibung</label>
+                <textarea name="description" id="description" rows="4" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('description') }}</textarea>
+                @error('description') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
         </div>
 
-        <div class="mt-4 flex gap-3">
+        <div class="mt-6 flex gap-3">
             <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Track erstellen</button>
             <a href="{{ route('admin.tracks.index') }}" class="px-5 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Abbrechen</a>
         </div>

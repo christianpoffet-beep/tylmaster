@@ -239,12 +239,12 @@
                     <p class="text-sm text-gray-600 dark:text-gray-300">Erfasse Songs mit Titel, ISRC-Code, Dauer, Genre, Status und verknüpften Artists (Kontakte). Optional kannst du eine Audiodatei hochladen.</p>
                 </div>
                 <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Releases</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Fasse Tracks zu Releases (Singles, EPs, Alben) zusammen. Erfasse UPC-Code, Veröffentlichungsdatum und verknüpfe die enthaltenen Tracks.</p>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Produkte</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Fasse Tracks zu Produkten (Singles, EPs, Alben) zusammen. Erfasse UPC-Code, Veröffentlichungsdatum und verknüpfe die enthaltenen Tracks.</p>
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Navigation</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Unter <strong>Musik</strong> findest du Tabs für Tracks und Releases. Wechsle zwischen den Ansichten über die Tab-Navigation oben.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Unter <strong>Musik</strong> findest du Tabs für Tracks und Produkte. Wechsle zwischen den Ansichten über die Tab-Navigation oben.</p>
                 </div>
             </div>
         </div>

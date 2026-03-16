@@ -404,7 +404,7 @@
             </ul>
         @endif
         @if($contract->releases->count())
-            <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin: 8px 0 3px;">Releases</p>
+            <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin: 8px 0 3px;">Produkte</p>
             <ul class="relation-list">
                 @foreach($contract->releases as $release)
                     <li>{{ $release->title }}{{ $release->upc ? ' (UPC: ' . $release->upc . ')' : '' }}</li>

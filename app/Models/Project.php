@@ -32,6 +32,11 @@ class Project extends Model
         return $this->belongsToMany(Track::class);
     }
 
+    public function releases()
+    {
+        return $this->belongsToMany(Release::class);
+    }
+
     public function tasks()
     {
         return $this->hasMany(Task::class);

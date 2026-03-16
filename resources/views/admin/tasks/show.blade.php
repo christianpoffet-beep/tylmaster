@@ -174,7 +174,7 @@
         @endif
 
         @if($task->releases->count())
-        <x-admin.collapsible-card title="Releases" :count="$task->releases->count()">
+        <x-admin.collapsible-card title="Produkte" :count="$task->releases->count()">
             @foreach($task->releases as $release)
                 <a href="{{ route('admin.releases.show', $release) }}" class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-1">{{ $release->title }}</a>
             @endforeach
