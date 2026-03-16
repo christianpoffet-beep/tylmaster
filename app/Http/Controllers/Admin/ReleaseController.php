@@ -75,6 +75,7 @@ class ReleaseController extends Controller
             'weight' => 'nullable|numeric|min:0',
             'price' => 'nullable|numeric|min:0',
             'currency' => 'nullable|string|in:CHF,EUR,USD,GBP',
+            'stock' => 'nullable|integer|min:0',
             'cover_image' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 
@@ -166,6 +167,7 @@ class ReleaseController extends Controller
             'weight' => 'nullable|numeric|min:0',
             'price' => 'nullable|numeric|min:0',
             'currency' => 'nullable|string|in:CHF,EUR,USD,GBP',
+            'stock' => 'nullable|integer|min:0',
             'cover_image' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 

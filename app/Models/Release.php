@@ -13,7 +13,7 @@ class Release extends Model
         'title', 'title_language', 'product_type', 'ean_upc', 'upc',
         'release_date', 'label', 'label_name', 'catalog_number', 'main_artist',
         'territory', 'description', 'release_info', 'release_info_internal',
-        'width', 'height', 'depth', 'weight', 'price', 'currency',
+        'width', 'height', 'depth', 'weight', 'price', 'currency', 'stock',
         'cover_image_path',
     ];
 

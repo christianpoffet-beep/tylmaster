@@ -154,6 +154,10 @@
                             @endforeach
                         </select>
                     </div>
+                    <div>
+                        <label for="stock" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Anzahl an Lager</label>
+                        <input type="number" name="stock" id="stock" value="{{ old('stock', $release->stock) }}" min="0" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
                 </div>
             </div>
         </div>
