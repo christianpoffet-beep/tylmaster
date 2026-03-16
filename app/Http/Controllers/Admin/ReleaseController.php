@@ -69,6 +69,12 @@ class ReleaseController extends Controller
             'description' => 'nullable|string|max:5000',
             'release_info' => 'nullable|string|max:5000',
             'release_info_internal' => 'nullable|string|max:5000',
+            'width' => 'nullable|numeric|min:0',
+            'height' => 'nullable|numeric|min:0',
+            'depth' => 'nullable|numeric|min:0',
+            'weight' => 'nullable|numeric|min:0',
+            'price' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|string|in:CHF,EUR,USD,GBP',
             'cover_image' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 
@@ -154,6 +160,12 @@ class ReleaseController extends Controller
             'description' => 'nullable|string|max:5000',
             'release_info' => 'nullable|string|max:5000',
             'release_info_internal' => 'nullable|string|max:5000',
+            'width' => 'nullable|numeric|min:0',
+            'height' => 'nullable|numeric|min:0',
+            'depth' => 'nullable|numeric|min:0',
+            'weight' => 'nullable|numeric|min:0',
+            'price' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|string|in:CHF,EUR,USD,GBP',
             'cover_image' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 

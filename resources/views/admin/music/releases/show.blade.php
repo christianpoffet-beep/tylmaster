@@ -94,6 +94,25 @@
                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ $release->description }}</dd>
                 </div>
             @endif
+            @if($release->width || $release->height || $release->depth || $release->weight)
+                <div class="sm:col-span-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Grösse / Gewicht</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                        @if($release->width || $release->height || $release->depth)
+                            {{ $release->width ?? '-' }} x {{ $release->height ?? '-' }} x {{ $release->depth ?? '-' }} cm
+                        @endif
+                        @if($release->weight)
+                            &middot; {{ $release->weight }} g
+                        @endif
+                    </dd>
+                </div>
+            @endif
+            @if($release->price)
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Preis</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $release->currency ?? 'CHF' }} {{ number_format($release->price, 2) }}</dd>
+                </div>
+            @endif
         </dl>
     </div>
 

@@ -119,6 +119,43 @@
                 <label for="release_info_internal" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Release Info (intern)</label>
                 <textarea name="release_info_internal" id="release_info_internal" rows="3" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('release_info_internal', $release->release_info_internal) }}</textarea>
             </div>
+
+            {{-- Grösse, Gewicht, Preis --}}
+            <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Grösse & Preis</p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                        <label for="width" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Breite (cm)</label>
+                        <input type="number" name="width" id="width" value="{{ old('width', $release->width) }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="height" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Höhe (cm)</label>
+                        <input type="number" name="height" id="height" value="{{ old('height', $release->height) }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="depth" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tiefe (cm)</label>
+                        <input type="number" name="depth" id="depth" value="{{ old('depth', $release->depth) }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="weight" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gewicht (g)</label>
+                        <input type="number" name="weight" id="weight" value="{{ old('weight', $release->weight) }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
+                    <div class="col-span-2 sm:col-span-1">
+                        <label for="price" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preis</label>
+                        <input type="number" name="price" id="price" value="{{ old('price', $release->price) }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Währung</label>
+                        <select name="currency" id="currency" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            @foreach(['CHF' => 'CHF', 'EUR' => 'EUR', 'USD' => 'USD', 'GBP' => 'GBP'] as $code => $label)
+                                <option value="{{ $code }}" {{ old('currency', $release->currency ?? 'CHF') === $code ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
         </div>
 
         {{-- Musik: Tracklist --}}
