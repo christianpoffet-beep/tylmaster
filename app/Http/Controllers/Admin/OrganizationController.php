@@ -21,7 +21,11 @@ class OrganizationController extends Controller
         $query = Organization::with('genres');
 
         if ($search = $request->input('search')) {
-            $query->where('names', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(CAST(names AS CHAR)) LIKE ?', ['%' . mb_strtolower($search) . '%'])
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
         }
 
         if ($type = $request->input('type')) {
@@ -313,11 +317,10 @@ class OrganizationController extends Controller
         $query = Organization::query();
 
         if ($q = $request->input('q')) {
-            $terms = preg_split('/\s+/', trim($q));
-            $query->where(function ($qb) use ($terms) {
-                foreach ($terms as $term) {
-                    $qb->where('names', 'like', "%{$term}%");
-                }
+            $query->where(function ($qb) use ($q) {
+                $qb->whereRaw('LOWER(CAST(names AS CHAR)) LIKE ?', ['%' . mb_strtolower($q) . '%'])
+                   ->orWhere('email', 'like', "%{$q}%")
+                   ->orWhere('phone', 'like', "%{$q}%");
             });
         }
 
