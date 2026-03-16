@@ -324,7 +324,7 @@ class ContactController extends Controller
             });
         }
 
-        $results = $query->orderBy('last_name')->limit(50)->get()->map(fn ($c) => [
+        $results = $query->orderBy('last_name')->limit(200)->get()->map(fn ($c) => [
             'id' => $c->id,
             'name' => $c->full_name,
             'email' => $c->email,

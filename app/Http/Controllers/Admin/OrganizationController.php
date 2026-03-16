@@ -328,7 +328,7 @@ class OrganizationController extends Controller
             $query->where('type', $type);
         }
 
-        $results = $query->orderBy('names')->limit(50)->get()->map(fn ($org) => [
+        $results = $query->orderBy('names')->limit(200)->get()->map(fn ($org) => [
             'id' => $org->id,
             'primary_name' => $org->primary_name,
             'all_names' => $org->all_names,
