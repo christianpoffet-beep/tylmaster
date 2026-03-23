@@ -7,6 +7,24 @@
     <form method="POST" action="{{ route('admin.tracks.store') }}" enctype="multipart/form-data">
         @csrf
 
+        {{-- Metadaten einfügen --}}
+        <div x-data="{ hasClipboard: !!localStorage.getItem('tyl_track_metadata'), pasted: false }" x-show="hasClipboard" class="mb-4">
+            <button type="button" @click="
+                const data = JSON.parse(localStorage.getItem('tyl_track_metadata'));
+                if (data.genre) document.getElementById('genre').value = data.genre;
+                if (data.language) document.getElementById('language').value = data.language;
+                if (data.bpm) document.getElementById('bpm').value = data.bpm;
+                if (data.musical_key) document.getElementById('musical_key').value = data.musical_key;
+                pasted = true;
+                setTimeout(() => pasted = false, 2000);
+            " class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <span x-show="!pasted">Metadaten einfügen</span>
+                <span x-show="pasted" x-cloak>Eingefügt!</span>
+            </button>
+            <span class="text-xs text-gray-400 ml-2">Aus Zwischenablage</span>
+        </div>
+
         {{-- Grunddaten (immer offen, nicht zuklappbar) --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Grunddaten</h3>

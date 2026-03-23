@@ -87,7 +87,11 @@ class TrackController extends Controller
             $ext = strtolower($file->getClientOriginalExtension());
             $name = substr(bin2hex(random_bytes(10)), 0, 20) . '.' . $ext;
             $validated['audio_file_path'] = $file->storeAs('tracks', $name, 'public');
-            $validated['audio_format'] = strtolower($file->getClientOriginalExtension());
+            $validated['audio_format'] = $ext;
+
+            // Extract audio metadata via getID3
+            $meta = $this->extractAudioMetadata($file->getRealPath());
+            $validated = array_merge($validated, $meta);
         }
         unset($validated['audio_file']);
 
@@ -112,6 +116,26 @@ class TrackController extends Controller
         $track->contracts()->sync($request->input('contract_ids', []));
 
         return redirect()->route('admin.tracks.show', $track)->with('success', 'Track erstellt.');
+    }
+
+    public function copyMetadata(Track $track)
+    {
+        $track->load(['contacts', 'organizations']);
+        return response()->json([
+            'genre' => $track->genre,
+            'language' => $track->language,
+            'bpm' => $track->bpm,
+            'musical_key' => $track->musical_key,
+            'band_ids' => $track->organizations->where('type', 'band')->pluck('id')->values(),
+            'label_ids' => $track->organizations->where('type', 'label')->pluck('id')->values(),
+            'publisher_ids' => $track->organizations->where('type', 'publishing')->pluck('id')->values(),
+            'credits' => $track->contacts->map(fn($c) => [
+                'contact_id' => $c->id,
+                'name' => $c->full_name,
+                'role' => $c->pivot->role,
+                'instrument' => $c->pivot->instrument,
+            ])->values(),
+        ]);
     }
 
     public function show(Track $track)
@@ -157,7 +181,11 @@ class TrackController extends Controller
             $ext = strtolower($file->getClientOriginalExtension());
             $name = substr(bin2hex(random_bytes(10)), 0, 20) . '.' . $ext;
             $validated['audio_file_path'] = $file->storeAs('tracks', $name, 'public');
-            $validated['audio_format'] = strtolower($file->getClientOriginalExtension());
+            $validated['audio_format'] = $ext;
+
+            // Extract audio metadata via getID3
+            $meta = $this->extractAudioMetadata($file->getRealPath());
+            $validated = array_merge($validated, $meta);
         }
         unset($validated['audio_file']);
 
@@ -188,6 +216,35 @@ class TrackController extends Controller
     {
         $track->delete();
         return redirect()->route('admin.tracks.index')->with('success', 'Track gelöscht.');
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        $action = $request->input('action');
+        $value = $request->input('value');
+
+        if (empty($ids) || !$action) {
+            return back()->with('error', 'Keine Tracks ausgewählt oder keine Aktion gewählt.');
+        }
+
+        $tracks = Track::whereIn('id', $ids);
+
+        switch ($action) {
+            case 'status':
+                if (in_array($value, ['draft', 'released', 'archived'])) {
+                    $tracks->update(['status' => $value]);
+                }
+                break;
+            case 'genre':
+                $tracks->update(['genre' => $value]);
+                break;
+            case 'delete':
+                $tracks->delete();
+                return back()->with('success', count($ids) . ' Tracks gelöscht.');
+        }
+
+        return back()->with('success', count($ids) . ' Tracks aktualisiert.');
     }
 
     private function syncReleases(Track $track, Request $request): void
@@ -225,5 +282,35 @@ class TrackController extends Controller
                 $track->contacts()->attach($credit['contact_id'], $pivot);
             }
         }
+    }
+
+    private function extractAudioMetadata(string $filePath): array
+    {
+        $meta = [];
+
+        try {
+            $getID3 = new \getID3();
+            $info = $getID3->analyze($filePath);
+
+            if (!empty($info['playtime_seconds'])) {
+                $meta['duration_seconds'] = (int) round($info['playtime_seconds']);
+            }
+            if (!empty($info['audio']['bitrate'])) {
+                $meta['bitrate'] = (int) round($info['audio']['bitrate'] / 1000); // kbps
+            }
+            if (!empty($info['audio']['sample_rate'])) {
+                $meta['sample_rate'] = (int) $info['audio']['sample_rate'];
+            }
+            if (!empty($info['audio']['channels'])) {
+                $meta['channels'] = (int) $info['audio']['channels'];
+            }
+            if (!empty($info['fileformat'])) {
+                $meta['audio_format'] = strtolower($info['fileformat']);
+            }
+        } catch (\Exception $e) {
+            // Silently fail — metadata is optional
+        }
+
+        return $meta;
     }
 }

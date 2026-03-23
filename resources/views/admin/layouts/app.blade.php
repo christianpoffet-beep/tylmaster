@@ -292,12 +292,13 @@
         @endif
 
         {{-- Page content --}}
-        <main class="flex-1 p-4 sm:p-6">
+        <main class="flex-1 p-4 sm:p-6 pb-20">
             @yield('content')
         </main>
     </div>
 
     @include('admin.partials.document-viewer-modal')
+    @include('admin.partials.audio-player')
     @stack('scripts')
 </body>
 </html>

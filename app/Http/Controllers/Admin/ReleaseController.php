@@ -260,4 +260,13 @@ class ReleaseController extends Controller
         }
         $release->artworks()->sync($syncData);
     }
+
+    public function reorderTracks(Request $request, Release $release)
+    {
+        $order = $request->input('order', []);
+        foreach ($order as $i => $trackId) {
+            $release->tracks()->updateExistingPivot($trackId, ['track_number' => $i + 1]);
+        }
+        return response()->json(['success' => true]);
+    }
 }

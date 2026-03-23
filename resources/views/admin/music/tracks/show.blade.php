@@ -26,7 +26,19 @@
                     @endswitch
                 </div>
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-2" x-data="{ copied: false }">
+                <button type="button" @click="
+                    fetch('{{ route('admin.tracks.copyMetadata', $track) }}')
+                        .then(r => r.json())
+                        .then(data => {
+                            localStorage.setItem('tyl_track_metadata', JSON.stringify(data));
+                            copied = true;
+                            setTimeout(() => copied = false, 2000);
+                        })
+                " class="px-4 py-2 bg-gray-600 dark:bg-gray-500 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-400 transition">
+                    <span x-show="!copied">Metadaten kopieren</span>
+                    <span x-show="copied" x-cloak>Kopiert!</span>
+                </button>
                 <a href="{{ route('admin.tracks.edit', $track) }}" class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600">Bearbeiten</a>
                 <form method="POST" action="{{ route('admin.tracks.destroy', $track) }}" onsubmit="return confirm('Track wirklich löschen?')">
                     @csrf
@@ -102,13 +114,15 @@
             </dl>
         </div>
 
-        {{-- Audio Player --}}
-        <x-admin.collapsible-card title="Audio Player" class="mt-6">
-            <audio controls class="w-full">
-                <source src="{{ Storage::url($track->audio_file) }}">
-                Ihr Browser unterstützt das Audio-Element nicht.
-            </audio>
-        </x-admin.collapsible-card>
+        {{-- Play Button --}}
+        <div class="mt-6">
+            <button type="button"
+                    @click="$dispatch('play-track', { title: '{{ addslashes($track->display_title) }}', artist: '{{ addslashes($track->organizations->where("type", "band")->pluck("primary_name")->join(", ")) }}', url: '{{ Storage::url($track->audio_file) }}' })"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                Abspielen
+            </button>
+        </div>
     @endif
 
     {{-- Releases --}}
