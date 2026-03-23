@@ -4,9 +4,19 @@
 
 @section('content')
 <div class="max-w-4xl">
-    <form method="POST" action="{{ route('admin.tracks.update', $track) }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('admin.tracks.update', $track) }}" enctype="multipart/form-data" data-turbo="false">
         @csrf
         @method('PUT')
+
+        {{-- Metadaten einfügen --}}
+        <div x-data="pasteMetadata()" x-show="hasClipboard" class="mb-4">
+            <button type="button" @click="paste()" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <span x-show="!pasted">Metadaten einfügen</span>
+                <span x-show="pasted" x-cloak>Eingefügt!</span>
+            </button>
+            <span class="text-xs text-gray-400 ml-2">Aus Zwischenablage</span>
+        </div>
 
         {{-- Grunddaten (immer offen) --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
@@ -70,7 +80,14 @@
             <div x-show="open" x-collapse>
                 <div class="px-6 pb-6">
                     @if($track->audio_file_path)
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Aktuelle Datei: <span class="font-medium">{{ basename($track->audio_file_path) }}</span></p>
+                        <div class="flex items-center gap-3 mb-3">
+                            <button type="button"
+                                    @click="$dispatch('play-track', { title: '{{ addslashes($track->display_title) }}', artist: '{{ addslashes($track->organizations->where("type", "band")->pluck("primary_name")->join(", ")) }}', url: '{{ Storage::url($track->audio_file_path) }}' })"
+                                    class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white transition flex-shrink-0">
+                                <svg class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            </button>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ basename($track->audio_file_path) }}</p>
+                        </div>
                     @endif
                     <input type="file" name="audio_file" id="audio_file" accept="audio/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
                     @error('audio_file') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -131,34 +148,44 @@
         </div>
 
         {{-- Releases --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mt-6" x-data="{ open: {{ $track->releases->count() ? 'true' : 'false' }} }">
+        @php
+            $existingReleases = old('releases', $track->releases->map(function ($r) {
+                return [
+                    'release_id' => (string) $r->id,
+                    'track_number' => $r->pivot->track_number,
+                    'disc_number' => $r->pivot->disc_number ?? 1,
+                    'role' => $r->pivot->role ?? 'main',
+                ];
+            })->toArray());
+        @endphp
+        <div x-data="{
+            open: {{ $track->releases->count() ? 'true' : 'false' }},
+            rows: @json(array_values($existingReleases)),
+            addRow() { this.rows.push({ release_id: '', track_number: '', disc_number: 1, role: 'main' }); },
+            removeRow(index) { this.rows.splice(index, 1); }
+        }" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mt-6">
+            {{-- Hidden inputs OUTSIDE collapse, always in DOM --}}
+            <input type="hidden" name="release_ids_submitted" value="1">
+            <template x-for="(row, index) in rows" :key="'hidden-'+index">
+                <div>
+                    <input type="hidden" :name="'release_ids[' + index + ']'" :value="row.release_id">
+                    <input type="hidden" :name="'release_track_numbers[' + index + ']'" :value="row.track_number">
+                    <input type="hidden" :name="'release_disc_numbers[' + index + ']'" :value="row.disc_number">
+                    <input type="hidden" :name="'release_roles[' + index + ']'" :value="row.role">
+                </div>
+            </template>
+
             <button type="button" @click="open = !open" class="w-full flex items-center justify-between p-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Produkte</h3>
                 <svg class="w-5 h-5 text-gray-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
             <div x-show="open" x-collapse>
                 <div class="px-6 pb-6">
-                    @php
-                        $existingReleases = old('releases', $track->releases->map(function ($r) {
-                            return [
-                                'release_id' => $r->id,
-                                'track_number' => $r->pivot->track_number,
-                                'disc_number' => $r->pivot->disc_number ?? 1,
-                                'role' => $r->pivot->role ?? 'main',
-                            ];
-                        })->toArray());
-                    @endphp
-
-                    <div x-data="{
-                        rows: @json(array_values($existingReleases)),
-                        addRow() { this.rows.push({ release_id: '', track_number: '', disc_number: 1, role: 'main' }); },
-                        removeRow(index) { this.rows.splice(index, 1); }
-                    }">
-                        <template x-for="(row, index) in rows" :key="index">
+                        <template x-for="(row, index) in rows" :key="'ui-'+index">
                             <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-3 items-end">
                                 <div class="sm:col-span-2">
                                     <label x-show="index === 0" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Produkt</label>
-                                    <select :name="'release_ids[' + index + ']'" x-model="row.release_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <select x-model="row.release_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                                         <option value="">-- Produkt wählen --</option>
                                         @foreach($releases as $release)
                                             <option value="{{ $release->id }}">{{ $release->title }}</option>
@@ -167,16 +194,16 @@
                                 </div>
                                 <div>
                                     <label x-show="index === 0" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Track-Nr.</label>
-                                    <input type="number" :name="'release_track_numbers[' + index + ']'" x-model="row.track_number" min="1" placeholder="#" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <input type="number" x-model="row.track_number" min="1" placeholder="#" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                                 </div>
                                 <div>
                                     <label x-show="index === 0" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Disc-Nr.</label>
-                                    <input type="number" :name="'release_disc_numbers[' + index + ']'" x-model="row.disc_number" min="1" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <input type="number" x-model="row.disc_number" min="1" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                                 </div>
                                 <div class="flex gap-2 items-end">
                                     <div class="flex-1">
                                         <label x-show="index === 0" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rolle</label>
-                                        <select :name="'release_roles[' + index + ']'" x-model="row.role" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <select x-model="row.role" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                                             <option value="main">Main</option>
                                             <option value="bonus_track">Bonus Track</option>
                                             <option value="hidden_track">Hidden Track</option>
@@ -193,7 +220,6 @@
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                             Produkt hinzufügen
                         </button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -316,3 +342,76 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function pasteMetadata() {
+    return {
+        hasClipboard: !!localStorage.getItem('tyl_track_metadata'),
+        pasted: false,
+
+        setField(id, value) {
+            const el = document.getElementById(id);
+            if (el && value !== undefined && value !== null) {
+                el.value = value;
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        },
+
+        paste() {
+            const raw = localStorage.getItem('tyl_track_metadata');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+
+            if (data.title) this.setField('title', data.title);
+            if (data.version) this.setField('version', data.version);
+            if (data.status) this.setField('status', data.status);
+            if (data.genre) this.setField('genre', data.genre);
+            if (data.duration_seconds) this.setField('duration_seconds', data.duration_seconds);
+            if (data.language) this.setField('language', data.language);
+            if (data.bpm) this.setField('bpm', data.bpm);
+            if (data.musical_key) this.setField('musical_key', data.musical_key);
+            if (data.description) this.setField('description', data.description);
+
+            // Band/Label/Publisher via Alpine events
+            if (data.bands?.length) {
+                window.dispatchEvent(new CustomEvent('paste-orgs-bandids', {
+                    detail: data.bands.map(b => ({ id: b.id, primary_name: b.name, type: 'band' }))
+                }));
+            }
+            if (data.labels?.length) {
+                window.dispatchEvent(new CustomEvent('paste-orgs-labelids', {
+                    detail: data.labels.map(l => ({ id: l.id, primary_name: l.name, type: 'label' }))
+                }));
+            }
+            if (data.publishers?.length) {
+                window.dispatchEvent(new CustomEvent('paste-orgs-publisherids', {
+                    detail: data.publishers.map(p => ({ id: p.id, primary_name: p.name, type: 'publishing' }))
+                }));
+            }
+
+            // Credits via Alpine event
+            if (data.credits?.length) {
+                window.dispatchEvent(new CustomEvent('paste-credits', { detail: data.credits }));
+            }
+
+            this.checkItems('project_ids[]', (data.projects || []).map(p => p.id));
+            this.checkItems('contract_ids[]', (data.contracts || []).map(c => c.id));
+
+            this.pasted = true;
+            setTimeout(() => this.pasted = false, 2000);
+        },
+
+        checkItems(name, ids) {
+            document.querySelectorAll(`input[name="${name}"]`).forEach(cb => {
+                if (ids.includes(parseInt(cb.value))) {
+                    cb.checked = true;
+                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+        }
+    };
+}
+</script>
+@endpush

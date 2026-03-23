@@ -4,20 +4,12 @@
 
 @section('content')
 <div class="max-w-4xl">
-    <form method="POST" action="{{ route('admin.tracks.store') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('admin.tracks.store') }}" enctype="multipart/form-data" data-turbo="false">
         @csrf
 
         {{-- Metadaten einfügen --}}
-        <div x-data="{ hasClipboard: !!localStorage.getItem('tyl_track_metadata'), pasted: false }" x-show="hasClipboard" class="mb-4">
-            <button type="button" @click="
-                const data = JSON.parse(localStorage.getItem('tyl_track_metadata'));
-                if (data.genre) document.getElementById('genre').value = data.genre;
-                if (data.language) document.getElementById('language').value = data.language;
-                if (data.bpm) document.getElementById('bpm').value = data.bpm;
-                if (data.musical_key) document.getElementById('musical_key').value = data.musical_key;
-                pasted = true;
-                setTimeout(() => pasted = false, 2000);
-            " class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition">
+        <div x-data="pasteMetadata()" x-show="hasClipboard" class="mb-4">
+            <button type="button" @click="paste()" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 <span x-show="!pasted">Metadaten einfügen</span>
                 <span x-show="pasted" x-cloak>Eingefügt!</span>
@@ -326,3 +318,84 @@
     </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function pasteMetadata() {
+    return {
+        hasClipboard: !!localStorage.getItem('tyl_track_metadata'),
+        pasted: false,
+
+        setField(id, value) {
+            const el = document.getElementById(id);
+            if (el && value !== undefined && value !== null) {
+                el.value = value;
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        },
+
+        paste() {
+            const raw = localStorage.getItem('tyl_track_metadata');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+
+            // Grunddaten
+            if (data.title) this.setField('title', data.title);
+            if (data.version) this.setField('version', data.version);
+            if (data.status) this.setField('status', data.status);
+            if (data.genre) this.setField('genre', data.genre);
+            if (data.duration_seconds) this.setField('duration_seconds', data.duration_seconds);
+
+            // Musik-Details
+            if (data.language) this.setField('language', data.language);
+            if (data.bpm) this.setField('bpm', data.bpm);
+            if (data.musical_key) this.setField('musical_key', data.musical_key);
+
+            // Notizen
+            if (data.description) this.setField('description', data.description);
+
+            // Band/Label/Publisher via Alpine events
+            if (data.bands?.length) {
+                window.dispatchEvent(new CustomEvent('paste-orgs-bandids', {
+                    detail: data.bands.map(b => ({ id: b.id, primary_name: b.name, type: 'band' }))
+                }));
+            }
+            if (data.labels?.length) {
+                window.dispatchEvent(new CustomEvent('paste-orgs-labelids', {
+                    detail: data.labels.map(l => ({ id: l.id, primary_name: l.name, type: 'label' }))
+                }));
+            }
+            if (data.publishers?.length) {
+                window.dispatchEvent(new CustomEvent('paste-orgs-publisherids', {
+                    detail: data.publishers.map(p => ({ id: p.id, primary_name: p.name, type: 'publishing' }))
+                }));
+            }
+
+            // Credits via Alpine event
+            if (data.credits?.length) {
+                window.dispatchEvent(new CustomEvent('paste-credits', { detail: data.credits }));
+            }
+
+            // Projects (checkboxes)
+            this.checkItems('project_ids[]', (data.projects || []).map(p => p.id));
+
+            // Contracts (checkboxes)
+            this.checkItems('contract_ids[]', (data.contracts || []).map(c => c.id));
+
+            this.pasted = true;
+            setTimeout(() => this.pasted = false, 2000);
+        },
+
+        checkItems(name, ids) {
+            document.querySelectorAll(`input[name="${name}"]`).forEach(cb => {
+                if (ids.includes(parseInt(cb.value))) {
+                    cb.checked = true;
+                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+        }
+    };
+}
+</script>
+@endpush

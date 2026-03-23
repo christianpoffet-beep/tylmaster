@@ -26,18 +26,9 @@
                     @endswitch
                 </div>
             </div>
-            <div class="flex gap-2" x-data="{ copied: false }">
-                <button type="button" @click="
-                    fetch('{{ route('admin.tracks.copyMetadata', $track) }}')
-                        .then(r => r.json())
-                        .then(data => {
-                            localStorage.setItem('tyl_track_metadata', JSON.stringify(data));
-                            copied = true;
-                            setTimeout(() => copied = false, 2000);
-                        })
-                " class="px-4 py-2 bg-gray-600 dark:bg-gray-500 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-400 transition">
-                    <span x-show="!copied">Metadaten kopieren</span>
-                    <span x-show="copied" x-cloak>Kopiert!</span>
+            <div class="flex gap-2" x-data="copyModal()" x-init="init()">
+                <button type="button" @click="openModal()" class="px-4 py-2 bg-gray-600 dark:bg-gray-500 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-400 transition">
+                    Metadaten kopieren
                 </button>
                 <a href="{{ route('admin.tracks.edit', $track) }}" class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600">Bearbeiten</a>
                 <form method="POST" action="{{ route('admin.tracks.destroy', $track) }}" onsubmit="return confirm('Track wirklich löschen?')">
@@ -45,6 +36,142 @@
                     @method('DELETE')
                     <button type="submit" class="px-4 py-2 bg-red-600 dark:bg-red-700 text-white text-sm rounded-lg hover:bg-red-700 dark:hover:bg-red-600">Löschen</button>
                 </form>
+
+                {{-- Copy Metadata Modal --}}
+                <div x-show="showModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" @keydown.escape.window="showModal = false">
+                    <div class="fixed inset-0 bg-black/50" @click="showModal = false"></div>
+                    <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6" @click.stop>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Metadaten kopieren</h3>
+
+                        <div class="space-y-1 text-sm" x-show="data">
+                            {{-- Grunddaten --}}
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-3 mb-1">Grunddaten</p>
+                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.title" class="rounded border-gray-300 text-blue-600"> Titel <span class="text-gray-400" x-show="data" x-text="data?.title ? '(' + data.title + ')' : ''"></span></label>
+                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.version" class="rounded border-gray-300 text-blue-600"> Version <span class="text-gray-400" x-show="data?.version" x-text="'(' + (data?.version || '') + ')'"></span></label>
+                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.status" class="rounded border-gray-300 text-blue-600"> Status <span class="text-gray-400" x-text="'(' + (data?.status || '-') + ')'"></span></label>
+                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.genre" class="rounded border-gray-300 text-blue-600"> Genre <span class="text-gray-400" x-text="'(' + (data?.genre || '-') + ')'"></span></label>
+                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.duration" class="rounded border-gray-300 text-blue-600"> Dauer</label>
+
+                            {{-- Band --}}
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Band</p>
+                            <template x-if="data?.bands?.length > 0">
+                                <div class="space-y-1 ml-1">
+                                    <template x-for="(b, i) in data.bands" :key="'band-'+i">
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 band-cb" :value="b.id" @change="toggleItem('selectedBands', b.id, $event.target.checked)">
+                                            <span x-text="b.name"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </template>
+                            <p x-show="!data?.bands?.length" class="text-gray-400 ml-1">Keine</p>
+
+                            {{-- Credits --}}
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Credits</p>
+                            <template x-if="data?.credits?.length > 0">
+                                <div class="space-y-1 ml-1">
+                                    <template x-for="(c, i) in data.credits" :key="'credit-'+i">
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 credit-cb" :value="i" @change="toggleItem('selectedCredits', i, $event.target.checked)">
+                                            <span x-text="c.name + ' (' + c.role + (c.instrument ? ', ' + c.instrument : '') + ')'"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </template>
+                            <p x-show="!data?.credits?.length" class="text-gray-400 ml-1">Keine</p>
+
+                            {{-- Label --}}
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Label</p>
+                            <template x-if="data?.labels?.length > 0">
+                                <div class="space-y-1 ml-1">
+                                    <template x-for="(l, i) in data.labels" :key="'label-'+i">
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 label-cb" :value="l.id" @change="toggleItem('selectedLabels', l.id, $event.target.checked)">
+                                            <span x-text="l.name"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </template>
+                            <p x-show="!data?.labels?.length" class="text-gray-400 ml-1">Keine</p>
+
+                            {{-- Publisher --}}
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Publisher</p>
+                            <template x-if="data?.publishers?.length > 0">
+                                <div class="space-y-1 ml-1">
+                                    <template x-for="(p, i) in data.publishers" :key="'pub-'+i">
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 pub-cb" :value="p.id" @change="toggleItem('selectedPublishers', p.id, $event.target.checked)">
+                                            <span x-text="p.name"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </template>
+                            <p x-show="!data?.publishers?.length" class="text-gray-400 ml-1">Keine</p>
+
+                            {{-- Produkte --}}
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Produkte</p>
+                            <template x-if="data?.releases?.length > 0">
+                                <div class="space-y-1 ml-1">
+                                    <template x-for="(r, i) in data.releases" :key="'rel-'+i">
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 rel-cb" :value="r.id" @change="toggleItem('selectedReleases', r.id, $event.target.checked)">
+                                            <span x-text="r.title + (r.track_number ? ' (#' + r.track_number + ')' : '')"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </template>
+                            <p x-show="!data?.releases?.length" class="text-gray-400 ml-1">Keine</p>
+
+                            {{-- Projekte --}}
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Projekte</p>
+                            <template x-if="data?.projects?.length > 0">
+                                <div class="space-y-1 ml-1">
+                                    <template x-for="(p, i) in data.projects" :key="'proj-'+i">
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 proj-cb" :value="p.id" @change="toggleItem('selectedProjects', p.id, $event.target.checked)">
+                                            <span x-text="p.name"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </template>
+                            <p x-show="!data?.projects?.length" class="text-gray-400 ml-1">Keine</p>
+
+                            {{-- Verträge --}}
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Verträge</p>
+                            <template x-if="data?.contracts?.length > 0">
+                                <div class="space-y-1 ml-1">
+                                    <template x-for="(c, i) in data.contracts" :key="'con-'+i">
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 con-cb" :value="c.id" @change="toggleItem('selectedContracts', c.id, $event.target.checked)">
+                                            <span x-text="c.title"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </template>
+                            <p x-show="!data?.contracts?.length" class="text-gray-400 ml-1">Keine</p>
+
+                            {{-- Notizen --}}
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Notizen</p>
+                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.description" class="rounded border-gray-300 text-blue-600"> Beschreibung <span class="text-gray-400" x-text="data?.description ? '(' + data.description.substring(0, 40) + (data.description.length > 40 ? '...' : '') + ')' : '(leer)'"></span></label>
+
+                            {{-- Musik-Details --}}
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Musik-Details</p>
+                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.bpm" class="rounded border-gray-300 text-blue-600"> BPM <span class="text-gray-400" x-text="'(' + (data?.bpm || '-') + ')'"></span></label>
+                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.musical_key" class="rounded border-gray-300 text-blue-600"> Tonart <span class="text-gray-400" x-text="'(' + (data?.musical_key || '-') + ')'"></span></label>
+                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.language" class="rounded border-gray-300 text-blue-600"> Sprache <span class="text-gray-400" x-text="'(' + (data?.language || '-') + ')'"></span></label>
+                        </div>
+
+                        {{-- Loading --}}
+                        <div x-show="!data" class="py-8 text-center text-gray-400">Laden...</div>
+
+                        {{-- Actions --}}
+                        <div class="flex gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <button type="button" @click="doCopy()" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">Kopieren</button>
+                            <button type="button" @click="showModal = false" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">Abbrechen</button>
+                            <span x-show="copied" x-transition class="text-sm text-green-600 dark:text-green-400 self-center ml-auto">Kopiert!</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -82,46 +209,23 @@
         </dl>
     </div>
 
-    {{-- Technical audio metadata --}}
-    @if($track->audio_file)
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Technische Details</h3>
-            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                @if($track->audio_format)
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Format</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ strtoupper($track->audio_format) }}</dd>
-                    </div>
-                @endif
-                @if($track->bitrate)
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Bitrate</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $track->bitrate }} kbps</dd>
-                    </div>
-                @endif
-                @if($track->sample_rate)
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Sample Rate</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ number_format($track->sample_rate) }} Hz</dd>
-                    </div>
-                @endif
-                @if($track->channels)
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Channels</dt>
-                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $track->channels == 1 ? 'Mono' : ($track->channels == 2 ? 'Stereo' : $track->channels . ' Channels') }}</dd>
-                    </div>
-                @endif
-            </dl>
-        </div>
-
-        {{-- Play Button --}}
-        <div class="mt-6">
+    {{-- Audio --}}
+    @if($track->audio_file_path)
+        <div class="mt-6 flex items-center gap-3" x-data>
             <button type="button"
-                    @click="$dispatch('play-track', { title: '{{ addslashes($track->display_title) }}', artist: '{{ addslashes($track->organizations->where("type", "band")->pluck("primary_name")->join(", ")) }}', url: '{{ Storage::url($track->audio_file) }}' })"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                Abspielen
+                    @click="$dispatch('play-track', { title: '{{ addslashes($track->display_title) }}', artist: '{{ addslashes($track->organizations->where("type", "band")->pluck("primary_name")->join(", ")) }}', url: '{{ Storage::url($track->audio_file_path) }}' })"
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white transition flex-shrink-0">
+                <svg class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
             </button>
+            <div>
+                <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ basename($track->audio_file_path) }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ strtoupper($track->audio_format ?? pathinfo($track->audio_file_path, PATHINFO_EXTENSION)) }}
+                    @if($track->bitrate) &middot; {{ $track->bitrate }} kbps @endif
+                    @if($track->sample_rate) &middot; {{ number_format($track->sample_rate) }} Hz @endif
+                    @if($track->channels) &middot; {{ $track->channels == 1 ? 'Mono' : 'Stereo' }} @endif
+                </p>
+            </div>
         </div>
     @endif
 
@@ -242,3 +346,78 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function copyModal() {
+    return {
+        showModal: false,
+        data: null,
+        copied: false,
+        fields: {
+            title: true, version: true, status: true, genre: true, duration: false,
+            description: true, bpm: false, musical_key: false, language: true,
+        },
+        selectedBands: [],
+        selectedLabels: [],
+        selectedPublishers: [],
+        selectedCredits: [],
+        selectedReleases: [],
+        selectedProjects: [],
+        selectedContracts: [],
+
+        init() {},
+
+        async openModal() {
+            this.showModal = true;
+            this.copied = false;
+            if (!this.data) {
+                const res = await fetch('{{ route("admin.tracks.copyMetadata", $track) }}');
+                this.data = await res.json();
+                // Default: all relational items selected
+                this.selectedBands = (this.data.bands || []).map(b => b.id);
+                this.selectedLabels = (this.data.labels || []).map(l => l.id);
+                this.selectedPublishers = (this.data.publishers || []).map(p => p.id);
+                this.selectedCredits = (this.data.credits || []).map((_, i) => i);
+                this.selectedReleases = (this.data.releases || []).map(r => r.id);
+                this.selectedProjects = (this.data.projects || []).map(p => p.id);
+                this.selectedContracts = (this.data.contracts || []).map(c => c.id);
+            }
+        },
+
+        toggleItem(list, val, checked) {
+            if (checked) {
+                if (!this[list].includes(val)) this[list].push(val);
+            } else {
+                this[list] = this[list].filter(v => v !== val);
+            }
+        },
+
+        doCopy() {
+            const result = {};
+            if (this.fields.title) result.title = this.data.title;
+            if (this.fields.version) result.version = this.data.version;
+            if (this.fields.status) result.status = this.data.status;
+            if (this.fields.genre) result.genre = this.data.genre;
+            if (this.fields.duration) result.duration_seconds = this.data.duration_seconds;
+            if (this.fields.language) result.language = this.data.language;
+            if (this.fields.bpm) result.bpm = this.data.bpm;
+            if (this.fields.musical_key) result.musical_key = this.data.musical_key;
+            if (this.fields.description) result.description = this.data.description;
+
+            result.bands = (this.data.bands || []).filter(b => this.selectedBands.includes(b.id));
+            result.labels = (this.data.labels || []).filter(l => this.selectedLabels.includes(l.id));
+            result.publishers = (this.data.publishers || []).filter(p => this.selectedPublishers.includes(p.id));
+            result.credits = (this.data.credits || []).filter((_, i) => this.selectedCredits.includes(i));
+            result.releases = (this.data.releases || []).filter(r => this.selectedReleases.includes(r.id));
+            result.projects = (this.data.projects || []).filter(p => this.selectedProjects.includes(p.id));
+            result.contracts = (this.data.contracts || []).filter(c => this.selectedContracts.includes(c.id));
+
+            localStorage.setItem('tyl_track_metadata', JSON.stringify(result));
+            this.copied = true;
+            setTimeout(() => { this.showModal = false; this.copied = false; }, 1200);
+        }
+    };
+}
+</script>
+@endpush

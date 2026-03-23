@@ -12,7 +12,63 @@
     $orgTypeColorsSearch = ['band' => 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300', 'label' => 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300', 'publishing' => 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300', 'venue' => 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300', 'event_festival' => 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300', 'media' => 'bg-pink-100 dark:bg-pink-900/50 text-pink-700 dark:text-pink-300', 'oma' => 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'];
 @endphp
 
-<div x-data="orgSearch_{{ $componentId }}()" class="relative">
+@php
+    $selectedJson = ($selected ?? collect())->map(function ($o) {
+        return ['id' => $o->id, 'primary_name' => $o->primary_name, 'all_names' => $o->all_names ?? $o->primary_name, 'type' => $o->type];
+    })->values();
+@endphp
+<script>
+function orgSearch_{{ $componentId }}() {
+    return {
+        query: '',
+        typeFilter: '{{ $orgTypeFilter }}',
+        results: [],
+        selected: @json($selectedJson),
+        open: false,
+        loading: false,
+        typeLabelMap: @json($orgTypeLabelsSearch),
+        typeColorMap: @json($orgTypeColorsSearch),
+        showCreateForm: false,
+        newType: '{{ $orgTypeFilter }}',
+        newName: '',
+        creating: false,
+        createError: '',
+        async search() {
+            this.loading = true;
+            try {
+                const params = new URLSearchParams({ q: this.query });
+                if (this.typeFilter) params.append('type', this.typeFilter);
+                const response = await fetch(`{{ route('admin.organizations.search') }}?${params}`);
+                this.results = await response.json();
+                this.open = true;
+            } catch (e) { this.results = []; }
+            this.loading = false;
+        },
+        async createOrganization() {
+            this.createError = '';
+            if (!this.newType || !this.newName.trim()) { this.createError = 'Typ und Name sind Pflichtfelder.'; return; }
+            this.creating = true;
+            try {
+                const response = await fetch(`{{ route('admin.organizations.storeQuick') }}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
+                    body: JSON.stringify({ type: this.newType, name: this.newName.trim() }),
+                });
+                if (!response.ok) { const err = await response.json(); this.createError = err.message || 'Fehler beim Erstellen.'; this.creating = false; return; }
+                const org = await response.json();
+                this.selected.push(org);
+                this.newType = '{{ $orgTypeFilter }}'; this.newName = ''; this.showCreateForm = false;
+            } catch (e) { this.createError = 'Netzwerkfehler.'; }
+            this.creating = false;
+        },
+        addOrganization(org) { if (!this.isSelected(org.id)) this.selected.push(org); this.query = ''; this.results = []; this.open = false; },
+        removeOrganization(id) { this.selected = this.selected.filter(o => o.id !== id); },
+        isSelected(id) { return this.selected.some(o => o.id === id); }
+    };
+}
+</script>
+
+<div x-data="orgSearch_{{ $componentId }}()" class="relative" id="org-search-{{ $componentId }}" @paste-orgs-{{ strtolower($componentId) }}.window="$event.detail.forEach(o => { if (!isSelected(o.id)) selected.push(o); })">
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $label }}</label>
 
     {{-- Search input --}}
@@ -96,94 +152,3 @@
         </div>
     </div>
 </div>
-
-@php
-    $selectedJson = ($selected ?? collect())->map(function ($o) {
-        return ['id' => $o->id, 'primary_name' => $o->primary_name, 'all_names' => $o->all_names ?? $o->primary_name, 'type' => $o->type];
-    })->values();
-@endphp
-<script>
-function orgSearch_{{ $componentId }}() {
-    return {
-        query: '',
-        typeFilter: '{{ $orgTypeFilter }}',
-        results: [],
-        selected: @json($selectedJson),
-        open: false,
-        loading: false,
-        typeLabelMap: @json($orgTypeLabelsSearch),
-        typeColorMap: @json($orgTypeColorsSearch),
-
-        showCreateForm: false,
-        newType: '{{ $orgTypeFilter }}',
-        newName: '',
-        creating: false,
-        createError: '',
-
-        async search() {
-            this.loading = true;
-            try {
-                const params = new URLSearchParams({ q: this.query });
-                if (this.typeFilter) params.append('type', this.typeFilter);
-                const response = await fetch(`{{ route('admin.organizations.search') }}?${params}`);
-                this.results = await response.json();
-                this.open = true;
-            } catch (e) {
-                this.results = [];
-            }
-            this.loading = false;
-        },
-
-        async createOrganization() {
-            this.createError = '';
-            if (!this.newType || !this.newName.trim()) {
-                this.createError = 'Typ und Name sind Pflichtfelder.';
-                return;
-            }
-            this.creating = true;
-            try {
-                const response = await fetch(`{{ route('admin.organizations.storeQuick') }}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({ type: this.newType, name: this.newName.trim() }),
-                });
-                if (!response.ok) {
-                    const err = await response.json();
-                    this.createError = err.message || 'Fehler beim Erstellen.';
-                    this.creating = false;
-                    return;
-                }
-                const org = await response.json();
-                this.selected.push(org);
-                this.newType = '{{ $orgTypeFilter }}';
-                this.newName = '';
-                this.showCreateForm = false;
-            } catch (e) {
-                this.createError = 'Netzwerkfehler.';
-            }
-            this.creating = false;
-        },
-
-        addOrganization(org) {
-            if (!this.isSelected(org.id)) {
-                this.selected.push(org);
-            }
-            this.query = '';
-            this.results = [];
-            this.open = false;
-        },
-
-        removeOrganization(id) {
-            this.selected = this.selected.filter(o => o.id !== id);
-        },
-
-        isSelected(id) {
-            return this.selected.some(o => o.id === id);
-        }
-    };
-}
-</script>

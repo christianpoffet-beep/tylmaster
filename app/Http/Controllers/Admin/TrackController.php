@@ -74,7 +74,7 @@ class TrackController extends Controller
             'description' => 'nullable|string|max:5000',
             'bpm' => 'nullable|integer|min:20|max:300',
             'musical_key' => 'nullable|string|in:' . implode(',', Track::MUSICAL_KEYS),
-            'audio_file' => 'nullable|file|mimes:mp3,wav,flac,aac,m4a,ogg|max:51200',
+            'audio_file' => 'nullable|file|mimes:mp3,wav,flac,aac,m4a,ogg|max:307200',
         ]);
 
         // Clean ISRC: strip dashes
@@ -120,20 +120,43 @@ class TrackController extends Controller
 
     public function copyMetadata(Track $track)
     {
-        $track->load(['contacts', 'organizations']);
+        $track->load(['contacts', 'organizations', 'releases', 'projects', 'contracts']);
         return response()->json([
+            'title' => $track->title,
+            'version' => $track->version,
+            'status' => $track->status,
             'genre' => $track->genre,
+            'duration_seconds' => $track->duration_seconds,
             'language' => $track->language,
             'bpm' => $track->bpm,
             'musical_key' => $track->musical_key,
-            'band_ids' => $track->organizations->where('type', 'band')->pluck('id')->values(),
-            'label_ids' => $track->organizations->where('type', 'label')->pluck('id')->values(),
-            'publisher_ids' => $track->organizations->where('type', 'publishing')->pluck('id')->values(),
+            'description' => $track->description,
+            'bands' => $track->organizations->where('type', 'band')->map(fn($o) => [
+                'id' => $o->id, 'name' => $o->primary_name,
+            ])->values(),
+            'labels' => $track->organizations->where('type', 'label')->map(fn($o) => [
+                'id' => $o->id, 'name' => $o->primary_name,
+            ])->values(),
+            'publishers' => $track->organizations->where('type', 'publishing')->map(fn($o) => [
+                'id' => $o->id, 'name' => $o->primary_name,
+            ])->values(),
             'credits' => $track->contacts->map(fn($c) => [
                 'contact_id' => $c->id,
                 'name' => $c->full_name,
                 'role' => $c->pivot->role,
                 'instrument' => $c->pivot->instrument,
+            ])->values(),
+            'releases' => $track->releases->map(fn($r) => [
+                'id' => $r->id, 'title' => $r->title,
+                'track_number' => $r->pivot->track_number,
+                'disc_number' => $r->pivot->disc_number,
+                'role' => $r->pivot->role,
+            ])->values(),
+            'projects' => $track->projects->map(fn($p) => [
+                'id' => $p->id, 'name' => $p->name,
+            ])->values(),
+            'contracts' => $track->contracts->map(fn($c) => [
+                'id' => $c->id, 'title' => $c->title,
             ])->values(),
         ]);
     }
@@ -169,7 +192,7 @@ class TrackController extends Controller
             'description' => 'nullable|string|max:5000',
             'bpm' => 'nullable|integer|min:20|max:300',
             'musical_key' => 'nullable|string|in:' . implode(',', Track::MUSICAL_KEYS),
-            'audio_file' => 'nullable|file|mimes:mp3,wav,flac,aac,m4a,ogg|max:51200',
+            'audio_file' => 'nullable|file|mimes:mp3,wav,flac,aac,m4a,ogg|max:307200',
         ]);
 
         if (!empty($validated['isrc'])) {
@@ -264,7 +287,15 @@ class TrackController extends Controller
             ];
         }
 
-        $track->releases()->sync($syncData);
+        \Log::info('SYNC RELEASES', [
+            'has_marker' => $request->has('release_ids_submitted'),
+            'release_ids_raw' => $request->input('release_ids'),
+            'track_numbers_raw' => $request->input('release_track_numbers'),
+            'syncData' => $syncData,
+        ]);
+        if ($request->has('release_ids_submitted')) {
+            $track->releases()->sync($syncData);
+        }
     }
 
     private function syncCredits(Track $track, Request $request): void

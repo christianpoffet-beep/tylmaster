@@ -25,7 +25,90 @@
     $existingCredits = array_values($grouped);
 @endphp
 
-<div x-data="musicCredits()" class="space-y-4">
+<script>
+function musicCredits() {
+    return {
+        contacts: @json($existingCredits),
+        query: '',
+        results: [],
+        open: false,
+        loading: false,
+
+        async search() {
+            this.loading = true;
+            try {
+                const params = new URLSearchParams({ q: this.query });
+                const response = await fetch(`{{ route('admin.contacts.search') }}?${params}`);
+                this.results = await response.json();
+                this.open = true;
+            } catch (e) {
+                this.results = [];
+            }
+            this.loading = false;
+        },
+
+        addContact(contact) {
+            const existing = this.contacts.find(c => c.contact_id === contact.id);
+            if (existing) {
+                existing.roles.push({ role: 'instrumentalist', instrument: '' });
+            } else {
+                this.contacts.push({
+                    contact_id: contact.id,
+                    name: contact.name,
+                    email: contact.email,
+                    roles: [{ role: 'instrumentalist', instrument: '' }],
+                });
+            }
+            this.query = '';
+            this.results = [];
+            this.open = false;
+        },
+
+        addRole(ci) {
+            this.contacts[ci].roles.push({ role: 'instrumentalist', instrument: '' });
+        },
+
+        removeRole(ci, ri) {
+            this.contacts[ci].roles.splice(ri, 1);
+        },
+
+        removeContact(ci) {
+            this.contacts.splice(ci, 1);
+        },
+
+        pasteCredits(credits) {
+            const grouped = {};
+            credits.forEach(c => {
+                const cid = c.contact_id;
+                if (!grouped[cid]) {
+                    grouped[cid] = { contact_id: cid, name: c.name || '', email: '', roles: [] };
+                }
+                grouped[cid].roles.push({ role: c.role || 'instrumentalist', instrument: c.instrument || '' });
+            });
+            Object.values(grouped).forEach(newContact => {
+                const existing = this.contacts.find(x => x.contact_id === newContact.contact_id);
+                if (existing) {
+                    newContact.roles.forEach(nr => {
+                        const hasRole = existing.roles.some(r => r.role === nr.role && r.instrument === nr.instrument);
+                        if (!hasRole) existing.roles = [...existing.roles, nr];
+                    });
+                } else {
+                    this.contacts = [...this.contacts, newContact];
+                }
+            });
+            this.contacts = [...this.contacts];
+        },
+
+        flatIndex(ci, ri) {
+            let idx = 0;
+            for (let i = 0; i < ci; i++) idx += this.contacts[i].roles.length;
+            return idx + ri;
+        }
+    };
+}
+</script>
+
+<div x-data="musicCredits()" class="space-y-4" @paste-credits.window="pasteCredits($event.detail)">
     {{-- Credits list grouped by contact --}}
     <div x-show="contacts.length > 0" class="space-y-3">
         <template x-for="(contact, ci) in contacts" :key="ci">
@@ -111,66 +194,3 @@
         </div>
     </div>
 </div>
-
-<script>
-function musicCredits() {
-    return {
-        contacts: @json($existingCredits),
-        query: '',
-        results: [],
-        open: false,
-        loading: false,
-
-        async search() {
-            this.loading = true;
-            try {
-                const params = new URLSearchParams({ q: this.query });
-                const response = await fetch(`{{ route('admin.contacts.search') }}?${params}`);
-                this.results = await response.json();
-                this.open = true;
-            } catch (e) {
-                this.results = [];
-            }
-            this.loading = false;
-        },
-
-        addContact(contact) {
-            // Check if contact already exists, if so just scroll to it
-            const existing = this.contacts.find(c => c.contact_id === contact.id);
-            if (existing) {
-                existing.roles.push({ role: 'instrumentalist', instrument: '' });
-            } else {
-                this.contacts.push({
-                    contact_id: contact.id,
-                    name: contact.name,
-                    email: contact.email,
-                    roles: [{ role: 'instrumentalist', instrument: '' }],
-                });
-            }
-            this.query = '';
-            this.results = [];
-            this.open = false;
-        },
-
-        addRole(ci) {
-            this.contacts[ci].roles.push({ role: 'instrumentalist', instrument: '' });
-        },
-
-        removeRole(ci, ri) {
-            this.contacts[ci].roles.splice(ri, 1);
-        },
-
-        removeContact(ci) {
-            this.contacts.splice(ci, 1);
-        },
-
-        flatIndex(ci, ri) {
-            let idx = 0;
-            for (let i = 0; i < ci; i++) {
-                idx += this.contacts[i].roles.length;
-            }
-            return idx + ri;
-        }
-    };
-}
-</script>
