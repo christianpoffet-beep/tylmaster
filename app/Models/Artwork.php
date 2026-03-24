@@ -45,6 +45,6 @@ class Artwork extends Model
 
     public function getArtworkUrlAttribute(): ?string
     {
-        return $this->artwork_path ? Storage::url($this->artwork_path) : null;
+        return $this->artwork_path ? Storage::disk('public')->url($this->artwork_path) : null;
     }
 }

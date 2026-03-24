@@ -42,7 +42,7 @@
                         <td class="px-4 py-3 text-sm text-gray-500 font-mono">{{ $tpl->masked_iban }}</td>
                         <td class="px-4 py-3">
                             @if($tpl->effective_logo_path)
-                                <img src="{{ Storage::url($tpl->effective_logo_path) }}" alt="Logo" class="h-6 w-auto">
+                                <img src="{{ Storage::disk('public')->url($tpl->effective_logo_path) }}" alt="Logo" class="h-6 w-auto">
                             @else
                                 <span class="text-xs text-gray-400">—</span>
                             @endif

@@ -56,7 +56,7 @@
                         <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
                             <div class="flex items-center gap-3">
                                 @if($release->cover_image_path)
-                                    <img src="{{ Storage::url($release->cover_image_path) }}" alt="" class="w-10 h-10 object-cover rounded shadow-sm flex-shrink-0">
+                                    <img src="{{ Storage::disk('public')->url($release->cover_image_path) }}" alt="" class="w-10 h-10 object-cover rounded shadow-sm flex-shrink-0">
                                 @endif
                                 <a href="{{ route('admin.releases.show', $release) }}" class="hover:text-blue-600 dark:hover:text-blue-400">{{ $release->title }}</a>
                             </div>

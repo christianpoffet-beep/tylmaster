@@ -193,7 +193,7 @@
                 <div x-show="logoSource === 'custom'">
                     @if($template->logo_path)
                         <div class="flex items-center gap-3 mb-2">
-                            <img src="{{ Storage::url($template->logo_path) }}" alt="Logo" class="h-10 w-auto border rounded">
+                            <img src="{{ Storage::disk('public')->url($template->logo_path) }}" alt="Logo" class="h-10 w-auto border rounded">
                         </div>
                     @endif
                     <input type="file" name="logo" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">

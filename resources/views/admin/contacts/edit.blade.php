@@ -13,7 +13,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Avatar</label>
                 @if($contact->avatar_path)
                     <div class="flex items-center gap-3 mb-2">
-                        <img src="{{ Storage::url($contact->avatar_path) }}" alt="Avatar" class="h-16 w-16 rounded-full object-cover border">
+                        <img src="{{ Storage::disk('public')->url($contact->avatar_path) }}" alt="Avatar" class="h-16 w-16 rounded-full object-cover border">
                         <label class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                             <input type="checkbox" name="remove_avatar" value="1" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
                             Entfernen

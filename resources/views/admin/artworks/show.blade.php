@@ -118,7 +118,7 @@
                     @endif
                 </div>
                 <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <a href="{{ Storage::url($logo->file_path) }}" download="{{ $logo->original_name }}" class="inline-flex items-center justify-center w-7 h-7 bg-white rounded-full shadow text-gray-500 hover:text-blue-600" title="Download">
+                    <a href="{{ Storage::disk('public')->url($logo->file_path) }}" download="{{ $logo->original_name }}" class="inline-flex items-center justify-center w-7 h-7 bg-white rounded-full shadow text-gray-500 hover:text-blue-600" title="Download">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     </a>
                 </div>

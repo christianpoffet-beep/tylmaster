@@ -10,7 +10,7 @@
             <div class="flex justify-between items-start mb-4">
                 <div class="flex items-center gap-4">
                     @if($contact->avatar_path)
-                        <img src="{{ Storage::url($contact->avatar_path) }}" alt="{{ $contact->full_name }}" class="w-16 h-16 rounded-full object-cover border border-gray-200 dark:border-gray-700">
+                        <img src="{{ Storage::disk('public')->url($contact->avatar_path) }}" alt="{{ $contact->full_name }}" class="w-16 h-16 rounded-full object-cover border border-gray-200 dark:border-gray-700">
                     @else
                         <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-400 text-xl font-bold border border-gray-200 dark:border-gray-700">
                             {{ strtoupper(substr($contact->first_name, 0, 1)) }}{{ strtoupper(substr($contact->last_name, 0, 1)) }}

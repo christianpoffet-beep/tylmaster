@@ -9,7 +9,7 @@
         <div class="flex justify-between items-start mb-6">
             <div class="flex gap-4">
                 @if($release->cover_image_path)
-                    <img src="{{ Storage::url($release->cover_image_path) }}" alt="Cover" class="w-32 h-32 object-cover rounded-lg shadow-sm flex-shrink-0">
+                    <img src="{{ Storage::disk('public')->url($release->cover_image_path) }}" alt="Cover" class="w-32 h-32 object-cover rounded-lg shadow-sm flex-shrink-0">
                 @endif
                 <div>
                     <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ $release->title }}</h2>
@@ -129,7 +129,7 @@
                 @foreach($release->artworks as $artwork)
                     <div class="flex items-center gap-3 p-2 rounded-lg border border-gray-200 dark:border-gray-700">
                         @if($artwork->file_path)
-                            <img src="{{ Storage::url($artwork->file_path) }}" alt="{{ $artwork->title }}" class="w-16 h-16 object-cover rounded shadow-sm">
+                            <img src="{{ Storage::disk('public')->url($artwork->file_path) }}" alt="{{ $artwork->title }}" class="w-16 h-16 object-cover rounded shadow-sm">
                         @endif
                         <div>
                             <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $artwork->title }}</span>
@@ -175,7 +175,7 @@
                                     <div class="flex items-center gap-2">
                                         @if($track->audio_file_path)
                                             <button type="button"
-                                                    @click="$dispatch('play-track', { title: '{{ addslashes($track->display_title) }}', artist: '{{ addslashes($track->organizations->where("type", "band")->pluck("primary_name")->join(", ")) }}', url: '{{ Storage::url($track->audio_file_path) }}' })"
+                                                    @click="$dispatch('play-track', { title: '{{ addslashes($track->display_title) }}', artist: '{{ addslashes($track->organizations->where("type", "band")->pluck("primary_name")->join(", ")) }}', url: '{{ Storage::disk('public')->url($track->audio_file_path) }}' })"
                                                     class="w-6 h-6 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white transition flex-shrink-0">
                                                 <svg class="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                                             </button>

@@ -21,6 +21,6 @@ class ArtworkLogo extends Model
 
     public function getUrlAttribute(): string
     {
-        return Storage::url($this->file_path);
+        return Storage::disk('public')->url($this->file_path);
     }
 }
