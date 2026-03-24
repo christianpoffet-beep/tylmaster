@@ -221,6 +221,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('content-posts/{content_post}/share', [ContentPostController::class, 'share'])->name('content-posts.share');
     Route::delete('content-posts/{content_post}/share', [ContentPostController::class, 'unshare'])->name('content-posts.unshare');
     Route::get('content-posts-image-browser', [ContentPostController::class, 'imageBrowser'])->name('content-posts.image-browser');
+    Route::delete('content-posts/{content_post}/images/{image}', [ContentPostController::class, 'removeImage'])->name('content-posts.images.destroy');
+    Route::post('content-posts/{content_post}/images/reorder', [ContentPostController::class, 'reorderImages'])->name('content-posts.images.reorder');
 
     // Kampagnen: Adresskreise
     Route::resource('address-circles', AddressCircleController::class);

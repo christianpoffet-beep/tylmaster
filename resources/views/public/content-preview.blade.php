@@ -22,10 +22,30 @@
         @endif
     </div>
 
-    {{-- Image --}}
-    @if($post->effective_image_url)
-        <div class="rounded-xl overflow-hidden mb-5 bg-gray-900">
-            <img src="{{ $post->effective_image_url }}" alt="" class="w-full object-contain max-h-[600px]">
+    {{-- Images carousel --}}
+    @if($post->images->count())
+        <div class="rounded-xl overflow-hidden mb-5 bg-gray-900" x-data="{ current: 0, total: {{ $post->images->count() }} }">
+            <div class="relative">
+                @foreach($post->images as $i => $img)
+                    <div x-show="current === {{ $i }}" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                        <img src="{{ $img->url }}" alt="" class="w-full object-contain max-h-[600px]">
+                    </div>
+                @endforeach
+
+                @if($post->images->count() > 1)
+                    <button @click="current = (current - 1 + total) % total" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <button @click="current = (current + 1) % total" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                        @foreach($post->images as $i => $img)
+                            <button @click="current = {{ $i }}" :class="current === {{ $i }} ? 'bg-white' : 'bg-white/50'" class="w-2 h-2 rounded-full transition-colors"></button>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
         </div>
     @endif
 

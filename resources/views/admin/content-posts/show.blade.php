@@ -42,12 +42,10 @@
                     <dt class="text-gray-500 dark:text-gray-400">Erstellt</dt>
                     <dd class="text-gray-900 dark:text-gray-100">{{ $contentPost->created_at->format('d.m.Y H:i') }}</dd>
                 </div>
-                @if($contentPost->image_source_label)
                 <div class="flex justify-between">
-                    <dt class="text-gray-500 dark:text-gray-400">Bild-Quelle</dt>
-                    <dd class="text-gray-900 dark:text-gray-100 text-right text-xs">{{ $contentPost->image_source_label }}</dd>
+                    <dt class="text-gray-500 dark:text-gray-400">Bilder</dt>
+                    <dd class="text-gray-900 dark:text-gray-100">{{ $contentPost->images->count() }}</dd>
                 </div>
-                @endif
             </dl>
 
             @if($contentPost->status !== 'published')
@@ -118,10 +116,42 @@
 
     {{-- Right: Preview --}}
     <div class="lg:col-span-2 space-y-6">
-        {{-- Image --}}
-        @if($contentPost->effective_image_url)
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <img src="{{ $contentPost->effective_image_url }}" alt="" class="w-full max-h-[500px] object-contain bg-gray-100 dark:bg-gray-900">
+        {{-- Images carousel --}}
+        @if($contentPost->images->count())
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+             x-data="{ current: 0, total: {{ $contentPost->images->count() }} }">
+            <div class="relative">
+                @foreach($contentPost->images as $i => $img)
+                    <div x-show="current === {{ $i }}" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                        <img src="{{ $img->url }}" alt="" class="w-full max-h-[500px] object-contain bg-gray-100 dark:bg-gray-900">
+                    </div>
+                @endforeach
+
+                @if($contentPost->images->count() > 1)
+                    <button @click="current = (current - 1 + total) % total" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <button @click="current = (current + 1) % total" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                        @foreach($contentPost->images as $i => $img)
+                            <button @click="current = {{ $i }}" :class="current === {{ $i }} ? 'bg-white' : 'bg-white/50'" class="w-2 h-2 rounded-full transition-colors"></button>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            @if($contentPost->images->count() > 1)
+                <div class="flex gap-1 p-2 bg-gray-50 dark:bg-gray-900/50">
+                    @foreach($contentPost->images as $i => $img)
+                        <button @click="current = {{ $i }}" :class="current === {{ $i }} ? 'ring-2 ring-blue-500' : 'opacity-60 hover:opacity-100'"
+                                class="w-12 h-12 rounded overflow-hidden flex-shrink-0 transition-all">
+                            <img src="{{ $img->url }}" class="w-full h-full object-cover">
+                        </button>
+                    @endforeach
+                </div>
+            @endif
         </div>
         @endif
 

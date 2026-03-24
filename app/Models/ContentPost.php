@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ContentPost extends Model
@@ -12,8 +11,7 @@ class ContentPost extends Model
     use LogsActivity;
 
     protected $fillable = [
-        'platform', 'title', 'caption', 'hashtags', 'image',
-        'image_source_type', 'image_source_id',
+        'platform', 'title', 'caption', 'hashtags',
         'status', 'scheduled_at', 'published_at', 'notes',
         'share_token',
     ];
@@ -35,60 +33,19 @@ class ContentPost extends Model
         'published' => 'Veröffentlicht',
     ];
 
-    public function imageSource()
+    public function images()
     {
-        if ($this->image_source_type === 'photo') {
-            return $this->belongsTo(Photo::class, 'image_source_id');
-        }
-        if ($this->image_source_type === 'artwork') {
-            return $this->belongsTo(Artwork::class, 'image_source_id');
-        }
-        if ($this->image_source_type === 'artwork_logo') {
-            return $this->belongsTo(ArtworkLogo::class, 'image_source_id');
-        }
-        return null;
+        return $this->hasMany(ContentPostImage::class)->orderBy('sort_order');
+    }
+
+    public function getImageUrlsAttribute(): array
+    {
+        return $this->images->map(fn ($img) => $img->url)->filter()->values()->all();
     }
 
     public function getEffectiveImageUrlAttribute(): ?string
     {
-        if ($this->image) {
-            return asset('storage/' . $this->image);
-        }
-
-        if ($this->image_source_type === 'photo') {
-            $photo = Photo::find($this->image_source_id);
-            return $photo?->photo_url;
-        }
-        if ($this->image_source_type === 'artwork') {
-            $artwork = Artwork::find($this->image_source_id);
-            return $artwork?->artwork_url;
-        }
-        if ($this->image_source_type === 'artwork_logo') {
-            $logo = ArtworkLogo::find($this->image_source_id);
-            return $logo?->url;
-        }
-
-        return null;
-    }
-
-    public function getImageSourceLabelAttribute(): ?string
-    {
-        if (!$this->image_source_type) return null;
-
-        if ($this->image_source_type === 'photo') {
-            $photo = Photo::find($this->image_source_id);
-            return $photo ? 'Foto: ' . $photo->display_title : null;
-        }
-        if ($this->image_source_type === 'artwork') {
-            $artwork = Artwork::find($this->image_source_id);
-            return $artwork ? 'Artwork: ' . $artwork->title : null;
-        }
-        if ($this->image_source_type === 'artwork_logo') {
-            $logo = ArtworkLogo::with('artwork')->find($this->image_source_id);
-            return $logo ? 'Logo: ' . ($logo->artwork->title ?? '') . ' – ' . $logo->original_name : null;
-        }
-
-        return null;
+        return $this->images->first()?->url;
     }
 
     public function generateShareToken(): string
