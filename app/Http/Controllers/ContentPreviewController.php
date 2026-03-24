@@ -1,5 +1,5 @@
 <?php
-
+// Public preview controller for shared content posts
 namespace App\Http\Controllers;
 
 use App\Models\ContentPost;

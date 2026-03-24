@@ -1,3 +1,4 @@
+{{-- Public preview for shared content posts --}}
 @extends('public.layouts.gallery')
 
 @section('title', $post->title ?: 'Beitrags-Vorschau')
