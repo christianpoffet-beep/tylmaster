@@ -40,6 +40,43 @@ echo "\n--- Git Info ---\n";
 echo "HEAD: " . trim(shell_exec('git rev-parse --short HEAD 2>&1')) . "\n";
 echo "Branch: " . trim(shell_exec('git branch --show-current 2>&1')) . "\n";
 
+echo "\n--- Storage Link Check ---\n";
+$linkPath = __DIR__ . '/storage';
+$targetPath = realpath(__DIR__ . '/../storage/app/public');
+echo "Link path: $linkPath\n";
+echo "Target path: $targetPath\n";
+echo "Link exists: " . (file_exists($linkPath) ? 'YES' : 'NO') . "\n";
+echo "Is symlink: " . (is_link($linkPath) ? 'YES' : 'NO') . "\n";
+if (is_link($linkPath)) {
+    echo "Points to: " . readlink($linkPath) . "\n";
+} elseif (is_dir($linkPath)) {
+    echo "Is regular dir (not symlink)!\n";
+}
+echo "Target exists: " . (file_exists($targetPath) ? 'YES' : 'NO') . "\n";
+if ($targetPath && is_dir($targetPath)) {
+    $files_in_storage = scandir($targetPath);
+    echo "Files in target: " . implode(', ', array_diff($files_in_storage, ['.', '..'])) . "\n";
+}
+echo "APP_URL: " . env('APP_URL') . "\n";
+echo "Test URL: " . Illuminate\Support\Facades\Storage::disk('public')->url('test.jpg') . "\n";
+
+// Create symlink if missing
+if (!file_exists($linkPath) && $targetPath) {
+    echo "\n> Creating symlink...\n";
+    try {
+        Illuminate\Support\Facades\Artisan::call('storage:link');
+        echo Illuminate\Support\Facades\Artisan::output();
+    } catch (\Throwable $e) {
+        echo "ERROR: " . $e->getMessage() . "\n";
+        // Try manual symlink
+        if (@symlink($targetPath, $linkPath)) {
+            echo "Manual symlink created!\n";
+        } else {
+            echo "Manual symlink also failed. Try creating it via Plesk File Manager.\n";
+        }
+    }
+}
+
 echo "\n--- Cache Clear ---\n";
 $commands = [
     'route:clear',
