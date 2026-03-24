@@ -232,20 +232,71 @@
     {{-- Releases --}}
     @if($track->releases->count())
         <x-admin.collapsible-card title="Produkte" :count="$track->releases->count()" class="mt-6">
-            <div class="space-y-2">
+            <div class="space-y-4">
                 @foreach($track->releases as $release)
-                    <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                        <a href="{{ route('admin.releases.show', $release) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">{{ $release->title }}</a>
-                        <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                            @if($release->pivot->track_number)
-                                <span>Track {{ $release->pivot->track_number }}</span>
+                    <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div class="flex items-start gap-4">
+                            {{-- Cover-Bild --}}
+                            @php $primaryArtwork = $release->artworks->firstWhere('pivot.is_primary', true) ?? $release->artworks->first(); @endphp
+                            @if($release->cover_image_path)
+                                <a href="{{ route('admin.releases.show', $release) }}">
+                                    <img src="{{ Storage::disk('public')->url($release->cover_image_path) }}" alt="{{ $release->title }}" class="w-20 h-20 object-cover rounded-lg shadow-sm flex-shrink-0">
+                                </a>
+                            @elseif($primaryArtwork?->artwork_path)
+                                <a href="{{ route('admin.releases.show', $release) }}">
+                                    <img src="{{ $primaryArtwork->artwork_url }}" alt="{{ $release->title }}" class="w-20 h-20 object-cover rounded-lg shadow-sm flex-shrink-0">
+                                </a>
                             @endif
-                            @if($release->pivot->disc_number && $release->pivot->disc_number > 1)
-                                <span>Disc {{ $release->pivot->disc_number }}</span>
-                            @endif
-                            @if($release->pivot->role && $release->pivot->role !== 'main')
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{{ ucfirst(str_replace('_', ' ', $release->pivot->role)) }}</span>
-                            @endif
+
+                            <div class="flex-1 min-w-0">
+                                {{-- Titel + Track-Nr --}}
+                                <div class="flex items-center justify-between gap-2">
+                                    <a href="{{ route('admin.releases.show', $release) }}" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $release->title }}</a>
+                                    <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
+                                        @if($release->pivot->track_number)
+                                            <span>Track {{ $release->pivot->track_number }}</span>
+                                        @endif
+                                        @if($release->pivot->disc_number && $release->pivot->disc_number > 1)
+                                            <span>Disc {{ $release->pivot->disc_number }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Produkttyp-Badges --}}
+                                @php $productTypes = is_array($release->product_type) ? $release->product_type : []; @endphp
+                                @if(count($productTypes))
+                                    <div class="mt-1 flex flex-wrap gap-1">
+                                        @foreach($productTypes as $pt)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">{{ $pt }}</span>
+                                        @endforeach
+                                    </div>
+                                @endif
+
+                                {{-- Metadaten --}}
+                                <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                                    @if($release->label_name)
+                                        <span>Label: {{ $release->label_name }}</span>
+                                    @endif
+                                    @if($release->catalog_number)
+                                        <span>Kat.-Nr.: {{ $release->catalog_number }}</span>
+                                    @endif
+                                    @if($release->release_date)
+                                        <span>{{ $release->release_date->format('d.m.Y') }}</span>
+                                    @endif
+                                    @if($release->ean_upc)
+                                        <span class="font-mono">{{ $release->ean_upc }}</span>
+                                    @endif
+                                </div>
+
+                                {{-- Artwork-Logos --}}
+                                @if($primaryArtwork?->logos->count())
+                                    <div class="mt-2 flex flex-wrap gap-2">
+                                        @foreach($primaryArtwork->logos as $logo)
+                                            <img src="{{ $logo->url }}" alt="{{ $logo->original_name }}" class="h-8 w-auto rounded bg-gray-100 dark:bg-gray-700 object-contain p-0.5" title="{{ $logo->comment ?? $logo->original_name }}">
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 @endforeach
