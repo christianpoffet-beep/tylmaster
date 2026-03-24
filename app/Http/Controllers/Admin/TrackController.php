@@ -287,12 +287,6 @@ class TrackController extends Controller
             ];
         }
 
-        \Log::info('SYNC RELEASES', [
-            'has_marker' => $request->has('release_ids_submitted'),
-            'release_ids_raw' => $request->input('release_ids'),
-            'track_numbers_raw' => $request->input('release_track_numbers'),
-            'syncData' => $syncData,
-        ]);
         if ($request->has('release_ids_submitted')) {
             $track->releases()->sync($syncData);
         }
