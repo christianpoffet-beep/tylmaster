@@ -46,6 +46,25 @@ Route::get('gallery/{token}', [PublicGalleryController::class, 'showGallery']);
 // Public content post preview (no auth)
 Route::get('preview/content/{token}', [ContentPreviewController::class, 'show'])->name('content-preview.show');
 
+// Temporary deploy route (remove after use)
+Route::get('deploy-refresh/{key}', function (string $key) {
+    if ($key !== 'tyl-deploy-2024x') {
+        abort(404);
+    }
+    $output = [];
+    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    $output[] = 'migrate: ' . \Illuminate\Support\Facades\Artisan::output();
+    \Illuminate\Support\Facades\Artisan::call('view:clear');
+    $output[] = 'view:clear: ' . \Illuminate\Support\Facades\Artisan::output();
+    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+    $output[] = 'cache:clear: ' . \Illuminate\Support\Facades\Artisan::output();
+    \Illuminate\Support\Facades\Artisan::call('route:clear');
+    $output[] = 'route:clear: ' . \Illuminate\Support\Facades\Artisan::output();
+    \Illuminate\Support\Facades\Artisan::call('config:clear');
+    $output[] = 'config:clear: ' . \Illuminate\Support\Facades\Artisan::output();
+    return '<pre>' . implode("\n", $output) . '</pre>';
+});
+
 // Redirect root to admin dashboard
 Route::redirect('/', '/admin');
 
