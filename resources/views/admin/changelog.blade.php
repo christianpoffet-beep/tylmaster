@@ -11,6 +11,28 @@
 
     <div class="space-y-6">
 
+        {{-- v1.6.1 --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">v1.6.1</h3>
+                <span class="text-sm text-gray-500 dark:text-gray-400">24.03.2026</span>
+            </div>
+            <div class="space-y-2">
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Produkt-Detailseite: Aggregierte Anzeige von Labels, Publishern und Credits aus verknüpften Tracks</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Artwork-Sektion in Produkten: Logos und Credits (Fotograf, Designer etc.) werden direkt angezeigt</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 mr-2">Fix</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Bild-Vorschauen: Storage-URLs für Avatare, Artworks, Logos, Cover und Audio-Dateien korrigiert</span>
+                </div>
+            </div>
+        </div>
+
         {{-- v1.6.0 --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center justify-between mb-3">

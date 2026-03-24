@@ -243,6 +243,16 @@
                     <p class="text-sm text-gray-600 dark:text-gray-300">Fasse Tracks zu Produkten (Singles, EPs, Alben) zusammen. Erfasse UPC-Code, Veröffentlichungsdatum und verknüpfe die enthaltenen Tracks.</p>
                 </div>
                 <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Aggregierte Informationen aus Tracks</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Sobald Tracks mit einem Produkt verknüpft sind, zeigt die Produkt-Detailseite automatisch zusätzliche Informationen aus den Tracks an:</p>
+                    <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 mt-1 space-y-1">
+                        <li><strong>Albumcover & Logos:</strong> Verknüpfte Artworks werden mit Vorschaubild, zugehörigen Logos und Artwork-Credits (Fotograf, Designer etc.) angezeigt.</li>
+                        <li><strong>Labels:</strong> Labels, die auf Track-Ebene verknüpft sind, erscheinen zusätzlich zu den Release-Labels in der Label-Sektion (mit «Track»-Kennzeichnung).</li>
+                        <li><strong>Publisher:</strong> Verlage aus den Tracks werden analog zu Labels aggregiert und in der Publisher-Sektion angezeigt.</li>
+                        <li><strong>Credits:</strong> Alle Credits der verknüpften Tracks (z.B. Produzent, Mixing Engineer, Musiker) werden gesammelt und unterhalb der Release-Credits angezeigt. Dabei wird angezeigt, aus welchem Track der Credit stammt. Duplikate (Credits, die bereits auf Release-Ebene existieren) werden automatisch gefiltert.</li>
+                    </ul>
+                </div>
+                <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Navigation</h4>
                     <p class="text-sm text-gray-600 dark:text-gray-300">Unter <strong>Musik</strong> findest du Tabs für Tracks und Produkte. Wechsle zwischen den Ansichten über die Tab-Navigation oben.</p>
                 </div>
@@ -276,7 +286,7 @@
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Verknüpfungen</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Artworks können mit Releases, Tracks und Projekten verknüpft werden.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Artworks können mit Releases, Tracks und Projekten verknüpft werden. Auf der Produkt-Detailseite werden verknüpfte Artworks automatisch mit Vorschaubild, Logos und Credits angezeigt.</p>
                 </div>
             </div>
         </div>

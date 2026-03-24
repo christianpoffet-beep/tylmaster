@@ -131,7 +131,11 @@ class ReleaseController extends Controller
 
     public function show(Release $release)
     {
-        $release->load(['tracks.organizations', 'contacts', 'organizations', 'projects', 'contracts', 'artworks']);
+        $release->load([
+            'tracks.organizations', 'tracks.contacts',
+            'contacts', 'organizations', 'projects', 'contracts',
+            'artworks.logos', 'artworks.credits.creditable',
+        ]);
         return view('admin.music.releases.show', compact('release'));
     }
 

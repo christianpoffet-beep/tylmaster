@@ -125,17 +125,46 @@
     {{-- Artworks --}}
     @if(isset($release->artworks) && $release->artworks->count())
         <x-admin.collapsible-card title="Artworks" :count="$release->artworks->count()" class="mt-6">
-            <div class="flex flex-wrap gap-4">
+            <div class="space-y-4">
                 @foreach($release->artworks as $artwork)
-                    <div class="flex items-center gap-3 p-2 rounded-lg border border-gray-200 dark:border-gray-700">
-                        @if($artwork->file_path)
-                            <img src="{{ Storage::disk('public')->url($artwork->file_path) }}" alt="{{ $artwork->title }}" class="w-16 h-16 object-cover rounded shadow-sm">
-                        @endif
-                        <div>
-                            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $artwork->title }}</span>
-                            @if($artwork->pivot->is_primary)
-                                <span class="ml-1 text-yellow-500" title="Haupt-Artwork">&#9733;</span>
+                    <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div class="flex items-start gap-4">
+                            @if($artwork->artwork_path)
+                                <a href="{{ route('admin.artworks.show', $artwork) }}">
+                                    <img src="{{ $artwork->artwork_url }}" alt="{{ $artwork->title }}" class="w-24 h-24 object-cover rounded-lg shadow-sm flex-shrink-0">
+                                </a>
                             @endif
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('admin.artworks.show', $artwork) }}" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $artwork->title }}</a>
+                                    @if($artwork->pivot->is_primary)
+                                        <span class="text-yellow-500" title="Haupt-Artwork">&#9733;</span>
+                                    @endif
+                                </div>
+
+                                {{-- Artwork Credits --}}
+                                @if($artwork->credits->count())
+                                    <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                                        @foreach($artwork->credits->groupBy('role') as $role => $credits)
+                                            <span>
+                                                {{ ['photographer' => 'Foto', 'artwork_by' => 'Artwork', 'logo_by' => 'Logo', 'design_by' => 'Design'][$role] ?? ucfirst($role) }}:
+                                                {{ $credits->pluck('display_name')->join(', ') }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+
+                                {{-- Logos --}}
+                                @if($artwork->logos->count())
+                                    <div class="mt-2 flex flex-wrap gap-2">
+                                        @foreach($artwork->logos as $logo)
+                                            <div class="group relative">
+                                                <img src="{{ $logo->url }}" alt="{{ $logo->original_name }}" class="h-10 w-auto rounded bg-gray-100 dark:bg-gray-700 object-contain p-0.5" title="{{ $logo->comment ?? $logo->original_name }}">
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 @endforeach
@@ -219,13 +248,35 @@
         </x-admin.collapsible-card>
     @endif
 
-    {{-- Credits --}}
-    @if($release->contacts->count())
-        @php
-            $roleLabels = collect(\App\Models\Setting::creditRoles())->flatMap(fn($roles) => $roles)->toArray();
-        @endphp
-        <x-admin.collapsible-card title="Credits" :count="$release->contacts->count()" class="mt-6">
+    {{-- Credits (Release + aggregiert aus Tracks) --}}
+    @php
+        $roleLabels = collect(\App\Models\Setting::creditRoles())->flatMap(fn($roles) => $roles)->toArray();
+
+        // Track-Credits sammeln (nur solche, die nicht bereits auf Release-Ebene existieren)
+        $releaseContactKeys = $release->contacts->map(fn($c) => $c->id . '-' . $c->pivot->role)->toArray();
+        $trackCredits = collect();
+        foreach ($release->tracks as $track) {
+            foreach ($track->contacts as $contact) {
+                $key = $contact->id . '-' . $contact->pivot->role;
+                if (!in_array($key, $releaseContactKeys) && !$trackCredits->has($key)) {
+                    $trackCredits->put($key, (object)[
+                        'contact' => $contact,
+                        'role' => $contact->pivot->role,
+                        'instrument' => $contact->pivot->instrument,
+                        'tracks' => collect([$track->display_title]),
+                    ]);
+                } elseif ($trackCredits->has($key)) {
+                    $trackCredits->get($key)->tracks->push($track->display_title);
+                }
+            }
+        }
+
+        $totalCredits = $release->contacts->count() + $trackCredits->count();
+    @endphp
+    @if($totalCredits > 0)
+        <x-admin.collapsible-card title="Credits" :count="$totalCredits" class="mt-6">
             <div class="space-y-2">
+                {{-- Release-Credits --}}
                 @foreach($release->contacts as $contact)
                     <div class="flex items-center justify-between py-1">
                         <a href="{{ route('admin.contacts.show', $contact) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800">{{ $contact->full_name }}</a>
@@ -237,29 +288,88 @@
                         </div>
                     </div>
                 @endforeach
+
+                {{-- Track-Credits --}}
+                @if($trackCredits->count())
+                    @if($release->contacts->count())
+                        <div class="pt-2 mt-2 border-t border-gray-100 dark:border-gray-700">
+                            <p class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-2">Aus Tracks</p>
+                        </div>
+                    @endif
+                    @foreach($trackCredits as $tc)
+                        <div class="flex items-center justify-between py-1">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <a href="{{ route('admin.contacts.show', $tc->contact) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800">{{ $tc->contact->full_name }}</a>
+                                <span class="text-xs text-gray-400 dark:text-gray-500 truncate" title="{{ $tc->tracks->join(', ') }}">({{ $tc->tracks->join(', ') }})</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <span class="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{{ $roleLabels[$tc->role] ?? $tc->role }}</span>
+                                @if($tc->instrument)
+                                    <span class="text-xs px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300">{{ $tc->instrument }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
             </div>
         </x-admin.collapsible-card>
     @endif
 
-    {{-- Label (Organisation) --}}
-    @php $labels = $release->organizations->where('type', 'label'); @endphp
-    @if($labels->count())
-        <x-admin.collapsible-card title="Label" :count="$labels->count()" class="mt-6">
+    {{-- Label (Release + aus Tracks) --}}
+    @php
+        $releaseLabels = $release->organizations->where('type', 'label');
+        $releaseLabelIds = $releaseLabels->pluck('id')->toArray();
+        $trackLabels = collect();
+        foreach ($release->tracks as $track) {
+            foreach ($track->organizations->where('type', 'label') as $org) {
+                if (!in_array($org->id, $releaseLabelIds) && !$trackLabels->contains('id', $org->id)) {
+                    $trackLabels->push($org);
+                }
+            }
+        }
+        $allLabelsCount = $releaseLabels->count() + $trackLabels->count();
+    @endphp
+    @if($allLabelsCount)
+        <x-admin.collapsible-card title="Label" :count="$allLabelsCount" class="mt-6">
             <div class="flex flex-wrap gap-2">
-                @foreach($labels as $labelOrg)
+                @foreach($releaseLabels as $labelOrg)
                     <a href="{{ route('admin.organizations.show', $labelOrg) }}" class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/50">{{ $labelOrg->primary_name }}</a>
+                @endforeach
+                @foreach($trackLabels as $labelOrg)
+                    <a href="{{ route('admin.organizations.show', $labelOrg) }}" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800/40 border border-blue-200 dark:border-blue-800" title="Aus Track">
+                        {{ $labelOrg->primary_name }}
+                        <span class="text-xs opacity-60">Track</span>
+                    </a>
                 @endforeach
             </div>
         </x-admin.collapsible-card>
     @endif
 
-    {{-- Publisher --}}
-    @php $publishers = $release->organizations->where('type', 'publishing'); @endphp
-    @if($publishers->count())
-        <x-admin.collapsible-card title="Publisher" :count="$publishers->count()" class="mt-6">
+    {{-- Publisher (Release + aus Tracks) --}}
+    @php
+        $releasePublishers = $release->organizations->where('type', 'publishing');
+        $releasePublisherIds = $releasePublishers->pluck('id')->toArray();
+        $trackPublishers = collect();
+        foreach ($release->tracks as $track) {
+            foreach ($track->organizations->where('type', 'publishing') as $org) {
+                if (!in_array($org->id, $releasePublisherIds) && !$trackPublishers->contains('id', $org->id)) {
+                    $trackPublishers->push($org);
+                }
+            }
+        }
+        $allPublishersCount = $releasePublishers->count() + $trackPublishers->count();
+    @endphp
+    @if($allPublishersCount)
+        <x-admin.collapsible-card title="Publisher" :count="$allPublishersCount" class="mt-6">
             <div class="flex flex-wrap gap-2">
-                @foreach($publishers as $publisher)
+                @foreach($releasePublishers as $publisher)
                     <a href="{{ route('admin.organizations.show', $publisher) }}" class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800/50">{{ $publisher->primary_name }}</a>
+                @endforeach
+                @foreach($trackPublishers as $publisher)
+                    <a href="{{ route('admin.organizations.show', $publisher) }}" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-800/40 border border-indigo-200 dark:border-indigo-800" title="Aus Track">
+                        {{ $publisher->primary_name }}
+                        <span class="text-xs opacity-60">Track</span>
+                    </a>
                 @endforeach
             </div>
         </x-admin.collapsible-card>
