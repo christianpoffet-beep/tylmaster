@@ -231,30 +231,100 @@
 
         {{-- 8. Musik --}}
         <div id="musik" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">8. Musik (Tracks & Releases)</h3>
-            <p class="text-sm text-gray-600 mb-3">Verwaltung deines Musikkatalogs mit Tracks und Releases.</p>
-            <div class="space-y-3">
-                <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Tracks</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Erfasse Songs mit Titel, ISRC-Code, Dauer, Genre, Status und verknüpften Artists (Kontakte). Optional kannst du eine Audiodatei hochladen.</p>
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">8. Musik (Tracks & Produkte)</h3>
+            <p class="text-sm text-gray-600 mb-3">Verwaltung deines Musikkatalogs. Unter <strong>Musik</strong> findest du zwei Tabs: <strong>Tracks</strong> und <strong>Produkte</strong>.</p>
+
+            <div class="space-y-4">
+                {{-- TRACKS --}}
+                <div class="border-l-2 border-blue-400 pl-4">
+                    <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">Tracks</h4>
+
+                    <div class="space-y-2">
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Grunddaten</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Titel (Pflichtfeld), Version (z.B. «Radio Edit», «Remix»), ISRC-Code, Status (Draft / Released / Archived), Genre und Dauer.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Audio</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Lade eine Audiodatei hoch (MP3, WAV, FLAC, AAC, M4A, OGG; max. 300 MB). Bitrate, Samplerate, Kanäle und Format werden automatisch ausgelesen. Die Datei kann direkt in der Detailansicht und in Listen abgespielt werden.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Musik-Details</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">BPM, Tonart (z.B. Am, F#) und Sprache des Songtexts.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Verknüpfungen</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Jeder Track kann mit folgenden Elementen verknüpft werden:</p>
+                            <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 mt-1 space-y-0.5">
+                                <li><strong>Band:</strong> Organisationen vom Typ «Band»</li>
+                                <li><strong>Credits:</strong> Kontakte mit Rolle (z.B. Produzent, Mixing Engineer, Instrumentalist) und optionalem Instrument</li>
+                                <li><strong>Label:</strong> Organisationen vom Typ «Label»</li>
+                                <li><strong>Publisher:</strong> Organisationen vom Typ «Publishing»</li>
+                                <li><strong>Produkte:</strong> Zuordnung zu einem oder mehreren Produkten mit Track-Nr., Disc-Nr. und Rolle (Main, Bonus Track, Hidden Track, Remix)</li>
+                                <li><strong>Projekte</strong> und <strong>Verträge</strong></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Metadaten kopieren</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Auf der Detailseite eines Tracks kannst du über <strong>«Metadaten kopieren»</strong> ausgewählte Felder und Verknüpfungen (Band, Label, Publisher, Credits, Produkte, Projekte, Verträge) in die Zwischenablage kopieren. Beim Erstellen oder Bearbeiten eines anderen Tracks erscheint dann <strong>«Metadaten einfügen»</strong>, um die Daten zu übernehmen.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Listenansicht</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Suche nach Titel, ISRC, Version, Komponist oder Produzent. Filtere nach Status, Genre oder Produkt. Sortiere nach Titel, ISRC, BPM oder Status. Über die Checkboxen können mehrere Tracks markiert und per Sammelaktion (Status ändern, Genre setzen, Löschen) bearbeitet werden.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Detailansicht</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Zeigt alle Metadaten, den Audio-Player und aufklappbare Sektionen für Produkte (mit Albumcover, Produkttyp-Badges, Label, Katalognummer und Logos), Band, Credits, Label, Publisher, Projekte und Verträge.</p>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Produkte</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Fasse Tracks zu Produkten (Singles, EPs, Alben) zusammen. Erfasse UPC-Code, Veröffentlichungsdatum und verknüpfe die enthaltenen Tracks.</p>
-                </div>
-                <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Aggregierte Informationen aus Tracks</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Sobald Tracks mit einem Produkt verknüpft sind, zeigt die Produkt-Detailseite automatisch zusätzliche Informationen aus den Tracks an:</p>
-                    <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 mt-1 space-y-1">
-                        <li><strong>Albumcover & Logos:</strong> Verknüpfte Artworks werden mit Vorschaubild, zugehörigen Logos und Artwork-Credits (Fotograf, Designer etc.) angezeigt.</li>
-                        <li><strong>Labels:</strong> Labels, die auf Track-Ebene verknüpft sind, erscheinen zusätzlich zu den Release-Labels in der Label-Sektion (mit «Track»-Kennzeichnung).</li>
-                        <li><strong>Publisher:</strong> Verlage aus den Tracks werden analog zu Labels aggregiert und in der Publisher-Sektion angezeigt.</li>
-                        <li><strong>Credits:</strong> Alle Credits der verknüpften Tracks (z.B. Produzent, Mixing Engineer, Musiker) werden gesammelt und unterhalb der Release-Credits angezeigt. Dabei wird angezeigt, aus welchem Track der Credit stammt. Duplikate (Credits, die bereits auf Release-Ebene existieren) werden automatisch gefiltert.</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Navigation</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Unter <strong>Musik</strong> findest du Tabs für Tracks und Produkte. Wechsle zwischen den Ansichten über die Tab-Navigation oben.</p>
+
+                {{-- PRODUKTE --}}
+                <div class="border-l-2 border-indigo-400 pl-4">
+                    <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">Produkte</h4>
+
+                    <div class="space-y-2">
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Grunddaten</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Titel (Pflichtfeld), Sprache des Titels, Katalognummer, EAN/UPC-Code, Veröffentlichungsdatum und Cover-Bild. Beim Erstellen kann eine <strong>Produktvorlage</strong> geladen werden, die Release-Info vorausfüllt.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Produkttypen</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Wähle einen oder mehrere Typen aus den Kategorien: Musik (Album, EP, Single, CD, Vinyl etc.), Video (Musikvideo, Lyric Video, Konzertfilm etc.), Merchandise Kleidung, Merchandise Accessoires und Merchandise Premium. Je nach gewähltem Typ werden zusätzliche Musik-Felder ein- oder ausgeblendet.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Musik-Felder</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Bei Musik-Produkttypen erscheinen zusätzlich: Hauptkünstler, Label Name, Tracklist, Territory (weltweit oder einzelne Länder mit Preset-Vorlagen), Band, Credits, Label- und Publisher-Zuordnung.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Tracklist</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Verknüpfe Tracks mit dem Produkt und vergib Track-Nummern. Auf der Detailseite kann die Reihenfolge per <strong>Drag &amp; Drop</strong> geändert werden &ndash; die neue Reihenfolge wird automatisch gespeichert. Tracks mit Audio können direkt in der Liste abgespielt werden.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Artworks</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Verknüpfe ein oder mehrere Artworks und markiere eines als <strong>Haupt-Artwork</strong> (Stern-Symbol). Die Detailseite zeigt das Artwork-Bild, zugehörige Logos und Artwork-Credits (Fotograf, Designer etc.) an.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Physische Produkte</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Für physische Produkte: Grösse (B &times; H &times; T in cm), Gewicht (in g), Preis (CHF/EUR/USD/GBP) und Lagerbestand.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Weitere Verknüpfungen</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Projekte, Verträge und Beschreibung (Notizen) können ebenfalls zugeordnet werden.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Aggregierte Informationen aus Tracks</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Die Produkt-Detailseite zeigt automatisch Daten aus den verknüpften Tracks an:</p>
+                            <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 mt-1 space-y-0.5">
+                                <li><strong>Credits:</strong> Alle Track-Credits werden unterhalb der Produkt-Credits angezeigt (mit Angabe des Track-Namens). Duplikate werden gefiltert.</li>
+                                <li><strong>Labels &amp; Publisher:</strong> Aus den Tracks stammende Labels und Verlage erscheinen mit «Track»-Kennzeichnung.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Listenansicht</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Suche nach Titel, EAN/UPC, Katalognummer, Label oder Künstler. Filtere nach Produkttyp. Sortiere nach Titel, Datum oder Erstellungszeitpunkt. Die Liste zeigt Cover-Thumbnail, Typ-Badges, Label, Track-Anzahl und Datum.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
