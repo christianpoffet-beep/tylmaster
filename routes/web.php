@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\AddressCircleController;
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CampaignTemplateController;
 use App\Http\Controllers\Admin\ContentPostController;
+use App\Http\Controllers\ContentPreviewController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\MusicSettingsController;
 use App\Http\Controllers\Admin\ProductTemplateController;
@@ -41,6 +42,9 @@ Route::get('dl/{path}', [PublicGalleryController::class, 'downloadPhoto'])->wher
 Route::get('p/{path}', [PublicGalleryController::class, 'showPhoto'])->where('path', '.*');
 Route::get('gallery/{token}/download', [PublicGalleryController::class, 'downloadFolder']);
 Route::get('gallery/{token}', [PublicGalleryController::class, 'showGallery']);
+
+// Public content post preview (no auth)
+Route::get('preview/content/{token}', [ContentPreviewController::class, 'show'])->name('content-preview.show');
 
 // Redirect root to admin dashboard
 Route::redirect('/', '/admin');
@@ -195,6 +199,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::resource('content-posts', ContentPostController::class);
     Route::post('content-posts/{content_post}/duplicate', [ContentPostController::class, 'duplicate'])->name('content-posts.duplicate');
     Route::patch('content-posts/{content_post}/mark-published', [ContentPostController::class, 'markPublished'])->name('content-posts.markPublished');
+    Route::post('content-posts/{content_post}/share', [ContentPostController::class, 'share'])->name('content-posts.share');
+    Route::delete('content-posts/{content_post}/share', [ContentPostController::class, 'unshare'])->name('content-posts.unshare');
+    Route::get('content-posts-image-browser', [ContentPostController::class, 'imageBrowser'])->name('content-posts.image-browser');
 
     // Kampagnen: Adresskreise
     Route::resource('address-circles', AddressCircleController::class);

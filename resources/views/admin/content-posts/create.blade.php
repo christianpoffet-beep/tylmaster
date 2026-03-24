@@ -57,13 +57,7 @@
                   placeholder="#metal #underground #livemusic">{{ old('hashtags') }}</textarea>
     </div>
 
-    <div>
-        <label for="image" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bild</label>
-        <input type="file" name="image" id="image" accept="image/jpeg,image/png,image/webp"
-               class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
-        <p class="text-xs text-gray-400 mt-1">JPG, PNG oder WebP, max. 10 MB</p>
-        @error('image') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-    </div>
+    @include('admin.content-posts._image-picker')
 
     <div>
         <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notizen</label>

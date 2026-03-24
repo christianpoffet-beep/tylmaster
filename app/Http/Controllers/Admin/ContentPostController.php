@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Artwork;
+use App\Models\ArtworkLogo;
 use App\Models\ContentPost;
+use App\Models\Photo;
+use App\Models\PhotoFolder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -55,6 +59,8 @@ class ContentPostController extends Controller
             'caption' => 'required|string',
             'hashtags' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'image_source_type' => 'nullable|in:photo,artwork,artwork_logo',
+            'image_source_id' => 'nullable|integer',
             'status' => 'required|in:' . implode(',', array_keys(ContentPost::STATUSES)),
             'scheduled_at' => 'nullable|date',
             'notes' => 'nullable|string',
@@ -62,6 +68,10 @@ class ContentPostController extends Controller
 
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('content-posts', 'public');
+            $validated['image_source_type'] = null;
+            $validated['image_source_id'] = null;
+        } elseif (!empty($validated['image_source_type']) && !empty($validated['image_source_id'])) {
+            $validated['image'] = null;
         }
 
         ContentPost::create($validated);
@@ -88,6 +98,8 @@ class ContentPostController extends Controller
             'caption' => 'required|string',
             'hashtags' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'image_source_type' => 'nullable|in:photo,artwork,artwork_logo',
+            'image_source_id' => 'nullable|integer',
             'status' => 'required|in:' . implode(',', array_keys(ContentPost::STATUSES)),
             'scheduled_at' => 'nullable|date',
             'notes' => 'nullable|string',
@@ -98,6 +110,19 @@ class ContentPostController extends Controller
                 Storage::disk('public')->delete($contentPost->image);
             }
             $validated['image'] = $request->file('image')->store('content-posts', 'public');
+            $validated['image_source_type'] = null;
+            $validated['image_source_id'] = null;
+        } elseif (!empty($validated['image_source_type']) && !empty($validated['image_source_id'])) {
+            if ($contentPost->image) {
+                Storage::disk('public')->delete($contentPost->image);
+            }
+            $validated['image'] = null;
+        }
+
+        // If user wants to clear image source (chose "upload" tab but didn't upload)
+        if ($request->input('clear_image_source') === '1') {
+            $validated['image_source_type'] = null;
+            $validated['image_source_id'] = null;
         }
 
         $contentPost->update($validated);
@@ -120,7 +145,7 @@ class ContentPostController extends Controller
 
     public function duplicate(ContentPost $contentPost)
     {
-        $copy = $contentPost->replicate(['published_at']);
+        $copy = $contentPost->replicate(['published_at', 'share_token']);
         $copy->status = 'draft';
         $copy->title = ($copy->title ? $copy->title . ' (Kopie)' : 'Kopie');
 
@@ -146,5 +171,74 @@ class ContentPostController extends Controller
 
         return redirect()->route('admin.content-posts.show', $contentPost)
             ->with('success', 'Beitrag als veröffentlicht markiert.');
+    }
+
+    public function share(ContentPost $contentPost)
+    {
+        $contentPost->generateShareToken();
+
+        return redirect()->route('admin.content-posts.show', $contentPost)
+            ->with('success', 'Teilen-Link erstellt.');
+    }
+
+    public function unshare(ContentPost $contentPost)
+    {
+        $contentPost->revokeShareToken();
+
+        return redirect()->route('admin.content-posts.show', $contentPost)
+            ->with('success', 'Teilen-Link deaktiviert.');
+    }
+
+    /**
+     * JSON API: Browse photos and artworks for image picker.
+     */
+    public function imageBrowser(Request $request)
+    {
+        $tab = $request->input('tab', 'photos');
+        $folderId = $request->input('folder_id');
+
+        if ($tab === 'photos') {
+            if ($folderId) {
+                $folder = PhotoFolder::findOrFail($folderId);
+                $subfolders = $folder->children()->orderBy('name')->get(['id', 'name']);
+                $photos = $folder->photos()->get()->map(fn ($p) => [
+                    'id' => $p->id,
+                    'type' => 'photo',
+                    'title' => $p->display_title,
+                    'thumb' => $p->photo_url,
+                ]);
+                return response()->json([
+                    'folder' => ['id' => $folder->id, 'name' => $folder->name, 'parent_id' => $folder->parent_id],
+                    'subfolders' => $subfolders,
+                    'items' => $photos,
+                ]);
+            }
+
+            $rootFolders = PhotoFolder::whereNull('parent_id')->orderBy('name')->get(['id', 'name']);
+            return response()->json([
+                'folder' => null,
+                'subfolders' => $rootFolders,
+                'items' => [],
+            ]);
+        }
+
+        if ($tab === 'artworks') {
+            $artworks = Artwork::orderBy('title')->get()->map(fn ($a) => [
+                'id' => $a->id,
+                'type' => 'artwork',
+                'title' => $a->title,
+                'thumb' => $a->artwork_url,
+                'logos' => $a->logos->map(fn ($l) => [
+                    'id' => $l->id,
+                    'type' => 'artwork_logo',
+                    'title' => $l->original_name . ($l->comment ? ' – ' . $l->comment : ''),
+                    'thumb' => $l->url,
+                ]),
+            ]);
+
+            return response()->json(['items' => $artworks]);
+        }
+
+        return response()->json([]);
     }
 }

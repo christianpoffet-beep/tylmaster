@@ -42,6 +42,12 @@
                     <dt class="text-gray-500 dark:text-gray-400">Erstellt</dt>
                     <dd class="text-gray-900 dark:text-gray-100">{{ $contentPost->created_at->format('d.m.Y H:i') }}</dd>
                 </div>
+                @if($contentPost->image_source_label)
+                <div class="flex justify-between">
+                    <dt class="text-gray-500 dark:text-gray-400">Bild-Quelle</dt>
+                    <dd class="text-gray-900 dark:text-gray-100 text-right text-xs">{{ $contentPost->image_source_label }}</dd>
+                </div>
+                @endif
             </dl>
 
             @if($contentPost->status !== 'published')
@@ -58,6 +64,50 @@
             @endif
         </div>
 
+        {{-- Share section --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Vorschau teilen</h2>
+
+            @if($contentPost->share_token)
+                <div x-data="{ copied: false }" class="space-y-3">
+                    <div class="flex items-center gap-2">
+                        <input type="text" readonly value="{{ $contentPost->share_url }}"
+                               class="flex-1 text-xs rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 bg-gray-50">
+                        <button type="button" @click="navigator.clipboard.writeText('{{ $contentPost->share_url }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                class="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <span x-show="!copied">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            </span>
+                            <span x-show="copied" x-cloak class="text-green-600 dark:text-green-400 text-xs">Kopiert!</span>
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="{{ $contentPost->share_url }}" target="_blank"
+                           class="flex-1 px-3 py-2 text-sm text-center rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            Vorschau öffnen
+                        </a>
+                        <form method="POST" action="{{ route('admin.content-posts.unshare', $contentPost) }}" class="flex-1">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" onclick="return confirm('Link deaktivieren? Externe Personen können die Vorschau danach nicht mehr sehen.')"
+                                    class="w-full px-3 py-2 text-sm rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30">
+                                Link deaktivieren
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @else
+                <form method="POST" action="{{ route('admin.content-posts.share', $contentPost) }}">
+                    @csrf
+                    <button type="submit"
+                            class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                        Teilen-Link erstellen
+                    </button>
+                </form>
+            @endif
+        </div>
+
         @if($contentPost->notes)
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Notizen</h2>
@@ -69,9 +119,9 @@
     {{-- Right: Preview --}}
     <div class="lg:col-span-2 space-y-6">
         {{-- Image --}}
-        @if($contentPost->image)
+        @if($contentPost->effective_image_url)
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <img src="{{ asset('storage/' . $contentPost->image) }}" alt="" class="w-full max-h-[500px] object-contain bg-gray-100 dark:bg-gray-900">
+            <img src="{{ $contentPost->effective_image_url }}" alt="" class="w-full max-h-[500px] object-contain bg-gray-100 dark:bg-gray-900">
         </div>
         @endif
 

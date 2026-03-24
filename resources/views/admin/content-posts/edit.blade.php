@@ -57,18 +57,7 @@
                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('hashtags', $contentPost->hashtags) }}</textarea>
     </div>
 
-    <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bild</label>
-        @if($contentPost->image)
-            <div class="mb-3">
-                <img src="{{ asset('storage/' . $contentPost->image) }}" alt="" class="w-32 h-32 rounded-lg object-cover">
-            </div>
-        @endif
-        <input type="file" name="image" id="image" accept="image/jpeg,image/png,image/webp"
-               class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
-        <p class="text-xs text-gray-400 mt-1">{{ $contentPost->image ? 'Neues Bild ersetzt das bestehende.' : 'JPG, PNG oder WebP, max. 10 MB' }}</p>
-        @error('image') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-    </div>
+    @include('admin.content-posts._image-picker', ['contentPost' => $contentPost])
 
     <div>
         <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notizen</label>
