@@ -60,20 +60,39 @@ if ($targetPath && is_dir($targetPath)) {
 echo "APP_URL: " . env('APP_URL') . "\n";
 echo "Test URL: " . Illuminate\Support\Facades\Storage::disk('public')->url('test.jpg') . "\n";
 
-// Create symlink if missing
-if (!file_exists($linkPath) && $targetPath) {
-    echo "\n> Creating symlink...\n";
-    try {
-        Illuminate\Support\Facades\Artisan::call('storage:link');
-        echo Illuminate\Support\Facades\Artisan::output();
-    } catch (\Throwable $e) {
-        echo "ERROR: " . $e->getMessage() . "\n";
-        // Try manual symlink
-        if (@symlink($targetPath, $linkPath)) {
-            echo "Manual symlink created!\n";
+// Fix: if public/storage is a regular dir (not symlink), replace with symlink
+if (file_exists($linkPath) && !is_link($linkPath) && is_dir($linkPath)) {
+    echo "\n> public/storage is a regular dir, replacing with symlink...\n";
+    // Check if dir is empty (only . and ..)
+    $contents = @scandir($linkPath);
+    $isEmpty = !$contents || count(array_diff($contents, ['.', '..'])) === 0;
+    if ($isEmpty) {
+        if (@rmdir($linkPath)) {
+            echo "  Removed empty directory.\n";
+            if (@symlink($targetPath, $linkPath)) {
+                echo "  Symlink created: $linkPath -> $targetPath\n";
+            } else {
+                echo "  ERROR: symlink() failed. Trying artisan...\n";
+                try {
+                    Illuminate\Support\Facades\Artisan::call('storage:link');
+                    echo Illuminate\Support\Facades\Artisan::output();
+                } catch (\Throwable $e) {
+                    echo "  ERROR: " . $e->getMessage() . "\n";
+                }
+            }
         } else {
-            echo "Manual symlink also failed. Try creating it via Plesk File Manager.\n";
+            echo "  ERROR: Could not remove directory.\n";
         }
+    } else {
+        echo "  Dir is NOT empty, not replacing automatically.\n";
+        echo "  Contents: " . implode(', ', array_diff($contents, ['.', '..'])) . "\n";
+    }
+} elseif (!file_exists($linkPath) && $targetPath) {
+    echo "\n> Creating symlink...\n";
+    if (@symlink($targetPath, $linkPath)) {
+        echo "  Symlink created: $linkPath -> $targetPath\n";
+    } else {
+        echo "  ERROR: symlink() failed.\n";
     }
 }
 
