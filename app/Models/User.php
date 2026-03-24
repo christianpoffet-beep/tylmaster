@@ -57,6 +57,7 @@ class User extends Authenticatable
      */
     public function sendPasswordResetNotification($token): void
     {
+        \Log::info('PASSWORD RESET: Using Brevo API for ' . $this->email);
         $brevo = app(\App\Services\BrevoService::class);
 
         if ($brevo->isConfigured()) {
