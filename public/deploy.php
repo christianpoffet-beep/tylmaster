@@ -1,7 +1,7 @@
 <?php
 
 // Temporary deploy script - DELETE AFTER USE
-if (($_GET['key'] ?? '') !== 'tyl-deploy-2024x') {
+if (($_GET['token'] ?? '') !== 'tyl-deploy-2026') {
     http_response_code(404);
     exit('Not found');
 }
