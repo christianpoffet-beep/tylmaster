@@ -91,6 +91,12 @@
                 </div>
             </div>
 
+            {{-- Katalognummer (immer sichtbar) --}}
+            <div>
+                <label for="catalog_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Katalognummer</label>
+                <input type="text" name="catalog_number" id="catalog_number" value="{{ old('catalog_number', $release->catalog_number) }}" class="w-full sm:w-1/2 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+
             {{-- Musik-spezifische Felder --}}
             <div x-show="isMusic" x-transition x-cloak class="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Musik-Felder</p>
@@ -103,10 +109,6 @@
                         <label for="label_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Label Name</label>
                         <input type="text" name="label_name" id="label_name" value="{{ old('label_name', $release->label_name) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
-                </div>
-                <div>
-                    <label for="catalog_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Katalognummer</label>
-                    <input type="text" name="catalog_number" id="catalog_number" value="{{ old('catalog_number', $release->catalog_number) }}" class="w-full sm:w-1/2 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
             </div>
 
