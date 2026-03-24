@@ -273,20 +273,16 @@
                                 @endif
 
                                 {{-- Metadaten --}}
-                                <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
-                                    @if($release->label_name)
-                                        <span>Label: {{ $release->label_name }}</span>
-                                    @endif
-                                    @if($release->catalog_number)
-                                        <span>Kat.-Nr.: {{ $release->catalog_number }}</span>
-                                    @endif
-                                    @if($release->release_date)
-                                        <span>{{ $release->release_date->format('d.m.Y') }}</span>
-                                    @endif
-                                    @if($release->ean_upc)
-                                        <span class="font-mono">{{ $release->ean_upc }}</span>
-                                    @endif
-                                </div>
+                                @php
+                                    $meta = collect();
+                                    if ($release->label_name) $meta->push($release->label_name);
+                                    if ($release->catalog_number) $meta->push($release->catalog_number);
+                                    if ($release->release_date) $meta->push($release->release_date->format('d.m.Y'));
+                                    if ($release->ean_upc) $meta->push($release->ean_upc);
+                                @endphp
+                                @if($meta->count())
+                                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">{{ $meta->join(' · ') }}</p>
+                                @endif
 
                                 {{-- Artwork-Logos --}}
                                 @if($primaryArtwork?->logos->count())
