@@ -63,34 +63,92 @@ echo "Test URL: " . Illuminate\Support\Facades\Storage::disk('public')->url('tes
 // Fix: if public/storage is a regular dir (not symlink), replace with symlink
 if (file_exists($linkPath) && !is_link($linkPath) && is_dir($linkPath)) {
     echo "\n> public/storage is a regular dir, replacing with symlink...\n";
-    // Check if dir is empty (only . and ..)
+
+    // Step 1: Move any files from public/storage/* into storage/app/public/*
+    // so nothing is lost when we replace the dir with a symlink
     $contents = @scandir($linkPath);
-    $isEmpty = !$contents || count(array_diff($contents, ['.', '..'])) === 0;
-    if ($isEmpty) {
-        if (@rmdir($linkPath)) {
-            echo "  Removed empty directory.\n";
-            if (@symlink($targetPath, $linkPath)) {
-                echo "  Symlink created: $linkPath -> $targetPath\n";
-            } else {
-                echo "  ERROR: symlink() failed. Trying artisan...\n";
-                try {
-                    Illuminate\Support\Facades\Artisan::call('storage:link');
-                    echo Illuminate\Support\Facades\Artisan::output();
-                } catch (\Throwable $e) {
-                    echo "  ERROR: " . $e->getMessage() . "\n";
+    $items = array_diff($contents ?: [], ['.', '..']);
+    echo "  Contents to merge: " . implode(', ', $items) . "\n";
+
+    foreach ($items as $item) {
+        $src = $linkPath . '/' . $item;
+        $dst = $targetPath . '/' . $item;
+        if (file_exists($dst)) {
+            // Target already has this item — if source is dir, merge recursively
+            if (is_dir($src) && is_dir($dst)) {
+                echo "  Merging dir: $item (exists in both locations)\n";
+                // Copy files from src that don't exist in dst
+                $srcFiles = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($src, RecursiveDirectoryIterator::SKIP_DOTS),
+                    RecursiveIteratorIterator::SELF_FIRST
+                );
+                foreach ($srcFiles as $fileInfo) {
+                    $relative = substr($fileInfo->getPathname(), strlen($src) + 1);
+                    $dstFile = $dst . '/' . $relative;
+                    if ($fileInfo->isDir()) {
+                        if (!is_dir($dstFile)) @mkdir($dstFile, 0755, true);
+                    } elseif (!file_exists($dstFile)) {
+                        @copy($fileInfo->getPathname(), $dstFile);
+                        echo "    Copied: $item/$relative\n";
+                    }
                 }
+            } else {
+                echo "  Skipped: $item (already exists in target)\n";
             }
         } else {
-            echo "  ERROR: Could not remove directory.\n";
+            // Move item to target
+            if (@rename($src, $dst)) {
+                echo "  Moved: $item\n";
+            } else {
+                echo "  ERROR moving: $item\n";
+            }
+        }
+    }
+
+    // Step 2: Remove all remaining files from public/storage
+    $removeDir = function($dir) use (&$removeDir) {
+        foreach (array_diff(scandir($dir), ['.', '..']) as $item) {
+            $path = $dir . '/' . $item;
+            is_dir($path) ? $removeDir($path) : @unlink($path);
+        }
+        @rmdir($dir);
+    };
+    // Re-scan after moves
+    $remaining = array_diff(scandir($linkPath) ?: [], ['.', '..']);
+    foreach ($remaining as $item) {
+        $path = $linkPath . '/' . $item;
+        if (is_dir($path)) {
+            $removeDir($path);
+            echo "  Cleaned up dir: $item\n";
+        } else {
+            @unlink($path);
+            echo "  Cleaned up file: $item\n";
+        }
+    }
+
+    // Step 3: Remove the now-empty directory and create symlink
+    if (@rmdir($linkPath)) {
+        echo "  Removed empty directory.\n";
+        if (@symlink($targetPath, $linkPath)) {
+            echo "  ✓ Symlink created: $linkPath -> $targetPath\n";
+        } else {
+            echo "  ERROR: symlink() failed. Trying artisan...\n";
+            try {
+                Illuminate\Support\Facades\Artisan::call('storage:link');
+                echo Illuminate\Support\Facades\Artisan::output();
+            } catch (\Throwable $e) {
+                echo "  ERROR: " . $e->getMessage() . "\n";
+            }
         }
     } else {
-        echo "  Dir is NOT empty, not replacing automatically.\n";
-        echo "  Contents: " . implode(', ', array_diff($contents, ['.', '..'])) . "\n";
+        echo "  ERROR: Could not remove directory (not empty?).\n";
+        $leftover = array_diff(scandir($linkPath) ?: [], ['.', '..']);
+        echo "  Remaining: " . implode(', ', $leftover) . "\n";
     }
 } elseif (!file_exists($linkPath) && $targetPath) {
     echo "\n> Creating symlink...\n";
     if (@symlink($targetPath, $linkPath)) {
-        echo "  Symlink created: $linkPath -> $targetPath\n";
+        echo "  ✓ Symlink created: $linkPath -> $targetPath\n";
     } else {
         echo "  ERROR: symlink() failed.\n";
     }
