@@ -35,7 +35,7 @@ class ContentPostController extends Controller
         }
 
         $sortCol = $request->input('sort', 'scheduled_at');
-        $sortDir = $request->input('direction', 'desc');
+        $sortDir = $request->input('dir', 'desc');
         $allowed = ['title', 'platform', 'status', 'scheduled_at', 'created_at'];
         if (!in_array($sortCol, $allowed)) $sortCol = 'scheduled_at';
 
