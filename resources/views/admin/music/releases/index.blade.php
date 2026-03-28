@@ -43,7 +43,7 @@
                 <tr>
                     <x-admin.sortable-header column="title">Titel</x-admin.sortable-header>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Typ</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Label</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Label Name</th>
                     <x-admin.sortable-header column="upc">UPC</x-admin.sortable-header>
                     <x-admin.sortable-header column="release_date">Datum</x-admin.sortable-header>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Tracks</th>
@@ -75,7 +75,7 @@
                                 <span class="text-sm text-gray-400">-</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $release->organizations->where('type', 'label')->first()?->primary_name ?? $release->label ?? '-' }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $release->label_name ?? '-' }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 font-mono">{{ $release->upc ?? '-' }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $release->release_date ? $release->release_date->format('d.m.Y') : '-' }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $release->tracks_count ?? $release->tracks->count() }}</td>

@@ -172,12 +172,10 @@
     <x-admin.collapsible-card title="Tracklist" :count="$release->tracks->count()" class="mt-6">
         @if($release->tracks->count())
             @php $hasRoles = $release->tracks->contains(fn($t) => $t->pivot->role && $t->pivot->role !== 'main'); @endphp
-            <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">Reihenfolge per Drag & Drop ändern</p>
             <div class="overflow-x-auto">
                 <table class="min-w-full">
                     <thead>
                         <tr class="border-b border-gray-200 dark:border-gray-700">
-                            <th class="py-2 w-8"></th>
                             <th class="py-2 pr-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-12">#</th>
                             <th class="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Titel</th>
                             <th class="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ISRC</th>
@@ -187,13 +185,10 @@
                             @endif
                         </tr>
                     </thead>
-                    <tbody id="tracklist-sortable" class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
                         @foreach($release->tracks->sortBy(['pivot.disc_number', 'pivot.track_number']) as $track)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-grab active:cursor-grabbing" data-track-id="{{ $track->id }}">
-                                <td class="py-2 px-2 text-gray-300 dark:text-gray-600">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M3 15h18v-2H3v2zm0 4h18v-2H3v2zm0-8h18V9H3v2zm0-6v2h18V5H3z"/></svg>
-                                </td>
-                                <td class="py-2 pr-3 text-sm text-gray-400 dark:text-gray-500 font-mono text-right track-number">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                                <td class="py-2 pr-3 text-sm text-gray-400 dark:text-gray-500 font-mono text-right">
                                     {{ $track->pivot->track_number ?? $loop->iteration }}
                                 </td>
                                 <td class="py-2 px-3 text-sm">
@@ -399,35 +394,3 @@
 </div>
 @endsection
 
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const el = document.getElementById('tracklist-sortable');
-    if (!el) return;
-
-    Sortable.create(el, {
-        animation: 150,
-        handle: 'tr',
-        ghostClass: 'bg-blue-50 dark:bg-blue-900/20',
-        onEnd: function() {
-            // Update track numbers visually
-            el.querySelectorAll('tr').forEach((row, i) => {
-                row.querySelector('.track-number').textContent = i + 1;
-            });
-
-            // Save new order via API
-            const order = Array.from(el.querySelectorAll('tr')).map(row => row.dataset.trackId);
-            fetch('{{ route("admin.releases.reorderTracks", $release) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                },
-                body: JSON.stringify({ order: order }),
-            });
-        }
-    });
-});
-</script>
-@endpush

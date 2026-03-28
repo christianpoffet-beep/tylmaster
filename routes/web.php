@@ -103,7 +103,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('tracks/{track}/copy-metadata', [TrackController::class, 'copyMetadata'])->name('tracks.copyMetadata');
     Route::post('tracks/bulk-update', [TrackController::class, 'bulkUpdate'])->name('tracks.bulkUpdate');
     Route::resource('releases', ReleaseController::class);
-    Route::post('releases/{release}/reorder-tracks', [ReleaseController::class, 'reorderTracks'])->name('releases.reorderTracks');
+
     Route::resource('projects', ProjectController::class);
     Route::post('projects/{project}/tasks', [ProjectController::class, 'storeTask'])->name('projects.tasks.store');
     Route::patch('projects/{project}/tasks/{task}/toggle', [ProjectController::class, 'toggleTask'])->name('projects.tasks.toggle');
