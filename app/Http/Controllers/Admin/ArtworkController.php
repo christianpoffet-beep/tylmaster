@@ -53,7 +53,7 @@ class ArtworkController extends Controller
             'logos.*.comment' => 'nullable|string|max:255',
             'credits' => 'nullable|array',
             'credits.*' => 'nullable|array',
-            'credits.*.*' => 'nullable|string|regex:/^(contact|organization):\d+$/',
+            'credits.*.*' => ['nullable', 'string', 'regex:/^(contact|organization):\d+$/'],
         ]);
 
         $artworkData = [
@@ -133,7 +133,7 @@ class ArtworkController extends Controller
             'logos.*.comment' => 'nullable|string|max:255',
             'credits' => 'nullable|array',
             'credits.*' => 'nullable|array',
-            'credits.*.*' => 'nullable|string|regex:/^(contact|organization):\d+$/',
+            'credits.*.*' => ['nullable', 'string', 'regex:/^(contact|organization):\d+$/'],
         ]);
 
         $artworkData = [
