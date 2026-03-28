@@ -217,6 +217,63 @@ class ArtworkController extends Controller
         return redirect()->route('admin.artworks.index')->with('success', 'Artwork gelöscht.');
     }
 
+    public function thumbnail(Artwork $artwork)
+    {
+        if (!$artwork->artwork_path || !Storage::disk('public')->exists($artwork->artwork_path)) {
+            abort(404);
+        }
+
+        $thumbDir = 'artworks/thumbs';
+        $thumbPath = $thumbDir . '/' . basename($artwork->artwork_path);
+
+        // Return cached thumbnail if exists
+        if (Storage::disk('public')->exists($thumbPath)) {
+            return response(Storage::disk('public')->get($thumbPath), 200, [
+                'Content-Type' => 'image/jpeg',
+                'Cache-Control' => 'public, max-age=31536000',
+            ]);
+        }
+
+        $sourcePath = Storage::disk('public')->path($artwork->artwork_path);
+        $mime = $artwork->artwork_mime_type ?? mime_content_type($sourcePath);
+
+        $source = match (true) {
+            str_contains($mime, 'jpeg'), str_contains($mime, 'jpg') => @imagecreatefromjpeg($sourcePath),
+            str_contains($mime, 'png') => @imagecreatefrompng($sourcePath),
+            str_contains($mime, 'webp') => @imagecreatefromwebp($sourcePath),
+            default => null,
+        };
+
+        if (!$source) {
+            // Fallback: serve original
+            return response(Storage::disk('public')->get($artwork->artwork_path), 200, [
+                'Content-Type' => $mime,
+                'Cache-Control' => 'public, max-age=86400',
+            ]);
+        }
+
+        $origW = imagesx($source);
+        $origH = imagesy($source);
+        $size = 600;
+        $thumbW = $origW >= $origH ? $size : (int) ($origW * $size / $origH);
+        $thumbH = $origH >= $origW ? $size : (int) ($origH * $size / $origW);
+
+        $thumb = imagecreatetruecolor($thumbW, $thumbH);
+        imagecopyresampled($thumb, $source, 0, 0, 0, 0, $thumbW, $thumbH, $origW, $origH);
+        imagedestroy($source);
+
+        // Save to storage
+        Storage::disk('public')->makeDirectory($thumbDir);
+        $fullThumbPath = Storage::disk('public')->path($thumbPath);
+        imagejpeg($thumb, $fullThumbPath, 80);
+        imagedestroy($thumb);
+
+        return response(Storage::disk('public')->get($thumbPath), 200, [
+            'Content-Type' => 'image/jpeg',
+            'Cache-Control' => 'public, max-age=31536000',
+        ]);
+    }
+
     public function destroyLogo(Artwork $artwork, ArtworkLogo $logo)
     {
         Storage::disk('public')->delete($logo->file_path);

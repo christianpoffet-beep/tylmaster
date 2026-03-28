@@ -108,6 +108,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('projects/{project}/tasks', [ProjectController::class, 'storeTask'])->name('projects.tasks.store');
     Route::patch('projects/{project}/tasks/{task}/toggle', [ProjectController::class, 'toggleTask'])->name('projects.tasks.toggle');
     Route::resource('artworks', ArtworkController::class);
+    Route::get('artworks/{artwork}/thumbnail', [ArtworkController::class, 'thumbnail'])->name('artworks.thumbnail');
     Route::delete('artworks/{artwork}/logos/{logo}', [ArtworkController::class, 'destroyLogo'])->name('artworks.logos.destroy');
     Route::get('credits-search', [ArtworkController::class, 'creditSearch'])->name('credits.search');
 
