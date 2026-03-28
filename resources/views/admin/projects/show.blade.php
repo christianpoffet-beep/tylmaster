@@ -136,9 +136,10 @@
                         <a href="{{ route('admin.releases.show', $release) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
                             {{ $release->title }}
                         </a>
-                        @if($release->product_type)
-                            <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{{ $release->product_type }}</span>
-                        @endif
+                        @php $types = is_array($release->product_type) ? $release->product_type : ($release->product_type ? [$release->product_type] : []); @endphp
+                        @foreach($types as $pt)
+                            <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{{ $pt }}</span>
+                        @endforeach
                     </div>
                 @endforeach
             </div>

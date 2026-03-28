@@ -91,6 +91,7 @@ class ProjectController extends Controller
         $contracts = Contract::orderBy('title')->get();
         $projectTypes = ProjectType::orderBy('sort_order')->get();
         $project->load(['contacts', 'organizations', 'artworks', 'genres', 'tracks', 'contracts']);
+
         return view('admin.projects.edit', compact('project', 'artworks', 'genres', 'tracks', 'contracts', 'projectTypes'));
     }
 
