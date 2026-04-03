@@ -7,11 +7,20 @@
     $statusColors = ['planned' => 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300', 'in_progress' => 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300', 'completed' => 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300', 'paused' => 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300'];
 @endphp
 
-<div x-data="projectSearch()" class="relative">
+<div x-data="projectSearch()" class="relative" @paste-projects.window="$event.detail.forEach(p => { if (!isSelected(p.id)) selected.push(p); })">
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Projekte</label>
 
-    <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="if(query.length >= 1 || results.length) open = true; else { search(); }"
-        placeholder="Projekt suchen..." class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500 mb-2">
+    <div class="flex gap-2 mb-2">
+        <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="if(query.length >= 1 || results.length) open = true; else { search(); }"
+            placeholder="Projekt suchen..." class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+        <select x-model="statusFilter" @change="search()" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            <option value="">Alle Status</option>
+            <option value="planned">Geplant</option>
+            <option value="in_progress">In Arbeit</option>
+            <option value="completed">Abgeschlossen</option>
+            <option value="paused">Pausiert</option>
+        </select>
+    </div>
 
     {{-- Results dropdown --}}
     <div x-show="open && results.length > 0" @click.away="open = false" x-cloak
@@ -21,14 +30,17 @@
                 class="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 last:border-0"
                 :class="isSelected(result.id) ? 'opacity-50 cursor-not-allowed' : ''"
                 :disabled="isSelected(result.id)">
-                <span class="text-sm text-gray-900 dark:text-gray-100" x-text="result.name"></span>
+                <div>
+                    <span class="text-sm text-gray-900 dark:text-gray-100" x-text="result.name"></span>
+                    <span x-show="result.deadline" class="text-xs text-gray-400 ml-1" x-text="'Deadline: ' + result.deadline"></span>
+                </div>
                 <span class="text-xs px-1.5 py-0.5 rounded" :class="statusColorMap[result.status] || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'" x-text="statusLabelMap[result.status] || result.status"></span>
             </button>
         </template>
     </div>
 
     {{-- No results --}}
-    <div x-show="open && results.length === 0 && query.length >= 1 && !loading" x-cloak class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3">
+    <div x-show="open && results.length === 0 && !loading" x-cloak class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3">
         <p class="text-sm text-gray-500 dark:text-gray-400">Keine Projekte gefunden.</p>
     </div>
 
@@ -46,13 +58,14 @@
 
 @php
     $selectedProjectsJson = ($selected ?? collect())->map(function ($p) {
-        return ['id' => $p->id, 'name' => $p->name, 'status' => $p->status];
+        return ['id' => $p->id, 'name' => $p->name, 'status' => $p->status, 'deadline' => $p->deadline?->format('d.m.Y')];
     })->values();
 @endphp
 <script>
 function projectSearch() {
     return {
         query: '',
+        statusFilter: '',
         results: [],
         selected: @json($selectedProjectsJson),
         open: false,
@@ -64,6 +77,7 @@ function projectSearch() {
             this.loading = true;
             try {
                 const params = new URLSearchParams({ q: this.query });
+                if (this.statusFilter) params.append('status', this.statusFilter);
                 const response = await fetch(`{{ route('admin.projects.search') }}?${params}`);
                 this.results = await response.json();
                 this.open = true;

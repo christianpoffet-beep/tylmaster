@@ -213,17 +213,8 @@
             </button>
             <div x-show="open" x-collapse>
                 <div class="px-6 pb-6">
-                    <div class="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3 space-y-2">
-                        @foreach($projects as $project)
-                            <label class="flex items-center">
-                                <input type="checkbox" name="project_ids[]" value="{{ $project->id }}" {{ in_array($project->id, old('project_ids', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $project->name }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                    @if($projects->isEmpty())
-                        <p class="text-sm text-gray-400">Keine Projekte vorhanden.</p>
-                    @endif
+                    @include('admin.partials.project-search', ['selected' => collect()])
+                    @error('project_ids') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
         </div>
@@ -236,17 +227,8 @@
             </button>
             <div x-show="open" x-collapse>
                 <div class="px-6 pb-6">
-                    <div class="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3 space-y-2">
-                        @foreach($contracts as $contract)
-                            <label class="flex items-center">
-                                <input type="checkbox" name="contract_ids[]" value="{{ $contract->id }}" {{ in_array($contract->id, old('contract_ids', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $contract->title }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                    @if($contracts->isEmpty())
-                        <p class="text-sm text-gray-400">Keine Verträge vorhanden.</p>
-                    @endif
+                    @include('admin.partials.contract-search', ['selected' => collect()])
+                    @error('contract_ids') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
         </div>
@@ -377,17 +359,26 @@ function pasteMetadata() {
                 window.dispatchEvent(new CustomEvent('paste-credits', { detail: data.credits }));
             }
 
-            // Projects (checkboxes)
-            this.checkItems('project_ids[]', (data.projects || []).map(p => p.id));
+            // Projects (search component)
+            if (data.projects?.length) {
+                window.dispatchEvent(new CustomEvent('paste-projects', {
+                    detail: data.projects.map(p => ({ id: p.id, name: p.name, status: p.status || 'planned' }))
+                }));
+            }
 
-            // Contracts (checkboxes)
-            this.checkItems('contract_ids[]', (data.contracts || []).map(c => c.id));
+            // Contracts (search component)
+            if (data.contracts?.length) {
+                window.dispatchEvent(new CustomEvent('paste-contracts', {
+                    detail: data.contracts.map(c => ({ id: c.id, title: c.title, contract_number: c.contract_number || '', status: c.status || 'draft' }))
+                }));
+            }
 
             this.pasted = true;
             setTimeout(() => this.pasted = false, 2000);
         },
 
         checkItems(name, ids) {
+            // Legacy fallback for checkbox-based selectors
             document.querySelectorAll(`input[name="${name}"]`).forEach(cb => {
                 if (ids.includes(parseInt(cb.value))) {
                     cb.checked = true;

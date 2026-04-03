@@ -361,10 +361,15 @@ class ContractController extends Controller
             });
         }
 
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
         $results = $query->orderBy('title')->limit(50)->get()->map(fn ($c) => [
             'id' => $c->id,
             'title' => $c->title,
             'contract_number' => $c->contract_number,
+            'status' => $c->status,
         ]);
 
         return response()->json($results);

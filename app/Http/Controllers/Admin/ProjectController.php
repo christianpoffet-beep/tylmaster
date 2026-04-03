@@ -151,10 +151,15 @@ class ProjectController extends Controller
             $query->where('name', 'like', "%{$q}%");
         }
 
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
         $results = $query->orderBy('name')->limit(50)->get()->map(fn ($p) => [
             'id' => $p->id,
             'name' => $p->name,
             'status' => $p->status,
+            'deadline' => $p->deadline?->format('d.m.Y'),
         ]);
 
         return response()->json($results);
