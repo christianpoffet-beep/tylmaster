@@ -195,6 +195,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
     Route::get('settings/appearance', [SettingsController::class, 'appearance'])->name('settings.appearance');
     Route::get('settings/system', [SettingsController::class, 'system'])->name('settings.system');
+    Route::post('settings/system', [SettingsController::class, 'updateSystem'])->name('settings.system.update');
 
     // Musik-Settings
     Route::get('settings/credit-roles', [MusicSettingsController::class, 'creditRoles'])->name('settings.credit-roles');

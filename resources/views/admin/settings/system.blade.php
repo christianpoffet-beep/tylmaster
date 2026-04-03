@@ -6,6 +6,69 @@
 @include('admin.settings._tabs', ['active' => 'system'])
 
 <div class="max-w-2xl space-y-4">
+
+    {{-- Favicon & Cursor --}}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700" x-data="{ open: false }">
+        <button type="button" @click="open = !open" class="w-full p-6 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Favicon & Cursor</h2>
+            <div class="flex items-center gap-2">
+                @if($faviconPath)
+                    <img src="/storage/{{ $faviconPath }}" alt="" class="w-6 h-6 object-contain">
+                @endif
+                <svg class="w-5 h-5 text-gray-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+        </button>
+        <div x-show="open" x-collapse>
+        <form method="POST" action="{{ route('admin.settings.system.update') }}" enctype="multipart/form-data">
+            @csrf
+
+            <div class="px-6 pb-6 space-y-4">
+                {{-- Current favicon preview --}}
+                @if($faviconPath)
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 flex items-center justify-center p-2">
+                            <img src="/storage/{{ $faviconPath }}" alt="Favicon" class="max-w-full max-h-full object-contain">
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-700 dark:text-gray-300">Aktuelles Favicon</p>
+                            <label class="inline-flex items-center mt-1">
+                                <input type="checkbox" name="remove_favicon" value="1" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                <span class="ml-2 text-xs text-red-600 dark:text-red-400">Favicon entfernen</span>
+                            </label>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Upload --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $faviconPath ? 'Neues Favicon hochladen' : 'Favicon hochladen' }}</label>
+                    <input type="file" name="favicon" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/x-icon"
+                        class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
+                    <p class="text-xs text-gray-400 mt-1">PNG, JPG, SVG oder WebP. Empfohlen: quadratisch, min. 512x512px.</p>
+                    @error('favicon') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Cursor toggle --}}
+                <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <label class="flex items-center gap-3">
+                        <input type="hidden" name="favicon_cursor" value="0">
+                        <input type="checkbox" name="favicon_cursor" value="1" {{ $cursorEnabled ? 'checked' : '' }}
+                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <div>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Favicon als Mauszeiger verwenden</span>
+                            <p class="text-xs text-gray-400">Ersetzt den Standard-Mauszeiger durch eine kleine Version des Favicons.</p>
+                        </div>
+                    </label>
+                </div>
+
+                <div>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Speichern</button>
+                </div>
+            </div>
+        </form>
+        </div>
+    </div>
+
     <a href="{{ route('admin.help') }}" class="flex items-center gap-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow transition-all group">
         <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
             <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>

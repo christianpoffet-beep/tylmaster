@@ -20,9 +20,22 @@
         })();
     </script>
 
+    <!-- Favicon -->
+    @php $faviconPath = \App\Models\Setting::get('favicon_path'); @endphp
+    @if($faviconPath)
+        <link rel="icon" href="/storage/{{ $faviconPath }}" type="image/png">
+        <link rel="apple-touch-icon" href="/storage/{{ $faviconPath }}">
+    @endif
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>[x-cloak] { display: none !important; }</style>
+    <style>
+        [x-cloak] { display: none !important; }
+        @if($faviconPath && \App\Models\Setting::get('favicon_cursor', false))
+        * { cursor: url('/storage/branding/cursor.png') 16 16, auto !important; }
+        a, button, [role="button"], input[type="submit"], select, .cursor-pointer { cursor: url('/storage/branding/cursor.png') 16 16, pointer !important; }
+        @endif
+    </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-950 font-sans antialiased">
     <div class="min-h-screen flex flex-col">
