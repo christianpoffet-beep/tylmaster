@@ -116,7 +116,6 @@ class DocumentController extends Controller
 
         return Storage::disk('public')->response($path, $document->title, [
             'Content-Type' => $mime,
-            'Content-Disposition' => 'inline; filename="' . $document->title . '"',
         ]);
     }
 
