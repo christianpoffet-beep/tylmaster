@@ -17,7 +17,7 @@ class ArtworkController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Artwork::withCount('logos');
+        $query = Artwork::with('logos')->withCount('logos');
 
         if ($search = $request->input('search')) {
             $query->where('title', 'like', "%{$search}%");
@@ -219,12 +219,19 @@ class ArtworkController extends Controller
 
     public function thumbnail(Artwork $artwork)
     {
-        if (!$artwork->artwork_path || !Storage::disk('public')->exists($artwork->artwork_path)) {
+        // Fallback to first logo if no artwork image
+        $imagePath = $artwork->artwork_path;
+        if (!$imagePath || !Storage::disk('public')->exists($imagePath)) {
+            $logo = $artwork->logos()->first();
+            $imagePath = $logo?->file_path;
+        }
+
+        if (!$imagePath || !Storage::disk('public')->exists($imagePath)) {
             abort(404);
         }
 
         $thumbDir = 'artworks/thumbs';
-        $thumbPath = $thumbDir . '/' . basename($artwork->artwork_path);
+        $thumbPath = $thumbDir . '/' . basename($imagePath);
 
         // Return cached thumbnail if exists
         if (Storage::disk('public')->exists($thumbPath)) {
@@ -234,8 +241,8 @@ class ArtworkController extends Controller
             ]);
         }
 
-        $sourcePath = Storage::disk('public')->path($artwork->artwork_path);
-        $mime = $artwork->artwork_mime_type ?? mime_content_type($sourcePath);
+        $sourcePath = Storage::disk('public')->path($imagePath);
+        $mime = mime_content_type($sourcePath);
 
         $source = match (true) {
             str_contains($mime, 'jpeg'), str_contains($mime, 'jpg') => @imagecreatefromjpeg($sourcePath),
@@ -246,7 +253,7 @@ class ArtworkController extends Controller
 
         if (!$source) {
             // Fallback: serve original
-            return response(Storage::disk('public')->get($artwork->artwork_path), 200, [
+            return response(Storage::disk('public')->get($imagePath), 200, [
                 'Content-Type' => $mime,
                 'Cache-Control' => 'public, max-age=86400',
             ]);
