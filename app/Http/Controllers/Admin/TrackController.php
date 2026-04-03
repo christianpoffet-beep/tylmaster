@@ -9,6 +9,8 @@ use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Contract;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class TrackController extends Controller
 {
@@ -233,6 +235,18 @@ class TrackController extends Controller
         $track->contracts()->sync($request->input('contract_ids', []));
 
         return redirect()->route('admin.tracks.show', $track)->with('success', 'Track aktualisiert.');
+    }
+
+    public function download(Track $track)
+    {
+        if (!$track->audio_file_path || !Storage::disk('public')->exists($track->audio_file_path)) {
+            abort(404, 'Audiodatei nicht gefunden.');
+        }
+
+        $extension = pathinfo($track->audio_file_path, PATHINFO_EXTENSION);
+        $filename = Str::slug($track->display_title) . '.' . $extension;
+
+        return Storage::disk('public')->download($track->audio_file_path, $filename);
     }
 
     public function destroy(Track $track)
