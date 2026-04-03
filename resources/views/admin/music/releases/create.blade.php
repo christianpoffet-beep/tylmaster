@@ -24,12 +24,8 @@
     musicTypes: @json($allMusicTypes),
     merchTypes: @json($allMerchTypes),
     get isMusic() { return this.selectedTypes.some(t => this.musicTypes.includes(t)); },
-    get isMerch() { return this.selectedTypes.some(t => this.merchTypes.includes(t)); },
-    toggleType(type) {
-        const idx = this.selectedTypes.indexOf(type);
-        if (idx > -1) { this.selectedTypes.splice(idx, 1); } else { this.selectedTypes.push(type); }
-    }
-}">
+    get isMerch() { return this.selectedTypes.some(t => this.merchTypes.includes(t)); }
+}" @product-types-changed.window="selectedTypes = $event.detail">
     <form method="POST" action="{{ route('admin.releases.store') }}" enctype="multipart/form-data">
         @csrf
 
@@ -67,30 +63,8 @@
                 </div>
             </div>
 
-            {{-- Produkt-Typ (scrollbare Tabellen pro Gruppe) --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Typ</label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    @foreach($allProductTypes as $group => $types)
-                        <div class="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
-                            <div class="bg-gray-50 dark:bg-gray-700/50 px-3 py-2">
-                                <span class="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">{{ $group }}</span>
-                            </div>
-                            <div class="max-h-40 overflow-y-auto p-2 space-y-1">
-                                @foreach($types as $type)
-                                    <label class="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer">
-                                        <input type="checkbox" name="product_type[]" value="{{ $type }}"
-                                            {{ in_array($type, old('product_type', [])) ? 'checked' : '' }}
-                                            @change="toggleType('{{ addslashes($type) }}')"
-                                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0">
-                                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ $type }}</span>
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
+            {{-- Produkt-Typ --}}
+            @include('admin.partials.product-type-selector', ['allProductTypes' => $allProductTypes, 'selectedTypes' => old('product_type', [])])
 
             {{-- Gemeinsame Felder --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
