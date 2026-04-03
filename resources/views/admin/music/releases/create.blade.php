@@ -281,54 +281,25 @@
         {{-- Projekte (immer) --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Projekte</h3>
-            <div class="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3 space-y-2">
-                @foreach($projects as $project)
-                    <label class="flex items-center">
-                        <input type="checkbox" name="project_ids[]" value="{{ $project->id }}" {{ in_array($project->id, old('project_ids', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $project->name }}</span>
-                    </label>
-                @endforeach
+            <div>
+                @include('admin.partials.project-search', ['selected' => collect()])
             </div>
-            @if($projects->isEmpty()) <p class="text-sm text-gray-400">Keine Projekte vorhanden.</p> @endif
         </div>
 
         {{-- Verträge (immer) --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Verträge</h3>
-            <div class="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3 space-y-2">
-                @foreach($contracts as $contract)
-                    <label class="flex items-center">
-                        <input type="checkbox" name="contract_ids[]" value="{{ $contract->id }}" {{ in_array($contract->id, old('contract_ids', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $contract->title }}</span>
-                    </label>
-                @endforeach
+            <div>
+                @include('admin.partials.contract-search', ['selected' => collect()])
             </div>
-            @if($contracts->isEmpty()) <p class="text-sm text-gray-400">Keine Verträge vorhanden.</p> @endif
         </div>
 
         {{-- Artworks (immer) --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Artworks</h3>
-            @if(isset($artworks) && $artworks->count())
-                <div class="space-y-3" x-data="{ primaryId: '{{ old('primary_artwork_id', '') }}' }">
-                    @foreach($artworks as $artwork)
-                        <label class="flex items-center gap-3">
-                            <input type="checkbox" name="artwork_ids[]" value="{{ $artwork->id }}"
-                                {{ in_array($artwork->id, old('artwork_ids', [])) ? 'checked' : '' }}
-                                x-ref="cb{{ $artwork->id }}"
-                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <input type="radio" name="primary_artwork_id" value="{{ $artwork->id }}"
-                                {{ old('primary_artwork_id') == $artwork->id ? 'checked' : '' }}
-                                @change="primaryId = '{{ $artwork->id }}'; $refs.cb{{ $artwork->id }}.checked = true"
-                                class="text-yellow-500">
-                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ $artwork->title }}</span>
-                            <span x-show="primaryId === '{{ $artwork->id }}'" class="text-xs text-yellow-500">(Haupt-Artwork)</span>
-                        </label>
-                    @endforeach
-                </div>
-            @else
-                <p class="text-sm text-gray-400">Keine Artworks vorhanden.</p>
-            @endif
+            <div>
+                @include('admin.partials.artwork-search', ['selected' => collect()])
+            </div>
         </div>
 
         {{-- Notizen (immer) --}}

@@ -71,55 +71,18 @@
             @include('admin.partials.organization-search', ['selected' => $project->organizations])
 
             {{-- Verträge --}}
-            @if($contracts->count())
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Verträge</label>
-                <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
-                    @php $selectedContracts = old('contract_ids', $project->contracts->pluck('id')->toArray()); @endphp
-                    @foreach($contracts as $contract)
-                        <label class="flex items-center">
-                            <input type="checkbox" name="contract_ids[]" value="{{ $contract->id }}" {{ in_array($contract->id, $selectedContracts) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $contract->title }}</span>
-                        </label>
-                    @endforeach
-                </div>
+                @include('admin.partials.contract-search', ['selected' => $project->contracts])
             </div>
-            @endif
 
             {{-- Tracks (nur Release + Administration) --}}
             <div x-show="type === 'release' || type === 'administration'" x-cloak>
-                @if($tracks->count())
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tracks (Musik)</label>
-                    <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
-                        @php $selectedTracks = old('track_ids', $project->tracks->pluck('id')->toArray()); @endphp
-                        @foreach($tracks as $track)
-                            <label class="flex items-center">
-                                <input type="checkbox" name="track_ids[]" value="{{ $track->id }}" {{ in_array($track->id, $selectedTracks) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $track->title }}{{ $track->isrc ? ' (' . $track->isrc . ')' : '' }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
+                @include('admin.partials.track-search', ['selected' => $project->tracks])
             </div>
 
             {{-- Artworks (nur Release + Administration) --}}
             <div x-show="type === 'release' || type === 'administration'" x-cloak>
-                @if($artworks->count())
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo & Artwork</label>
-                    <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
-                        @php $selectedArtworks = old('artwork_ids', $project->artworks->pluck('id')->toArray()); @endphp
-                        @foreach($artworks as $artwork)
-                            <label class="flex items-center">
-                                <input type="checkbox" name="artwork_ids[]" value="{{ $artwork->id }}" {{ in_array($artwork->id, $selectedArtworks) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $artwork->title }}{{ $artwork->yoc ? ' (' . $artwork->yoc . ')' : '' }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
+                @include('admin.partials.artwork-search', ['selected' => $project->artworks])
             </div>
         </div>
 

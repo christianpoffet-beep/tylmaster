@@ -265,4 +265,20 @@ class ReleaseController extends Controller
         $release->artworks()->sync($syncData);
     }
 
+    public function search(Request $request)
+    {
+        $query = Release::query();
+
+        if ($q = $request->input('q')) {
+            $query->where('title', 'like', "%{$q}%");
+        }
+
+        $results = $query->orderBy('title')->limit(50)->get()->map(fn ($r) => [
+            'id' => $r->id,
+            'title' => $r->title,
+            'product_type' => $r->product_type,
+        ]);
+
+        return response()->json($results);
+    }
 }

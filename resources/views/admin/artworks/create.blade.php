@@ -44,18 +44,9 @@
             <hr class="border-gray-200 dark:border-gray-700">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Projekte</h3>
 
-            @if($projects->count())
-            <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
-                @foreach($projects as $project)
-                    <label class="flex items-center">
-                        <input type="checkbox" name="project_ids[]" value="{{ $project->id }}" {{ in_array($project->id, old('project_ids', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $project->name }}</span>
-                    </label>
-                @endforeach
+            <div>
+                @include('admin.partials.project-search', ['selected' => collect()])
             </div>
-            @else
-                <p class="text-sm text-gray-400">Keine Projekte vorhanden.</p>
-            @endif
 
             <hr class="border-gray-200 dark:border-gray-700">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Logos</h3>

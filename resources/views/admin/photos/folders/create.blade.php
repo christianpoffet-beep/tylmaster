@@ -36,47 +36,17 @@
             <hr class="border-gray-200 dark:border-gray-700">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Verknüpfungen</h3>
 
-            @if($contacts->count())
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kontakte</label>
-                <div class="max-h-36 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
-                    @foreach($contacts as $contact)
-                        <label class="flex items-center">
-                            <input type="checkbox" name="contact_ids[]" value="{{ $contact->id }}" {{ in_array($contact->id, old('contact_ids', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $contact->full_name }}</span>
-                        </label>
-                    @endforeach
-                </div>
+                @include('admin.partials.contact-search', ['selected' => collect()])
             </div>
-            @endif
 
-            @if($organizations->count())
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organisationen</label>
-                <div class="max-h-36 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
-                    @foreach($organizations as $org)
-                        <label class="flex items-center">
-                            <input type="checkbox" name="organization_ids[]" value="{{ $org->id }}" {{ in_array($org->id, old('organization_ids', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $org->primary_name }}</span>
-                        </label>
-                    @endforeach
-                </div>
+                @include('admin.partials.organization-search', ['selected' => collect(), 'inputName' => 'organization_ids[]', 'orgSearchLabel' => 'Organisationen', 'orgTypeFilter' => ''])
             </div>
-            @endif
 
-            @if($projects->count())
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Projekte</label>
-                <div class="max-h-36 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-2">
-                    @foreach($projects as $project)
-                        <label class="flex items-center">
-                            <input type="checkbox" name="project_ids[]" value="{{ $project->id }}" {{ in_array($project->id, old('project_ids', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $project->name }}</span>
-                        </label>
-                    @endforeach
-                </div>
+                @include('admin.partials.project-search', ['selected' => collect()])
             </div>
-            @endif
         </div>
 
         <div class="mt-4 flex gap-3">

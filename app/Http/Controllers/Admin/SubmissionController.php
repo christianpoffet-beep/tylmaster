@@ -227,4 +227,28 @@ class SubmissionController extends Controller
 
         return implode("\n", $terms) ?: 'Keine zusätzlichen Bedingungen.';
     }
+
+    public function search(Request $request)
+    {
+        $query = MusicSubmission::query();
+
+        if ($q = $request->input('q')) {
+            $query->where(function ($qb) use ($q) {
+                $qb->where('artist_name', 'like', "%{$q}%")
+                   ->orWhere('track_title', 'like', "%{$q}%");
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        $results = $query->orderBy('created_at', 'desc')->limit(50)->get()->map(fn ($s) => [
+            'id' => $s->id,
+            'title' => $s->artist_name . ' — ' . $s->track_title,
+            'status' => $s->status,
+        ]);
+
+        return response()->json($results);
+    }
 }

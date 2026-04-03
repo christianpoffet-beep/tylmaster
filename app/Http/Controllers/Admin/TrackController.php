@@ -352,4 +352,30 @@ class TrackController extends Controller
 
         return $meta;
     }
+
+    public function search(Request $request)
+    {
+        $query = Track::with('organizations');
+
+        if ($q = $request->input('q')) {
+            $query->where(function ($qb) use ($q) {
+                $qb->where('title', 'like', "%{$q}%")
+                   ->orWhere('isrc', 'like', "%{$q}%");
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        $results = $query->orderBy('title')->limit(50)->get()->map(fn ($t) => [
+            'id' => $t->id,
+            'title' => $t->display_title,
+            'artist' => $t->organizations->where('type', 'band')->pluck('primary_name')->join(', '),
+            'isrc' => $t->isrc_formatted,
+            'status' => $t->status,
+        ]);
+
+        return response()->json($results);
+    }
 }

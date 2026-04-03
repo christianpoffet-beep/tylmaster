@@ -433,4 +433,20 @@ class ArtworkController extends Controller
 
         return null;
     }
+
+    public function search(Request $request)
+    {
+        $query = Artwork::query();
+
+        if ($q = $request->input('q')) {
+            $query->where('title', 'like', "%{$q}%");
+        }
+
+        $results = $query->orderBy('title')->limit(50)->get()->map(fn ($a) => [
+            'id' => $a->id,
+            'title' => $a->title,
+        ]);
+
+        return response()->json($results);
+    }
 }

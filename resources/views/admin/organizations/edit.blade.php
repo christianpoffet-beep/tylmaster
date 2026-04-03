@@ -134,31 +134,9 @@
                 <textarea name="notes" id="notes" rows="3" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('notes', $organization->notes) }}</textarea>
             </div>
 
-            {{-- Tracks --}}
-            @if($tracks->count())
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tracks</label>
-                <select name="track_ids[]" multiple class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" size="4">
-                    @foreach($tracks as $track)
-                        <option value="{{ $track->id }}" {{ in_array($track->id, old('track_ids', $organization->tracks->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $track->title }}{{ $track->isrc ? ' (' . $track->isrc . ')' : '' }}</option>
-                    @endforeach
-                </select>
-                <p class="text-xs text-gray-400 mt-1">Ctrl/Cmd gedrückt halten für Mehrfachauswahl</p>
-            </div>
-            @endif
+            @include('admin.partials.track-search', ['selected' => $organization->tracks])
 
-            {{-- Releases --}}
-            @if($releases->count())
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Produkte</label>
-                <select name="release_ids[]" multiple class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" size="4">
-                    @foreach($releases as $release)
-                        <option value="{{ $release->id }}" {{ in_array($release->id, old('release_ids', $organization->releases->pluck('id')->toArray())) ? 'selected' : '' }}>{{ $release->title }}{{ $release->upc ? ' (' . $release->upc . ')' : '' }}</option>
-                    @endforeach
-                </select>
-                <p class="text-xs text-gray-400 mt-1">Ctrl/Cmd gedrückt halten für Mehrfachauswahl</p>
-            </div>
-            @endif
+            @include('admin.partials.release-search', ['selected' => $organization->releases])
 
             {{-- Verträge --}}
             @include('admin.partials.contract-search', ['selected' => $organization->contracts])

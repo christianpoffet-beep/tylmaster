@@ -132,85 +132,25 @@
             <hr class="border-gray-200 dark:border-gray-700">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Verknüpfungen</h3>
 
-            @if($contacts->count())
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kontakte</label>
-                <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                    @foreach($contacts as $contact)
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="contact_ids[]" value="{{ $contact->id }}"
-                                {{ $task->contacts->contains($contact->id) ? 'checked' : '' }}
-                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">{{ $contact->full_name }}</span>
-                        </label>
-                    @endforeach
-                </div>
+                @include('admin.partials.contact-search', ['selected' => $task->contacts])
             </div>
-            @endif
 
-            @if($contracts->count())
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Verträge</label>
-                <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                    @foreach($contracts as $contract)
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="contract_ids[]" value="{{ $contract->id }}"
-                                {{ $task->contracts->contains($contract->id) ? 'checked' : '' }}
-                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">{{ $contract->title }}</span>
-                        </label>
-                    @endforeach
-                </div>
+                @include('admin.partials.contract-search', ['selected' => $task->contracts])
             </div>
-            @endif
 
-            @if($tracks->count())
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tracks</label>
-                <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                    @foreach($tracks as $track)
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="track_ids[]" value="{{ $track->id }}"
-                                {{ $task->tracks->contains($track->id) ? 'checked' : '' }}
-                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">{{ $track->title }}</span>
-                        </label>
-                    @endforeach
-                </div>
+                @include('admin.partials.track-search', ['selected' => $task->tracks])
             </div>
-            @endif
 
-            @if($projects->count())
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Verknüpfte Projekte</label>
-                <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                    @foreach($projects as $project)
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="linked_project_ids[]" value="{{ $project->id }}"
-                                {{ $task->projects->contains($project->id) ? 'checked' : '' }}
-                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">{{ $project->name }}</span>
-                        </label>
-                    @endforeach
-                </div>
+                @include('admin.partials.project-search', ['selected' => $task->projects, 'projectInputName' => 'linked_project_ids[]'])
             </div>
-            @endif
 
-            @if($submissions->count())
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Submissions</label>
-                <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                    @foreach($submissions as $submission)
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="submission_ids[]" value="{{ $submission->id }}"
-                                {{ $task->submissions->contains($submission->id) ? 'checked' : '' }}
-                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">{{ $submission->artist_name }} — {{ $submission->project_name ?? $submission->track_title }}</span>
-                        </label>
-                    @endforeach
-                </div>
+                @include('admin.partials.submission-search', ['selected' => $task->submissions])
             </div>
-            @endif
         </div>
 
         <div class="mt-4 flex gap-3">

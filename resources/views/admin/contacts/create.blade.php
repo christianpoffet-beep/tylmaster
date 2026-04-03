@@ -78,21 +78,9 @@
             </div>
 
             {{-- Projekte --}}
-            @if($projects->count())
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Projekte</label>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($projects as $project)
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="project_ids[]" value="{{ $project->id }}"
-                                {{ in_array($project->id, old('project_ids', [])) ? 'checked' : '' }}
-                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">{{ $project->name }}</span>
-                        </label>
-                    @endforeach
-                </div>
+                @include('admin.partials.project-search', ['selected' => collect()])
             </div>
-            @endif
 
             {{-- Organisationen --}}
             @include('admin.partials.organization-search', ['selected' => collect()])
