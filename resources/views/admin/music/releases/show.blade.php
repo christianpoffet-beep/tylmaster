@@ -52,6 +52,19 @@
                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $release->main_artist }}</dd>
                 </div>
             @endif
+            @php
+                $trackBands = $release->tracks->flatMap(fn($t) => $t->organizations->where('type', 'band'))->unique('id');
+            @endphp
+            @if($trackBands->count())
+                <div class="sm:col-span-2">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ $trackBands->count() === 1 ? 'Band' : 'Bands' }}</dt>
+                    <dd class="mt-1 flex flex-wrap gap-1.5">
+                        @foreach($trackBands as $band)
+                            <a href="{{ route('admin.organizations.show', $band) }}" class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900">{{ $band->primary_name }}</a>
+                        @endforeach
+                    </dd>
+                </div>
+            @endif
             <div>
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">EAN / UPC</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-mono">{{ $release->ean_upc ?? $release->upc ?? '-' }}</dd>
@@ -121,48 +134,39 @@
     {{-- Artworks --}}
     @if(isset($release->artworks) && $release->artworks->count())
         <x-admin.collapsible-card title="Artworks" :count="$release->artworks->count()" class="mt-6">
-            <div class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 @foreach($release->artworks as $artwork)
-                    <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <div class="flex items-start gap-4">
-                            @if($artwork->artwork_path)
-                                <a href="{{ route('admin.artworks.show', $artwork) }}">
-                                    <img src="{{ $artwork->artwork_url }}" alt="{{ $artwork->title }}" class="w-24 h-24 object-cover rounded-lg shadow-sm flex-shrink-0">
-                                </a>
+                    <a href="{{ route('admin.artworks.show', $artwork) }}" class="flex gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors group">
+                        <div class="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                            @if($artwork->artwork_path || $artwork->logos->first()?->file_path)
+                                <img src="{{ route('admin.artworks.thumbnail', $artwork) }}" alt="{{ $artwork->title }}" class="w-full h-full {{ $artwork->artwork_path ? 'object-cover' : 'object-contain p-1' }}">
+                            @else
+                                <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             @endif
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <a href="{{ route('admin.artworks.show', $artwork) }}" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $artwork->title }}</a>
-                                    @if($artwork->pivot->is_primary)
-                                        <span class="text-yellow-500" title="Haupt-Artwork">&#9733;</span>
-                                    @endif
-                                </div>
-
-                                {{-- Artwork Credits --}}
-                                @if($artwork->credits->count())
-                                    <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
-                                        @foreach($artwork->credits->groupBy('role') as $role => $credits)
-                                            <span>
-                                                {{ ['photographer' => 'Foto', 'artwork_by' => 'Artwork', 'logo_by' => 'Logo', 'design_by' => 'Design'][$role] ?? ucfirst($role) }}:
-                                                {{ $credits->pluck('display_name')->join(', ') }}
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                @endif
-
-                                {{-- Logos --}}
-                                @if($artwork->logos->count())
-                                    <div class="mt-2 flex flex-wrap gap-2">
-                                        @foreach($artwork->logos as $logo)
-                                            <div class="group relative">
-                                                <img src="{{ $logo->url }}" alt="{{ $logo->original_name }}" class="h-10 w-auto rounded bg-gray-100 dark:bg-gray-700 object-contain p-0.5" title="{{ $logo->comment ?? $logo->original_name }}">
-                                            </div>
-                                        @endforeach
-                                    </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">{{ $artwork->title }}</span>
+                                @if($artwork->pivot->is_primary)
+                                    <span class="text-yellow-500 flex-shrink-0" title="Haupt-Artwork">&#9733;</span>
                                 @endif
                             </div>
+                            @if($artwork->credits->count())
+                                <div class="mt-1.5 space-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                    @foreach($artwork->credits->groupBy('role') as $role => $credits)
+                                        <div><span class="font-medium text-gray-600 dark:text-gray-300">{{ ['photographer' => 'Foto', 'artwork_by' => 'Artwork', 'logo_by' => 'Logo', 'design_by' => 'Design'][$role] ?? ucfirst($role) }}:</span> {{ $credits->pluck('display_name')->join(', ') }}</div>
+                                    @endforeach
+                                </div>
+                            @endif
+                            @if($artwork->logos->count())
+                                <div class="mt-1.5 flex flex-wrap gap-1.5">
+                                    @foreach($artwork->logos as $logo)
+                                        <img src="/storage/{{ $logo->file_path }}" alt="{{ $logo->original_name }}" class="h-8 w-auto rounded bg-gray-100 dark:bg-gray-700 object-contain p-0.5" title="{{ $logo->comment ?? $logo->original_name }}">
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
-                    </div>
+                    </a>
                 @endforeach
             </div>
         </x-admin.collapsible-card>
