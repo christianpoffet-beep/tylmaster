@@ -13,7 +13,7 @@ class InvoiceTemplate extends Model
     protected $fillable = [
         'name', 'slug', 'contact_id', 'organization_id',
         'recipient_contact_id', 'recipient_organization_id',
-        'logo_path', 'use_avatar_as_logo', 'vat_rate',
+        'logo_path', 'qr_code_path', 'use_avatar_as_logo', 'vat_rate',
         'footer_text', 'payment_terms_days',
     ];
 

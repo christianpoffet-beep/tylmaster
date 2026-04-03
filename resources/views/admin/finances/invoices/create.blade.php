@@ -9,7 +9,7 @@
         <p class="text-sm text-gray-500 mt-1">Nr. {{ $nextInvoiceNumber }} (wird automatisch vergeben)</p>
     </div>
 
-    <form method="POST" action="{{ route('admin.invoices.store') }}" @submit="submitting = true">
+    <form method="POST" action="{{ route('admin.invoices.store') }}" enctype="multipart/form-data" @submit="submitting = true">
         @csrf
 
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
@@ -301,6 +301,17 @@
                 </div>
             </div>
 
+            {{-- QR-Code Einzahlungsschein (nur wenn Vorlage keinen hat) --}}
+            <div x-show="!templateHasQr" class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">QR-Code Einzahlungsschein</label>
+                <p class="text-xs text-gray-400 mb-2">Optional: QR-Code-Bild für den Zahlteil hochladen (z.B. aus dem E-Banking).</p>
+                <input type="file" name="qr_code" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
+                @error('qr_code') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+            <div x-show="templateHasQr" class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <p class="text-xs text-gray-400"><svg class="w-4 h-4 inline text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> QR-Code wird von der Rechnungsvorlage übernommen.</p>
+            </div>
+
             {{-- Notizen --}}
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notizen</label>
@@ -322,6 +333,7 @@
 function invoiceForm() {
     return {
         submitting: false,
+        templateHasQr: false,
         items: @json(old('items', $defaultItems)),
         vatRate: @json(old('vat_rate', '')),
         accountingId: @json(old('accounting_id', '')),
@@ -396,10 +408,11 @@ function invoiceForm() {
         },
         async onTemplateChange(e) {
             const id = e.target.value;
-            if (!id) return;
+            if (!id) { this.templateHasQr = false; return; }
             try {
                 const resp = await fetch(`/admin/invoice-templates/${id}/data`);
                 const data = await resp.json();
+                this.templateHasQr = !!data.has_qr_code;
                 if (data.payment_terms_days) {
                     const invoiceDate = document.getElementById('invoice_date').value;
                     if (invoiceDate) {

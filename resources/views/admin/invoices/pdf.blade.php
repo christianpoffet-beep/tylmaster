@@ -223,7 +223,7 @@
         @endif
 
         {{-- QR-Bill Payment Slip --}}
-        @if($qrSvg)
+        @if($qrImagePath || $qrSvg)
             @php
                 $hasSender = $invoice->hasSender();
                 $qrIban = $hasSender ? $invoice->sender_formatted_iban : ($template ? $template->formatted_iban : '');
@@ -281,7 +281,11 @@
                         <table style="width:100%">
                             <tr>
                                 <td style="width:51mm; vertical-align:top;">
-                                    <img src="{{ $qrSvg }}" class="qr-code-img" alt="QR-Code">
+                                    @if($qrImagePath)
+                                        <img src="{{ $qrImagePath }}" class="qr-code-img" alt="QR-Code">
+                                    @else
+                                        <img src="{{ $qrSvg }}" class="qr-code-img" alt="QR-Code">
+                                    @endif
                                 </td>
                                 <td style="vertical-align:top; padding-left:5mm;">
                                     <div class="qr-section-title">Konto / Zahlbar an</div>
@@ -293,7 +297,7 @@
                                     </div>
 
                                     <div class="qr-section-title">Referenz</div>
-                                    <div class="qr-value">{{ $invoice->invoice_number }}</div>
+                                    <div class="qr-value">{{ $qrReference ?? $invoice->invoice_number }}</div>
 
                                     @if($invoice->organization || $invoice->contact)
                                         <div class="qr-section-title">Zahlbar durch</div>

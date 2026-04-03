@@ -9,7 +9,7 @@
         <p class="text-sm text-gray-500 mt-1">{{ $invoice->invoice_number }}</p>
     </div>
 
-    <form method="POST" action="{{ route('admin.invoices.update', $invoice) }}" @submit="submitting = true">
+    <form method="POST" action="{{ route('admin.invoices.update', $invoice) }}" enctype="multipart/form-data" @submit="submitting = true">
         @csrf @method('PUT')
 
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
@@ -23,7 +23,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                     <label for="invoice_template_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rechnungsvorlage</label>
-                    <select name="invoice_template_id" id="invoice_template_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select name="invoice_template_id" id="invoice_template_id" @change="async (e) => { const id = e.target.value; if (!id) { templateHasQr = false; return; } try { const r = await fetch(`/admin/invoice-templates/${id}/data`); const d = await r.json(); templateHasQr = !!d.has_qr_code; } catch(e) {} }" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">— Keine Vorlage —</option>
                         @foreach($templates as $tpl)
                             <option value="{{ $tpl->id }}" {{ old('invoice_template_id', $invoice->invoice_template_id) == $tpl->id ? 'selected' : '' }}>{{ $tpl->name }}</option>
@@ -301,6 +301,26 @@
                 </div>
             </div>
 
+            {{-- QR-Code Einzahlungsschein (nur wenn Vorlage keinen hat) --}}
+            <div x-show="!templateHasQr" class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">QR-Code Einzahlungsschein</label>
+                <p class="text-xs text-gray-400 mb-2">Optional: QR-Code-Bild für den Zahlteil hochladen (z.B. aus dem E-Banking).</p>
+                @if($invoice->qr_code_path)
+                    <div class="flex items-center gap-3 mb-2">
+                        <img src="/storage/{{ $invoice->qr_code_path }}" alt="QR-Code" class="h-20 w-auto border rounded bg-white p-1">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="remove_qr_code" value="1" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                            <span class="ml-2 text-xs text-red-600 dark:text-red-400">QR-Code entfernen</span>
+                        </label>
+                    </div>
+                @endif
+                <input type="file" name="qr_code" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
+                @error('qr_code') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+            <div x-show="templateHasQr" class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <p class="text-xs text-gray-400"><svg class="w-4 h-4 inline text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> QR-Code wird von der Rechnungsvorlage übernommen.</p>
+            </div>
+
             {{-- Notizen --}}
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notizen</label>
@@ -335,6 +355,7 @@
 function invoiceForm() {
     return {
         submitting: false,
+        templateHasQr: {{ $invoice->template && $invoice->template->qr_code_path ? 'true' : 'false' }},
         items: @json(old('items', $invoiceItems)),
         vatRate: @json(old('vat_rate', $invoice->vat_rate ?? '')),
         accountingId: @json(old('accounting_id', $invoice->accounting_id ?? '')),

@@ -90,8 +90,12 @@ class InvoiceTemplateController extends Controller
             $validated['logo_path'] = $request->file('logo')->store('invoice-templates', 'public');
         }
 
+        if ($request->hasFile('qr_code')) {
+            $validated['qr_code_path'] = $request->file('qr_code')->store('invoice-templates', 'public');
+        }
+
         $templateItems = $validated['template_items'] ?? [];
-        unset($validated['logo'], $validated['logo_source'], $validated['template_items'], $validated['sender_type'], $validated['recipient_type']);
+        unset($validated['logo'], $validated['logo_source'], $validated['template_items'], $validated['sender_type'], $validated['recipient_type'], $validated['qr_code']);
 
         $template = InvoiceTemplate::create($validated);
 
@@ -144,6 +148,8 @@ class InvoiceTemplateController extends Controller
             'recipient_contact_id' => 'nullable|exists:contacts,id',
             'logo_source' => 'required|in:avatar,custom',
             'logo' => 'nullable|image|max:2048',
+            'qr_code' => 'nullable|image|max:2048',
+            'remove_qr_code' => 'nullable|boolean',
             'vat_rate' => 'nullable|numeric|min:0|max:100',
             'footer_text' => 'nullable|string',
             'payment_terms_days' => 'required|integer|min:0|max:365',
@@ -194,8 +200,21 @@ class InvoiceTemplateController extends Controller
             $validated['logo_path'] = $request->file('logo')->store('invoice-templates', 'public');
         }
 
+        // QR Code handling
+        if ($request->input('remove_qr_code')) {
+            if ($invoiceTemplate->qr_code_path) {
+                Storage::disk('public')->delete($invoiceTemplate->qr_code_path);
+            }
+            $validated['qr_code_path'] = null;
+        } elseif ($request->hasFile('qr_code')) {
+            if ($invoiceTemplate->qr_code_path) {
+                Storage::disk('public')->delete($invoiceTemplate->qr_code_path);
+            }
+            $validated['qr_code_path'] = $request->file('qr_code')->store('invoice-templates', 'public');
+        }
+
         $templateItems = $validated['template_items'] ?? [];
-        unset($validated['logo'], $validated['logo_source'], $validated['template_items'], $validated['sender_type'], $validated['recipient_type']);
+        unset($validated['logo'], $validated['logo_source'], $validated['template_items'], $validated['sender_type'], $validated['recipient_type'], $validated['qr_code'], $validated['remove_qr_code']);
 
         $invoiceTemplate->update($validated);
 

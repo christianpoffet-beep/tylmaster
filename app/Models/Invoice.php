@@ -15,6 +15,7 @@ class Invoice extends Model
         'amount', 'vat_rate', 'currency',
         'invoice_date', 'due_date', 'status', 'notes',
         'invoice_template_id', 'accounting_id', 'debit_account_id', 'credit_account_id', 'project_id',
+        'qr_code_path',
     ];
 
     protected $casts = [

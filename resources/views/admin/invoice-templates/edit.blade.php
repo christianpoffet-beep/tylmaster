@@ -200,6 +200,23 @@
                 </div>
             </div>
 
+            {{-- QR-Code Einzahlungsschein --}}
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">QR-Code Einzahlungsschein</label>
+                <p class="text-xs text-gray-400 mb-2">Lade ein QR-Code-Bild hoch (z.B. aus dem E-Banking exportiert). Wird automatisch auf CHF-Rechnungen gedruckt.</p>
+                @if($template->qr_code_path)
+                    <div class="flex items-center gap-3 mb-2">
+                        <img src="/storage/{{ $template->qr_code_path }}" alt="QR-Code" class="h-20 w-auto border rounded bg-white p-1">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="remove_qr_code" value="1" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                            <span class="ml-2 text-xs text-red-600 dark:text-red-400">QR-Code entfernen</span>
+                        </label>
+                    </div>
+                @endif
+                <input type="file" name="qr_code" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
+                @error('qr_code') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
             {{-- Fusszeile --}}
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <label for="footer_text" class="block text-xs text-gray-500 mb-1">Fusszeile</label>

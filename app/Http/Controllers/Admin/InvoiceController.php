@@ -99,6 +99,7 @@ class InvoiceController extends Controller
             'items.*.quantity' => 'required|numeric|min:0.001',
             'items.*.unit_price' => 'required|numeric|min:0',
             'vat_rate' => 'nullable|numeric|min:0|max:100',
+            'qr_code' => 'nullable|image|max:2048',
         ]);
 
         // Clear account fields if no accounting selected
@@ -133,6 +134,12 @@ class InvoiceController extends Controller
             $validated['sender_contact_id'] = null;
             $validated['sender_organization_id'] = null;
         }
+
+        // QR code upload
+        if ($request->hasFile('qr_code')) {
+            $validated['qr_code_path'] = $request->file('qr_code')->store('invoices/qr', 'public');
+        }
+        unset($validated['qr_code']);
 
         $validated['invoice_number'] = Invoice::generateNumber();
         $validated['amount'] = 0;
@@ -218,6 +225,8 @@ class InvoiceController extends Controller
             'items.*.quantity' => 'required|numeric|min:0.001',
             'items.*.unit_price' => 'required|numeric|min:0',
             'vat_rate' => 'nullable|numeric|min:0|max:100',
+            'qr_code' => 'nullable|image|max:2048',
+            'remove_qr_code' => 'nullable|boolean',
         ]);
 
         // Clear account fields if no accounting selected
@@ -252,6 +261,20 @@ class InvoiceController extends Controller
             $validated['sender_contact_id'] = null;
             $validated['sender_organization_id'] = null;
         }
+
+        // QR code handling
+        if ($request->input('remove_qr_code')) {
+            if ($invoice->qr_code_path) {
+                Storage::disk('public')->delete($invoice->qr_code_path);
+            }
+            $validated['qr_code_path'] = null;
+        } elseif ($request->hasFile('qr_code')) {
+            if ($invoice->qr_code_path) {
+                Storage::disk('public')->delete($invoice->qr_code_path);
+            }
+            $validated['qr_code_path'] = $request->file('qr_code')->store('invoices/qr', 'public');
+        }
+        unset($validated['qr_code'], $validated['remove_qr_code']);
 
         $items = $validated['items'];
         unset($validated['items']);
@@ -386,6 +409,7 @@ class InvoiceController extends Controller
             'sender_organization_id' => $invoiceTemplate->organization_id,
             'recipient_contact_id' => $invoiceTemplate->recipient_contact_id,
             'recipient_organization_id' => $invoiceTemplate->recipient_organization_id,
+            'has_qr_code' => !empty($invoiceTemplate->qr_code_path),
         ]);
     }
 
@@ -423,13 +447,35 @@ class InvoiceController extends Controller
         $invoice->load('contact', 'organization', 'items', 'template', 'senderContact', 'senderOrganization');
 
         $qrSvg = null;
-        if ($invoice->currency === 'CHF') {
+        $qrImagePath = null;
+        $qrReference = null;
+
+        // Check for uploaded QR code image: invoice-level first, then template
+        if ($invoice->qr_code_path && Storage::disk('public')->exists($invoice->qr_code_path)) {
+            $qrImagePath = Storage::disk('public')->path($invoice->qr_code_path);
+        } elseif ($invoice->template && $invoice->template->qr_code_path && Storage::disk('public')->exists($invoice->template->qr_code_path)) {
+            $qrImagePath = Storage::disk('public')->path($invoice->template->qr_code_path);
+        }
+
+        // Fallback: generate QR code if no image uploaded
+        if (!$qrImagePath && $invoice->currency === 'CHF') {
             $hasIban = $invoice->hasSender()
                 ? !empty($invoice->sender_iban)
                 : ($invoice->template && !empty($invoice->template->iban));
 
             if ($hasIban) {
                 $qrSvg = $this->generateQrBill($invoice);
+
+                // Determine reference for display
+                $rawIban = $invoice->hasSender() ? $invoice->sender_iban : $invoice->template->iban;
+                $iban = strtoupper(preg_replace('/\s+/', '', $rawIban));
+                if ((str_starts_with($iban, 'CH') || str_starts_with($iban, 'LI'))) {
+                    $iid = (int) substr($iban, 4, 5);
+                    if ($iid >= 30000 && $iid <= 31999) {
+                        $ref = $this->generateQrReference($invoice->invoice_number);
+                        $qrReference = implode(' ', str_split($ref, 5));
+                    }
+                }
             }
         }
 
@@ -437,6 +483,8 @@ class InvoiceController extends Controller
             'invoice' => $invoice,
             'template' => $invoice->template,
             'qrSvg' => $qrSvg,
+            'qrImagePath' => $qrImagePath,
+            'qrReference' => $qrReference,
         ]);
 
         $pdf->setPaper('A4');
@@ -525,12 +573,33 @@ class InvoiceController extends Controller
         $hasSender = $invoice->hasSender();
 
         // Creditor (sender) info: use invoice's own sender if set, otherwise template
-        $iban = $hasSender ? $invoice->sender_iban : $tpl->iban;
+        $rawIban = $hasSender ? $invoice->sender_iban : $tpl->iban;
         $billingName = $hasSender ? $invoice->sender_billing_name : $tpl->billing_name;
         $billingAddress = $hasSender ? $invoice->sender_billing_address_line : $tpl->billing_address_line;
         $billingZip = $hasSender ? $invoice->sender_billing_zip : $tpl->billing_zip;
         $billingCity = $hasSender ? $invoice->sender_billing_city : $tpl->billing_city;
         $billingCountry = $hasSender ? $invoice->sender_billing_country : $tpl->billing_country;
+
+        // Normalize IBAN: remove spaces, uppercase
+        $iban = strtoupper(preg_replace('/\s+/', '', $rawIban));
+
+        // Detect QR-IBAN (Swiss IID 30000-31999)
+        $isQrIban = false;
+        if (str_starts_with($iban, 'CH') || str_starts_with($iban, 'LI')) {
+            $iid = (int) substr($iban, 4, 5);
+            $isQrIban = ($iid >= 30000 && $iid <= 31999);
+        }
+
+        // Reference type: QR-IBANs require QRR, regular IBANs use NON
+        $refType = 'NON';
+        $reference = '';
+        $unstructuredMsg = mb_substr($invoice->invoice_number, 0, 140);
+
+        if ($isQrIban) {
+            $refType = 'QRR';
+            $reference = $this->generateQrReference($invoice->invoice_number);
+            $unstructuredMsg = '';
+        }
 
         // Recipient (debtor) info
         $entity = $invoice->contact ?? $invoice->organization;
@@ -550,48 +619,84 @@ class InvoiceController extends Controller
 
         $amount = number_format($invoice->amount, 2, '.', '');
 
-        $qrData = implode("\n", [
-            'SPC',
-            '0200',
-            '1',
-            $iban,
-            'S',
-            $billingName,
-            $billingAddress,
-            '',
-            $billingZip,
-            $billingCity,
-            $billingCountry,
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            $amount,
-            $invoice->currency,
-            'S',
-            $recipientName,
-            $recipientAddress,
-            '',
-            $recipientZip,
-            $recipientCity,
-            $recipientCountry,
-            'NON',
-            '',
-            $invoice->invoice_number,
-            'EPD',
+        // Truncate fields to SIX spec max lengths
+        $billingName = mb_substr($billingName, 0, 70);
+        $billingAddress = mb_substr($billingAddress, 0, 70);
+        $billingZip = mb_substr($billingZip, 0, 16);
+        $billingCity = mb_substr($billingCity, 0, 35);
+        $recipientName = mb_substr($recipientName, 0, 70);
+        $recipientAddress = mb_substr($recipientAddress, 0, 70);
+        $recipientZip = mb_substr($recipientZip, 0, 16);
+        $recipientCity = mb_substr($recipientCity, 0, 35);
+
+        // Swiss QR-Bill payload (SIX standard, 31 elements)
+        $qrData = implode("\r\n", [
+            'SPC',                  // 1: QR Type
+            '0200',                 // 2: Version
+            '1',                    // 3: Coding (UTF-8)
+            $iban,                  // 4: Creditor IBAN
+            'S',                    // 5: Creditor address type (structured)
+            $billingName,           // 6: Creditor name
+            $billingAddress,        // 7: Creditor street
+            '',                     // 8: Creditor building number
+            $billingZip,            // 9: Creditor postal code
+            $billingCity,           // 10: Creditor city
+            $billingCountry,        // 11: Creditor country
+            '',                     // 12: Ultimate creditor address type (empty in v2)
+            '',                     // 13: Ultimate creditor name
+            '',                     // 14: Ultimate creditor street
+            '',                     // 15: Ultimate creditor building
+            '',                     // 16: Ultimate creditor postal code
+            '',                     // 17: Ultimate creditor city
+            '',                     // 18: Ultimate creditor country
+            $amount,                // 19: Amount
+            $invoice->currency,     // 20: Currency (CHF or EUR)
+            'S',                    // 21: Debtor address type (structured)
+            $recipientName,         // 22: Debtor name
+            $recipientAddress,      // 23: Debtor street
+            '',                     // 24: Debtor building number
+            $recipientZip,          // 25: Debtor postal code
+            $recipientCity,         // 26: Debtor city
+            $recipientCountry,      // 27: Debtor country
+            $refType,               // 28: Reference type (QRR, SCOR, NON)
+            $reference,             // 29: Reference number
+            $unstructuredMsg,       // 30: Unstructured message
+            'EPD',                  // 31: Trailer
         ]);
 
         $options = new QROptions([
             'outputType' => QRCode::OUTPUT_MARKUP_SVG,
             'svgUseCssProperties' => false,
             'eccLevel' => QRCode::ECC_M,
-            'addQuietzone' => false,
+            'addQuietzone' => true,
+            'quietzoneSize' => 1,
             'scale' => 3,
         ]);
 
         return (new QRCode($options))->render($qrData);
+    }
+
+    /**
+     * Generate a 27-digit QR reference number from the invoice number.
+     * Format: 26 digits + 1 check digit (mod 10 recursive).
+     */
+    private function generateQrReference(string $invoiceNumber): string
+    {
+        // Extract digits from invoice number (e.g., "RE-2026-0001" → "202600001")
+        $digits = preg_replace('/\D/', '', $invoiceNumber);
+
+        // Pad to 26 digits
+        $digits = str_pad($digits, 26, '0', STR_PAD_LEFT);
+        $digits = substr($digits, 0, 26);
+
+        // Calculate mod 10 recursive check digit
+        $carry = 0;
+        $table = [0, 9, 4, 6, 8, 2, 7, 1, 3, 5];
+        for ($i = 0; $i < 26; $i++) {
+            $carry = $table[($carry + (int) $digits[$i]) % 10];
+        }
+        $checkDigit = (10 - $carry) % 10;
+
+        return $digits . $checkDigit;
     }
 }
