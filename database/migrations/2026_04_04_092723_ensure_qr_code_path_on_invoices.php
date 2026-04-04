@@ -11,17 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('invoices', function (Blueprint $table) {
-            if (!Schema::hasColumn('invoices', 'qr_code_path')) {
+        if (!Schema::hasColumn('invoices', 'qr_code_path')) {
+            Schema::table('invoices', function (Blueprint $table) {
                 $table->string('qr_code_path')->nullable();
-            }
-        });
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('invoices', function (Blueprint $table) {
-            $table->dropColumn('qr_code_path');
-        });
+        // handled by original migration
     }
 };
