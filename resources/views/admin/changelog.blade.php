@@ -11,6 +11,56 @@
 
     <div class="space-y-6">
 
+        {{-- v1.7.0 --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">v1.7.0</h3>
+                <span class="text-sm text-gray-500 dark:text-gray-400">04.04.2026</span>
+            </div>
+            <div class="space-y-2">
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Durchsuchbare Auswahl-Komponenten: Alle Verknüpfungen (Kontakte, Verträge, Projekte, Tracks, Produkte, Artworks, Submissions) nutzen neu durchsuchbare Dropdowns mit Status-Filter und farbigen Badges</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Katalognummer-Generator: Kataloge werden bei Label-Organisationen erfasst und bei Produkten per Dropdown mit automatischer Nummernvergabe angeboten (z.B. TYL001)</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Produkttyp-Auswahl: Quick-Select-Buttons, Suchfeld und gruppierte Checkboxen mit Zusammenfassung der Auswahl</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Favicon &amp; Custom Cursor: Favicon-Upload und optionaler Mauszeiger-Ersatz unter Settings &rarr; System</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">QR-Code-Upload: Eigenes QR-Code-Bild f&uuml;r Rechnungen hochladbar (auf Vorlage oder direkt auf Rechnung)</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Track-Download: Audiodateien können direkt aus der Track-Liste heruntergeladen werden</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Produkt-Detailseite: Bands aus Tracks werden als klickbare Badges in der Metadaten-Kachel angezeigt; Artwork-Darstellung mit Thumbnail, Credits und Logos optimiert</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Artwork-&Uuml;bersicht: Logo wird als Fallback-Thumbnail angezeigt wenn kein Artwork-Bild vorhanden</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">QR-Bill-Generator: IBAN-Normalisierung, QR-IBAN-Erkennung, Quiet Zone und SIX-Spec-konforme Feldl&auml;ngen</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 mr-2">Fix</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Dokumente: Vorschau-Modal f&uuml;r Bilder und Audio repariert (Alpine.js Scope und Content-Disposition Header)</span>
+                </div>
+            </div>
+        </div>
+
         {{-- v1.6.1 --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center justify-between mb-3">

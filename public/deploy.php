@@ -17,14 +17,15 @@ echo "=== TYL Deploy Refresh ===\n\n";
 // Check which files exist on server
 echo "--- File Check ---\n";
 $files = [
-    'app/Http/Controllers/ContentPreviewController.php',
-    'app/Http/Controllers/Admin/ContentPostController.php',
-    'app/Models/ContentPost.php',
-    'database/migrations/2026_03_24_013035_add_share_token_and_image_source_to_content_posts.php',
-    'resources/views/admin/content-posts/_image-picker.blade.php',
-    'resources/views/admin/content-posts/create.blade.php',
-    'resources/views/admin/content-posts/show.blade.php',
-    'resources/views/public/content-preview.blade.php',
+    'database/migrations/2026_04_03_231352_add_qr_code_path_to_invoice_templates.php',
+    'database/migrations/2026_04_03_232544_add_qr_code_path_to_invoices.php',
+    'database/migrations/2026_04_03_235839_add_catalogs_to_organizations.php',
+    'resources/views/admin/partials/track-search.blade.php',
+    'resources/views/admin/partials/artwork-search.blade.php',
+    'resources/views/admin/partials/release-search.blade.php',
+    'resources/views/admin/partials/submission-search.blade.php',
+    'resources/views/admin/partials/product-type-selector.blade.php',
+    'app/Http/Controllers/Admin/ReleaseController.php',
     'routes/web.php',
 ];
 foreach ($files as $f) {

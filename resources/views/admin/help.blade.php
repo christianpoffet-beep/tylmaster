@@ -111,8 +111,12 @@
                     <p class="text-sm text-gray-600 dark:text-gray-300">Jede Organisation kann eine Rechtsform haben: AG, GmbH, Verein, Stiftung, Einzelfirma, Ltd, LLP (UK) oder LLC.</p>
                 </div>
                 <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Kataloge (Label)</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Bei Organisationen vom Typ <strong>Label</strong> erscheint ein Feld «Kataloge», in dem Präfixe für Katalognummern hinterlegt werden können (z.B. TYL, ZEN). Diese stehen dann bei der Produkt-Erstellung als Dropdown zur Auswahl.</p>
+                </div>
+                <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Verknüpfungen</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Beim Erstellen oder Bearbeiten einer Organisation kannst du über Suchfelder <strong>Kontakte</strong>, <strong>Projekte</strong> und <strong>Verträge</strong> suchen und zuordnen. Mehrfachauswahl ist möglich. Neue Kontakte können direkt inline erstellt werden.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Beim Erstellen oder Bearbeiten einer Organisation kannst du über Suchfelder <strong>Kontakte</strong>, <strong>Projekte</strong>, <strong>Tracks</strong>, <strong>Produkte</strong> und <strong>Verträge</strong> suchen und zuordnen. Alle Auswahlen nutzen durchsuchbare Dropdowns mit Mehrfachauswahl.</p>
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">PLZ-Autovervollständigung</h4>
@@ -136,7 +140,7 @@
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Vorschau & Download</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Klicke auf ein Dokument, um eine Vorschau zu öffnen (für PDFs und Bilder). Über den Download-Button kannst du die Datei herunterladen.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Klicke auf das Auge-Symbol oder den Dokumententitel, um eine Vorschau zu öffnen (für PDFs, Bilder, Audio und Video). Über den Download-Button kannst du die Datei herunterladen.</p>
                 </div>
             </div>
         </div>
@@ -246,7 +250,7 @@
                         </div>
                         <div>
                             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Audio</p>
-                            <p class="text-sm text-gray-600 dark:text-gray-300">Lade eine Audiodatei hoch (MP3, WAV, FLAC, AAC, M4A, OGG; max. 300 MB). Bitrate, Samplerate, Kanäle und Format werden automatisch ausgelesen. Die Datei kann direkt in der Detailansicht und in Listen abgespielt werden.</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Lade eine Audiodatei hoch (MP3, WAV, FLAC, AAC, M4A, OGG; max. 300 MB). Bitrate, Samplerate, Kanäle und Format werden automatisch ausgelesen. Die Datei kann direkt in der Detailansicht und in Listen abgespielt und über das Download-Symbol heruntergeladen werden.</p>
                         </div>
                         <div>
                             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Musik-Details</p>
@@ -261,7 +265,7 @@
                                 <li><strong>Label:</strong> Organisationen vom Typ «Label»</li>
                                 <li><strong>Publisher:</strong> Organisationen vom Typ «Publishing»</li>
                                 <li><strong>Produkte:</strong> Zuordnung zu einem oder mehreren Produkten mit Track-Nr., Disc-Nr. und Rolle (Main, Bonus Track, Hidden Track, Remix)</li>
-                                <li><strong>Projekte</strong> und <strong>Verträge</strong></li>
+                                <li><strong>Projekte</strong> und <strong>Verträge</strong> (jeweils mit durchsuchbarem Dropdown und Status-Filter)</li>
                             </ul>
                         </div>
                         <div>
@@ -286,11 +290,11 @@
                     <div class="space-y-2">
                         <div>
                             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Grunddaten</p>
-                            <p class="text-sm text-gray-600 dark:text-gray-300">Titel (Pflichtfeld), Sprache des Titels, Katalognummer, EAN/UPC-Code, Veröffentlichungsdatum und Cover-Bild. Beim Erstellen kann eine <strong>Produktvorlage</strong> geladen werden, die Release-Info vorausfüllt.</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Titel (Pflichtfeld), Sprache des Titels, Katalognummer, EAN/UPC-Code, Veröffentlichungsdatum und Cover-Bild. Die <strong>Katalognummer</strong> kann automatisch generiert werden: wähle einen Katalog aus dem Dropdown (basierend auf den bei Label-Organisationen hinterlegten Katalogen), und die nächste freie Nummer wird eingetragen (z.B. TYL001). Beim Erstellen kann eine <strong>Produktvorlage</strong> geladen werden, die Release-Info vorausfüllt.</p>
                         </div>
                         <div>
                             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Produkttypen</p>
-                            <p class="text-sm text-gray-600 dark:text-gray-300">Wähle einen oder mehrere Typen aus den Kategorien: Musik (Album, EP, Single, CD, Vinyl etc.), Video (Musikvideo, Lyric Video, Konzertfilm etc.), Merchandise Kleidung, Merchandise Accessoires und Merchandise Premium. Je nach gewähltem Typ werden zusätzliche Musik-Felder ein- oder ausgeblendet.</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Wähle einen oder mehrere Typen über die <strong>Quick-Select-Buttons</strong> (Digital Album, CD, Vinyl 12&quot; etc.) oder durchsuche alle Typen per Suchfeld. Typen sind in Kategorien gruppiert: Musik, Video, Merchandise Kleidung, Accessoires und Premium. Je nach gewähltem Typ werden zusätzliche Musik-Felder ein- oder ausgeblendet.</p>
                         </div>
                         <div>
                             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Musik-Felder</p>
@@ -316,6 +320,7 @@
                             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Aggregierte Informationen aus Tracks</p>
                             <p class="text-sm text-gray-600 dark:text-gray-300">Die Produkt-Detailseite zeigt automatisch Daten aus den verknüpften Tracks an:</p>
                             <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 mt-1 space-y-0.5">
+                                <li><strong>Bands:</strong> Alle Bands aus den verknüpften Tracks werden als klickbare Badges in der Metadaten-Kachel angezeigt.</li>
                                 <li><strong>Credits:</strong> Alle Track-Credits werden unterhalb der Produkt-Credits angezeigt (mit Angabe des Track-Namens). Duplikate werden gefiltert.</li>
                                 <li><strong>Labels &amp; Publisher:</strong> Aus den Tracks stammende Labels und Verlage erscheinen mit «Track»-Kennzeichnung.</li>
                             </ul>
@@ -352,7 +357,7 @@
             <div class="space-y-3">
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Erstellen</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Erstelle ein Artwork mit Titel und lade eine oder mehrere Bilddateien hoch. Vergib optionale Credits (Fotograf, Designer etc.).</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Erstelle ein Artwork mit Titel und lade eine oder mehrere Bilddateien hoch. Vergib optionale Credits (Fotograf, Designer etc.). In der Übersicht wird automatisch ein Thumbnail angezeigt &ndash; wenn kein Artwork-Bild vorhanden ist, wird das erste Logo als Fallback verwendet.</p>
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Verknüpfungen</h4>
@@ -403,7 +408,7 @@
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">PDF-Export</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Für ausgehende Rechnungen kannst du ein professionelles PDF mit Swiss QR-Bill generieren (für CHF-Rechnungen). Klicke auf <strong>«PDF»</strong> auf der Rechnungs-Detailseite.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Für ausgehende Rechnungen wird ein professionelles PDF mit Swiss QR-Bill generiert (für CHF-Rechnungen). Du kannst ein <strong>eigenes QR-Code-Bild</strong> hochladen (z.B. aus dem E-Banking exportiert) &ndash; entweder in der Rechnungsvorlage (gilt für alle Rechnungen mit dieser Vorlage) oder direkt auf der Rechnung. Das QR-Feld auf der Rechnung wird nur angezeigt, wenn die Vorlage keinen QR-Code enthält.</p>
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Status &amp; Bezahlt markieren</h4>
@@ -616,7 +621,7 @@
         {{-- 14. Settings --}}
         <div id="settings" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
             <h3 class="text-lg font-semibold text-gray-900 mb-3">14. Settings</h3>
-            <p class="text-sm text-gray-600 mb-3">Unter Settings findest du zwei Bereiche: <strong>Labels</strong> und <strong>Vorlagen</strong>.</p>
+            <p class="text-sm text-gray-600 mb-3">Unter Settings findest du drei Bereiche: <strong>Labels</strong>, <strong>Vorlagen</strong> und <strong>System</strong>.</p>
             <div class="space-y-3">
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Labels</h4>
@@ -635,8 +640,16 @@
                     <p class="text-sm text-gray-600 dark:text-gray-300">Vorlagen beschleunigen die Erstellung neuer Einträge:</p>
                     <ul class="text-sm text-gray-600 list-disc list-inside mt-1 space-y-0.5">
                         <li><strong>Kontopläne:</strong> Vorlagen für Buchhaltungs-Konten. Beim Erstellen einer neuen Buchhaltung werden die Konten aus der Vorlage übernommen.</li>
-                        <li><strong>Rechnungsvorlagen:</strong> Layout und Standardwerte für Rechnungen (Absender, Bankverbindung, Zahlungsbedingungen).</li>
+                        <li><strong>Rechnungsvorlagen:</strong> Layout und Standardwerte für Rechnungen (Absender, Bankverbindung, Zahlungsbedingungen, optional QR-Code-Bild für den Einzahlungsschein).</li>
                         <li><strong>Vertragsvorlagen:</strong> Vertragstexte mit vordefinierten Parteien, Status und Bedingungen. Beim Erstellen eines Vertrags füllt die Vorlage automatisch alle Felder aus.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">System</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Unter <strong>Settings &rarr; System</strong> findest du:</p>
+                    <ul class="text-sm text-gray-600 list-disc list-inside mt-1 space-y-0.5">
+                        <li><strong>Favicon &amp; Cursor:</strong> Lade ein eigenes Favicon hoch (wird im Browser-Tab angezeigt). Optional kann das Favicon auch als Mauszeiger verwendet werden.</li>
+                        <li><strong>Systeminfo:</strong> Laravel-Version, PHP-Version, Datenbank und Umgebung.</li>
                     </ul>
                 </div>
             </div>
