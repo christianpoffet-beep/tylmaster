@@ -68,7 +68,18 @@
             {{-- Katalognummer (immer sichtbar) --}}
             <div>
                 <label for="catalog_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Katalognummer</label>
-                <input type="text" name="catalog_number" id="catalog_number" value="{{ old('catalog_number', $release->catalog_number) }}" class="w-full sm:w-1/2 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <div x-data="catalogGenerator()" class="flex gap-2 items-start">
+                    <select x-model="selectedCatalog" @change="generate()" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Katalog...</option>
+                        <template x-for="cat in catalogs" :key="cat.prefix">
+                            <option :value="cat.prefix" x-text="cat.prefix + ' (' + cat.label + ')'"></option>
+                        </template>
+                    </select>
+                    <input type="text" name="catalog_number" id="catalog_number" x-model="catalogNumber" placeholder="z.B. TYL001" class="flex-1 sm:max-w-xs rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500 font-mono">
+                    <button type="button" @click="generate()" x-show="selectedCatalog" class="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 flex-shrink-0" title="Nächste freie Nummer generieren">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </button>
+                </div>
             </div>
 
             {{-- Musik-spezifische Felder --}}
@@ -288,3 +299,25 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function catalogGenerator() {
+    return {
+        catalogs: @json($catalogs),
+        selectedCatalog: '',
+        catalogNumber: '{{ old('catalog_number', $release->catalog_number ?? '') }}',
+        async generate() {
+            if (!this.selectedCatalog) return;
+            try {
+                const resp = await fetch(`/admin/releases-next-catalog-number?prefix=${encodeURIComponent(this.selectedCatalog)}`, {headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}});
+                if (resp.ok) {
+                    const data = await resp.json();
+                    this.catalogNumber = data.catalog_number;
+                }
+            } catch (e) {}
+        }
+    };
+}
+</script>
+@endpush

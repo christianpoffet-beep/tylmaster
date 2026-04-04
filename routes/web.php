@@ -134,6 +134,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('tracks-search', [TrackController::class, 'search'])->name('tracks.search');
     Route::get('artworks-search', [ArtworkController::class, 'search'])->name('artworks.search');
     Route::get('releases-search', [ReleaseController::class, 'search'])->name('releases.search');
+    Route::get('releases-next-catalog-number', [ReleaseController::class, 'nextCatalogNumber'])->name('releases.nextCatalogNumber');
     Route::get('submissions-search', [SubmissionController::class, 'search'])->name('submissions.search');
     Route::resource('tasks', TaskController::class);
     Route::patch('tasks/{task}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');

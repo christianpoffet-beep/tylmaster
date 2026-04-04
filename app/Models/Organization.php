@@ -19,7 +19,7 @@ class Organization extends Model
     }
 
     protected $fillable = [
-        'type', 'legal_form', 'names', 'biography', 'websites',
+        'type', 'legal_form', 'names', 'biography', 'websites', 'catalogs',
         'street', 'zip', 'city', 'country', 'email', 'phone',
         'iban', 'bank_name', 'bank_zip', 'bank_city', 'bank_country', 'bic',
         'vat_number', 'avatar_path', 'notes',
@@ -28,6 +28,7 @@ class Organization extends Model
     protected $casts = [
         'names' => 'array',
         'websites' => 'array',
+        'catalogs' => 'array',
     ];
 
     public function getPrimaryNameAttribute(): string

@@ -158,6 +158,8 @@ class OrganizationController extends Controller
             'release_ids.*' => 'exists:releases,id',
             'contract_ids' => 'nullable|array',
             'contract_ids.*' => 'exists:contracts,id',
+            'catalogs' => 'nullable|array',
+            'catalogs.*' => 'nullable|string|max:20',
         ]);
 
         if ($request->hasFile('avatar')) {
@@ -167,6 +169,10 @@ class OrganizationController extends Controller
 
         // Filter empty websites
         $validated['websites'] = array_values(array_filter($validated['websites'] ?? []));
+
+        // Filter and uppercase catalogs
+        $validated['catalogs'] = array_values(array_filter(array_map(fn($c) => strtoupper(trim($c)), $validated['catalogs'] ?? [])));
+        if (empty($validated['catalogs'])) $validated['catalogs'] = null;
 
         $organization = Organization::create($validated);
 
@@ -246,6 +252,8 @@ class OrganizationController extends Controller
             'release_ids.*' => 'exists:releases,id',
             'contract_ids' => 'nullable|array',
             'contract_ids.*' => 'exists:contracts,id',
+            'catalogs' => 'nullable|array',
+            'catalogs.*' => 'nullable|string|max:20',
         ]);
 
         if ($request->boolean('remove_avatar') && $organization->avatar_path) {
@@ -260,6 +268,10 @@ class OrganizationController extends Controller
         unset($validated['avatar'], $validated['remove_avatar']);
 
         $validated['websites'] = array_values(array_filter($validated['websites'] ?? []));
+
+        // Filter and uppercase catalogs
+        $validated['catalogs'] = array_values(array_filter(array_map(fn($c) => strtoupper(trim($c)), $validated['catalogs'] ?? [])));
+        if (empty($validated['catalogs'])) $validated['catalogs'] = null;
 
         $organization->update($validated);
 

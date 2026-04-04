@@ -8,7 +8,7 @@
 
 @section('content')
 <div class="max-w-3xl">
-    <form method="POST" action="{{ route('admin.organizations.store') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('admin.organizations.store') }}" enctype="multipart/form-data" x-data="{ orgType: '{{ old('type', '') }}', catalogItems: {{ json_encode(old('catalogs', [''])) }} }">
         @csrf
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
             <div>
@@ -35,7 +35,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Typ *</label>
-                    <select name="type" id="type" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select name="type" id="type" required x-model="orgType" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">— Bitte wählen —</option>
                         @foreach($typeLabels as $v => $l)
                             <option value="{{ $v }}" {{ old('type') === $v ? 'selected' : '' }}>{{ $l }}</option>
@@ -116,6 +116,26 @@
             <div>
                 <label for="biography" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Biografie</label>
                 <textarea name="biography" id="biography" rows="4" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('biography') }}</textarea>
+            </div>
+
+            {{-- Kataloge (nur für Labels) --}}
+            <div x-show="orgType === 'label'" x-transition>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kataloge</label>
+                <p class="text-xs text-gray-400 mb-2">Präfixe für Katalognummern (z.B. TYL, ZEN). Werden bei Produkten zur Auswahl angeboten.</p>
+                <div class="space-y-2">
+                    <template x-for="(cat, i) in catalogItems" :key="i">
+                        <div class="flex gap-2">
+                            <input type="text" :name="'catalogs[' + i + ']'" x-model="catalogItems[i]" placeholder="z.B. TYL" class="w-40 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500 uppercase font-mono">
+                            <button type="button" @click="catalogItems.splice(i, 1)" x-show="catalogItems.length > 1" class="text-red-500 hover:text-red-700">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+                <button type="button" @click="catalogItems.push('')" class="mt-2 inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    Katalog hinzufügen
+                </button>
             </div>
 
             {{-- Notizen (intern) --}}

@@ -4,57 +4,52 @@
 @php
     $selectedTypes = $selectedTypes ?? [];
     $quickDefaults = [
-        'Digital Album',
-        'Digital Single',
-        'Digital EP',
-        'CD',
-        'Vinyl 12"',
-        'Vinyl 7"',
-        'Kassette',
-        'Album (LP)',
-        'EP (Extended Play)',
-        'Single',
-        'T-Shirt',
+        'Digital Album', 'Digital Single', 'Digital EP',
+        'CD', 'Vinyl 12"', 'Vinyl 7"', 'Kassette',
+        'Album (LP)', 'EP (Extended Play)', 'Single', 'T-Shirt',
     ];
-    // Only show quick defaults that actually exist in the product types
     $allFlat = collect($allProductTypes)->flatten()->toArray();
     $quickDefaults = array_values(array_filter($quickDefaults, fn($t) => in_array($t, $allFlat)));
 @endphp
 
-<div x-data="{
-    search: '',
-    selectedTypes: @json(array_values($selectedTypes)),
-    toggleType(type) {
-        const idx = this.selectedTypes.indexOf(type);
-        if (idx > -1) { this.selectedTypes.splice(idx, 1); } else { this.selectedTypes.push(type); }
-        this.syncCheckboxes();
-        this.$dispatch('product-types-changed', [...this.selectedTypes]);
-    },
-    hasType(type) { return this.selectedTypes.includes(type); },
-    matchesSearch(type) {
-        if (!this.search) return true;
-        return type.toLowerCase().includes(this.search.toLowerCase());
-    },
-    groupVisible(types) {
-        return types.some(t => this.matchesSearch(t));
-    },
-    syncCheckboxes() {
-        this.$nextTick(() => {
-            this.$el.querySelectorAll('input[name=&quot;product_type[]&quot;]').forEach(cb => {
-                cb.checked = this.selectedTypes.includes(cb.value);
+<script>
+function productTypeSelector(initial) {
+    return {
+        search: '',
+        selectedTypes: initial,
+        toggleType(type) {
+            const idx = this.selectedTypes.indexOf(type);
+            if (idx > -1) { this.selectedTypes.splice(idx, 1); } else { this.selectedTypes.push(type); }
+            this.$nextTick(() => {
+                this.$el.querySelectorAll('input[name="product_type[]"]').forEach(cb => {
+                    cb.checked = this.selectedTypes.includes(cb.value);
+                });
             });
-        });
-    }
-}">
+            this.$dispatch('product-types-changed', [...this.selectedTypes]);
+        },
+        hasType(type) { return this.selectedTypes.includes(type); },
+        matchesSearch(type) {
+            if (!this.search) return true;
+            return type.toLowerCase().includes(this.search.toLowerCase());
+        },
+        groupVisible(types) {
+            return types.some(t => this.matchesSearch(t));
+        }
+    };
+}
+</script>
+
+<div x-data="productTypeSelector(@json(array_values($selectedTypes)))">
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Typ</label>
 
     {{-- Quick-Select Buttons --}}
     <div class="flex flex-wrap gap-1.5 mb-3">
         @foreach($quickDefaults as $qd)
+            @php $jsQd = Js::from($qd); @endphp
             <button type="button"
-                @click="toggleType('{{ addslashes($qd) }}')"
+                @click="toggleType({{ $jsQd }})"
                 class="px-2.5 py-1 rounded-full text-xs font-medium border transition-colors"
-                :class="hasType('{{ addslashes($qd) }}')
+                :class="hasType({{ $jsQd }})
                     ? 'bg-blue-600 text-white border-blue-600'
                     : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500'">
                 {{ $qd }}
@@ -76,12 +71,13 @@
                 </div>
                 <div class="max-h-40 overflow-y-auto p-2 space-y-1">
                     @foreach($types as $type)
+                        @php $jsType = Js::from($type); @endphp
                         <label class="items-center gap-2 px-2 py-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer"
-                               x-show="matchesSearch('{{ addslashes($type) }}')"
-                               :class="matchesSearch('{{ addslashes($type) }}') ? 'flex' : 'hidden'">
+                               x-show="matchesSearch({{ $jsType }})"
+                               :class="matchesSearch({{ $jsType }}) ? 'flex' : 'hidden'">
                             <input type="checkbox" name="product_type[]" value="{{ $type }}"
                                 {{ in_array($type, $selectedTypes) ? 'checked' : '' }}
-                                @change="toggleType('{{ addslashes($type) }}')"
+                                x-on:change="toggleType({{ $jsType }})"
                                 class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0">
                             <span class="text-sm text-gray-700 dark:text-gray-300">{{ $type }}</span>
                         </label>

@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\Artwork;
 use App\Models\ProductTemplate;
 use App\Models\Setting;
+use App\Models\Organization;
 use Illuminate\Http\Request;
 
 class ReleaseController extends Controller
@@ -52,7 +53,10 @@ class ReleaseController extends Controller
         $artworks = Artwork::orderBy('title')->get();
         $templates = ProductTemplate::orderBy('sort_order')->get();
         $allTracks = Track::orderBy('title')->get();
-        return view('admin.music.releases.create', compact('territoryPresets', 'projects', 'contracts', 'artworks', 'templates', 'allTracks'));
+        $catalogs = Organization::where('type', 'label')->whereNotNull('catalogs')->get()
+            ->flatMap(fn($org) => collect($org->catalogs)->map(fn($c) => ['prefix' => $c, 'label' => $org->primary_name]))
+            ->unique('prefix')->sortBy('prefix')->values();
+        return view('admin.music.releases.create', compact('territoryPresets', 'projects', 'contracts', 'artworks', 'templates', 'allTracks', 'catalogs'));
     }
 
     public function store(Request $request)
@@ -148,7 +152,10 @@ class ReleaseController extends Controller
         $artworks = Artwork::orderBy('title')->get();
         $templates = ProductTemplate::orderBy('sort_order')->get();
         $allTracks = Track::orderBy('title')->get();
-        return view('admin.music.releases.edit', compact('release', 'territoryPresets', 'projects', 'contracts', 'artworks', 'templates', 'allTracks'));
+        $catalogs = Organization::where('type', 'label')->whereNotNull('catalogs')->get()
+            ->flatMap(fn($org) => collect($org->catalogs)->map(fn($c) => ['prefix' => $c, 'label' => $org->primary_name]))
+            ->unique('prefix')->sortBy('prefix')->values();
+        return view('admin.music.releases.edit', compact('release', 'territoryPresets', 'projects', 'contracts', 'artworks', 'templates', 'allTracks', 'catalogs'));
     }
 
     public function update(Request $request, Release $release)
@@ -263,6 +270,53 @@ class ReleaseController extends Controller
             $syncData[$id] = ['is_primary' => ($id == $primaryId)];
         }
         $release->artworks()->sync($syncData);
+    }
+
+    public function nextCatalogNumber(Request $request)
+    {
+        $prefix = $request->input('prefix', '');
+        if (!$prefix) {
+            // Return all available catalogs from label organizations
+            $catalogs = Organization::where('type', 'label')
+                ->whereNotNull('catalogs')
+                ->get()
+                ->flatMap(function ($org) {
+                    return collect($org->catalogs)->map(fn($c) => [
+                        'prefix' => $c,
+                        'label' => $org->primary_name,
+                    ]);
+                })
+                ->unique('prefix')
+                ->sortBy('prefix')
+                ->values();
+
+            return response()->json(['catalogs' => $catalogs]);
+        }
+
+        // Find all existing catalog numbers with this prefix
+        $existing = Release::where('catalog_number', 'like', $prefix . '%')
+            ->pluck('catalog_number')
+            ->map(function ($cn) use ($prefix) {
+                $numPart = substr($cn, strlen($prefix));
+                return is_numeric($numPart) ? (int) $numPart : null;
+            })
+            ->filter()
+            ->sort()
+            ->values();
+
+        // Find lowest unused number starting from 1
+        $next = 1;
+        foreach ($existing as $num) {
+            if ($num === $next) {
+                $next++;
+            } else {
+                break;
+            }
+        }
+
+        $catalogNumber = $prefix . str_pad($next, 3, '0', STR_PAD_LEFT);
+
+        return response()->json(['catalog_number' => $catalogNumber]);
     }
 
     public function search(Request $request)

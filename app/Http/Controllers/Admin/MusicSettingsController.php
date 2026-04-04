@@ -101,4 +101,5 @@ class MusicSettingsController extends Controller
         Setting::set('product_types', $productTypes);
         return redirect()->route('admin.settings.product-types')->with('success', 'Produkttypen gespeichert.');
     }
+
 }
