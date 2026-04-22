@@ -17,6 +17,20 @@ echo "=== TYL Deploy Refresh ===\n\n";
 // Check which files exist on server
 echo "--- File Check ---\n";
 $files = [
+    // v1.8.0 — IPI credits, Artwork image variants, Content preview
+    'database/migrations/2026_04_22_120000_add_ipi_number_to_track_contact.php',
+    'database/migrations/2026_04_22_130000_add_ipi_number_to_artwork_credits.php',
+    'database/migrations/2026_04_22_140000_create_photo_credits_table.php',
+    'database/migrations/2026_04_22_150000_create_artwork_images_table.php',
+    'database/migrations/2026_04_22_150001_add_primary_purpose_to_artwork_logos.php',
+    'database/migrations/2026_04_22_150002_migrate_artwork_path_to_images.php',
+    'app/Models/ArtworkImage.php',
+    'app/Models/PhotoCredit.php',
+    'resources/views/public/partials/feed-instagram.blade.php',
+    'resources/views/public/partials/feed-facebook.blade.php',
+    'resources/views/public/partials/feed-twitter.blade.php',
+    'config/filesystems.php',
+    // v1.7.0 — previous release
     'database/migrations/2026_04_03_231352_add_qr_code_path_to_invoice_templates.php',
     'database/migrations/2026_04_03_232544_add_qr_code_path_to_invoices.php',
     'database/migrations/2026_04_03_235839_add_catalogs_to_organizations.php',
