@@ -11,7 +11,13 @@ class ArtworkLogo extends Model
     use LogsActivity;
 
     protected $fillable = [
-        'artwork_id', 'file_path', 'file_size', 'mime_type', 'original_name', 'comment',
+        'artwork_id', 'file_path', 'file_size', 'mime_type', 'original_name',
+        'comment', 'is_primary', 'purpose', 'sort_order',
+    ];
+
+    protected $casts = [
+        'is_primary' => 'boolean',
+        'sort_order' => 'integer',
     ];
 
     public function artwork()

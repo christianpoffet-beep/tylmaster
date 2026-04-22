@@ -157,7 +157,12 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 @foreach($project->artworks as $artwork)
                     <a href="{{ route('admin.artworks.show', $artwork) }}" class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                        @if($artwork->artwork_path && in_array($artwork->artwork_mime_type, ['image/jpeg', 'image/jpg']))
+                        @php
+                            $primaryImg = $artwork->primary_image;
+                            $primaryMime = $primaryImg?->mime_type ?? '';
+                            $isRenderable = $primaryImg && (str_contains($primaryMime, 'jpeg') || str_contains($primaryMime, 'jpg') || str_contains($primaryMime, 'png') || str_contains($primaryMime, 'webp'));
+                        @endphp
+                        @if($isRenderable)
                             <div class="w-12 h-12 rounded overflow-hidden bg-gray-200 dark:bg-gray-600 flex-shrink-0">
                                 <img src="{{ $artwork->artwork_url }}" alt="{{ $artwork->title }}" class="w-full h-full object-cover">
                             </div>

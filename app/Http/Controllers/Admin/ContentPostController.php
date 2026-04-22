@@ -236,7 +236,7 @@ class ContentPostController extends Controller
         }
 
         if ($tab === 'artworks') {
-            $artworks = Artwork::orderBy('title')->get()->map(fn ($a) => [
+            $artworks = Artwork::with(['images', 'logos'])->orderBy('title')->get()->map(fn ($a) => [
                 'id' => $a->id,
                 'type' => 'artwork',
                 'title' => $a->title,

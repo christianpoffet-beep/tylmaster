@@ -38,23 +38,53 @@
         </div>
     </div>
 
-    {{-- Artwork-Bild --}}
-    @if($artwork->artwork_path)
-    <x-admin.collapsible-card title="Artwork" class="mt-6">
-        <div class="rounded-lg overflow-hidden bg-gray-100 inline-block">
-            @if(in_array($artwork->artwork_mime_type, ['image/jpeg', 'image/jpg']))
-                <img src="{{ $artwork->artwork_url }}" alt="{{ $artwork->title }}" class="max-w-md max-h-96 object-contain">
-            @else
-                <div class="w-64 h-64 flex items-center justify-center text-gray-400">
-                    <div class="text-center">
-                        <p class="text-lg font-medium">{{ strtoupper(pathinfo($artwork->artwork_original_name, PATHINFO_EXTENSION)) }}</p>
-                        <p class="text-xs mt-1">{{ $artwork->artwork_original_name }}</p>
+    {{-- Artwork-Bildvarianten --}}
+    @if($artwork->images->count())
+    <x-admin.collapsible-card title="Bildvarianten" :count="$artwork->images->count()" class="mt-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach($artwork->images as $image)
+                <div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden {{ $image->is_primary ? 'ring-2 ring-blue-500' : '' }}">
+                    <div class="aspect-square bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                        @php
+                            $mime = $image->mime_type ?? '';
+                            $isRenderable = str_contains($mime, 'jpeg') || str_contains($mime, 'jpg') || str_contains($mime, 'png') || str_contains($mime, 'webp');
+                        @endphp
+                        @if($isRenderable)
+                            <img src="{{ $image->url }}" alt="{{ $image->original_name }}" class="w-full h-full object-contain">
+                        @else
+                            <div class="text-gray-400 text-center">
+                                <p class="text-lg font-semibold">{{ $image->format_label }}</p>
+                                <p class="text-xs mt-1 truncate px-2">{{ $image->original_name }}</p>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="p-3 text-xs space-y-1 bg-white dark:bg-gray-800">
+                        <div class="flex items-center justify-between gap-2 flex-wrap">
+                            @if($image->purpose)
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">{{ $image->purpose }}</span>
+                            @else
+                                <span class="text-xs text-gray-400">Ohne Zweck</span>
+                            @endif
+                            @if($image->is_primary)
+                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                    Primär
+                                </span>
+                            @endif
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-300 truncate" title="{{ $image->original_name }}">{{ $image->original_name }}</p>
+                        <div class="text-gray-400 dark:text-gray-500 flex flex-wrap gap-x-2">
+                            @if($image->dimensions_label)<span>{{ $image->dimensions_label }}</span>@endif
+                            <span>{{ $image->format_label }}</span>
+                            @if($image->file_size_mb)<span>{{ $image->file_size_mb }}</span>@endif
+                            @if($image->dpi)<span>{{ $image->dpi }} DPI</span>@endif
+                        </div>
+                        <div class="pt-1">
+                            <a href="{{ $image->url }}" download="{{ $image->original_name }}" class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800">Herunterladen</a>
+                        </div>
                     </div>
                 </div>
-            @endif
-        </div>
-        <div class="mt-2 text-xs text-gray-400">
-            {{ $artwork->artwork_original_name }} &middot; {{ number_format(($artwork->artwork_file_size ?? 0) / 1024 / 1024, 1) }} MB
+            @endforeach
         </div>
     </x-admin.collapsible-card>
     @endif
@@ -117,12 +147,23 @@
         @if($artwork->logos->count())
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             @foreach($artwork->logos as $logo)
-            <div class="group relative bg-gray-50 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div class="group relative bg-gray-50 dark:bg-gray-700/50 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 {{ $logo->is_primary ? 'ring-2 ring-blue-500' : '' }}">
                 <div class="aspect-square flex items-center justify-center p-2">
                     <img src="{{ $logo->url }}" alt="{{ $logo->original_name }}" class="max-w-full max-h-full object-contain">
                 </div>
-                <div class="p-2 border-t border-gray-200 dark:border-gray-700">
-                    <p class="text-xs text-gray-700 truncate" title="{{ $logo->original_name }}">{{ $logo->original_name }}</p>
+                <div class="p-2 border-t border-gray-200 dark:border-gray-700 space-y-0.5">
+                    <div class="flex items-center gap-1 flex-wrap">
+                        @if($logo->purpose)
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200">{{ $logo->purpose }}</span>
+                        @endif
+                        @if($logo->is_primary)
+                            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                Primär
+                            </span>
+                        @endif
+                    </div>
+                    <p class="text-xs text-gray-700 dark:text-gray-200 truncate" title="{{ $logo->original_name }}">{{ $logo->original_name }}</p>
                     @if($logo->comment)
                         <p class="text-xs text-gray-400 dark:text-gray-500 truncate" title="{{ $logo->comment }}">{{ $logo->comment }}</p>
                     @endif

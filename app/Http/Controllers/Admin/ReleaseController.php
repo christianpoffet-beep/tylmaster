@@ -138,7 +138,7 @@ class ReleaseController extends Controller
         $release->load([
             'tracks.organizations', 'tracks.contacts',
             'contacts', 'organizations', 'projects', 'contracts',
-            'artworks.logos', 'artworks.credits.creditable',
+            'artworks.images', 'artworks.logos', 'artworks.credits.creditable',
         ]);
         return view('admin.music.releases.show', compact('release'));
     }

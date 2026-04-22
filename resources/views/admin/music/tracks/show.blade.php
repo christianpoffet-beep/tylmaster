@@ -242,7 +242,7 @@
                                 <a href="{{ route('admin.releases.show', $release) }}">
                                     <img src="{{ Storage::disk('public')->url($release->cover_image_path) }}" alt="{{ $release->title }}" class="w-20 h-20 object-cover rounded-lg shadow-sm flex-shrink-0">
                                 </a>
-                            @elseif($primaryArtwork?->artwork_path)
+                            @elseif($primaryArtwork && $primaryArtwork->artwork_url)
                                 <a href="{{ route('admin.releases.show', $release) }}">
                                     <img src="{{ $primaryArtwork->artwork_url }}" alt="{{ $release->title }}" class="w-20 h-20 object-cover rounded-lg shadow-sm flex-shrink-0">
                                 </a>

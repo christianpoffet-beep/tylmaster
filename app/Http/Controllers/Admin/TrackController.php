@@ -177,7 +177,7 @@ class TrackController extends Controller
 
     public function show(Track $track)
     {
-        $track->load(['releases.artworks.logos', 'releases.artworks.credits.creditable', 'contacts', 'projects', 'contracts', 'organizations', 'documents']);
+        $track->load(['releases.artworks.images', 'releases.artworks.logos', 'releases.artworks.credits.creditable', 'contacts', 'projects', 'contracts', 'organizations', 'documents']);
         return view('admin.music.tracks.show', compact('track'));
     }
 
