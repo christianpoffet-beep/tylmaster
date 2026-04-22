@@ -87,4 +87,45 @@ class ContentPost extends Model
     {
         return self::PLATFORMS[$this->platform] ?? ucfirst($this->platform);
     }
+
+    /**
+     * Caption + hashtags rendered for social-feed preview.
+     * Highlights @mentions, #hashtags and URLs with platform-appropriate link colors.
+     * Returns safe HTML (already escaped + wrapped).
+     */
+    public function renderCaptionHtml(): string
+    {
+        $text = trim((string) $this->caption);
+        $tags = trim((string) $this->hashtags);
+
+        $full = $text;
+        if ($tags !== '') {
+            $full .= ($text !== '' ? "\n\n" : '') . $tags;
+        }
+
+        $escaped = e($full);
+
+        // URLs (http/https)
+        $escaped = preg_replace_callback(
+            '/(https?:\/\/[^\s<]+[^\s.,!?:;)"<])/iu',
+            fn ($m) => '<a href="' . e($m[1]) . '" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline break-all">' . e($m[1]) . '</a>',
+            $escaped
+        );
+
+        // #hashtags (Unicode-aware word chars)
+        $escaped = preg_replace(
+            '/(^|\s)(#[\p{L}\p{N}_]+)/u',
+            '$1<span class="text-sky-400">$2</span>',
+            $escaped
+        );
+
+        // @mentions
+        $escaped = preg_replace(
+            '/(^|\s)(@[\p{L}\p{N}_.]+)/u',
+            '$1<span class="text-sky-400">$2</span>',
+            $escaped
+        );
+
+        return nl2br($escaped);
+    }
 }
