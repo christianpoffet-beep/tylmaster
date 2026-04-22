@@ -8,15 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('track_contact', function (Blueprint $table) {
-            $table->string('ipi_number', 50)->nullable()->after('instrument');
-        });
+        if (!Schema::hasColumn('track_contact', 'ipi_number')) {
+            Schema::table('track_contact', function (Blueprint $table) {
+                $table->string('ipi_number', 50)->nullable()->after('instrument');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('track_contact', function (Blueprint $table) {
-            $table->dropColumn('ipi_number');
-        });
+        if (Schema::hasColumn('track_contact', 'ipi_number')) {
+            Schema::table('track_contact', function (Blueprint $table) {
+                $table->dropColumn('ipi_number');
+            });
+        }
     }
 };

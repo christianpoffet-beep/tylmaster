@@ -2,15 +2,26 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 return new class extends Migration
 {
     public function up(): void
     {
+        // Guard: skip if artwork_images table doesn't exist yet (earlier migration failed)
+        if (!Schema::hasTable('artwork_images')) {
+            return;
+        }
+
         $artworks = DB::table('artworks')->whereNotNull('artwork_path')->get();
 
         foreach ($artworks as $artwork) {
+            // Skip if this artwork already has images (re-run safe)
+            if (DB::table('artwork_images')->where('artwork_id', $artwork->id)->exists()) {
+                continue;
+            }
+
             $width = null;
             $height = null;
             $dpi = null;
@@ -57,19 +68,24 @@ return new class extends Migration
             ]);
         }
 
-        // Mark first logo per artwork as primary for existing data
-        $logosGrouped = DB::table('artwork_logos')
-            ->orderBy('artwork_id')
-            ->orderBy('id')
-            ->get()
-            ->groupBy('artwork_id');
+        // Mark first logo per artwork as primary for existing data (only where none is primary yet)
+        if (Schema::hasColumn('artwork_logos', 'is_primary')) {
+            $artworkIdsWithoutPrimary = DB::table('artwork_logos')
+                ->select('artwork_id')
+                ->groupBy('artwork_id')
+                ->havingRaw('SUM(CASE WHEN is_primary = 1 THEN 1 ELSE 0 END) = 0')
+                ->pluck('artwork_id');
 
-        foreach ($logosGrouped as $artworkId => $logos) {
-            $firstLogo = $logos->first();
-            if ($firstLogo) {
-                DB::table('artwork_logos')
-                    ->where('id', $firstLogo->id)
-                    ->update(['is_primary' => true]);
+            foreach ($artworkIdsWithoutPrimary as $artworkId) {
+                $first = DB::table('artwork_logos')
+                    ->where('artwork_id', $artworkId)
+                    ->orderBy('id')
+                    ->first();
+                if ($first) {
+                    DB::table('artwork_logos')
+                        ->where('id', $first->id)
+                        ->update(['is_primary' => true]);
+                }
             }
         }
     }
@@ -77,7 +93,11 @@ return new class extends Migration
     public function down(): void
     {
         // Non-destructive: keep legacy columns untouched. Just purge migrated rows.
-        DB::table('artwork_images')->delete();
-        DB::table('artwork_logos')->update(['is_primary' => false]);
+        if (Schema::hasTable('artwork_images')) {
+            DB::table('artwork_images')->delete();
+        }
+        if (Schema::hasColumn('artwork_logos', 'is_primary')) {
+            DB::table('artwork_logos')->update(['is_primary' => false]);
+        }
     }
 };
