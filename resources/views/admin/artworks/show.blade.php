@@ -77,14 +77,24 @@
                 @if($groupedCredits->has($role))
                 <div>
                     <dt class="text-gray-500 dark:text-gray-400">{{ $roleLabel }}</dt>
-                    <dd class="text-gray-900 mt-0.5">
+                    <dd class="text-gray-900 mt-0.5 space-y-1">
                         @foreach($groupedCredits[$role] as $credit)
-                            @if($credit->creditable_type === \App\Models\Contact::class)
-                                <a href="{{ route('admin.contacts.show', $credit->creditable_id) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $credit->display_name }}</a>
-                            @elseif($credit->creditable_type === \App\Models\Organization::class)
-                                <a href="{{ route('admin.organizations.show', $credit->creditable_id) }}" class="text-purple-600 hover:text-purple-800">{{ $credit->display_name }}</a>
-                            @endif
-                            @if(!$loop->last), @endif
+                            <div class="flex items-center gap-2 flex-wrap">
+                                @if($credit->creditable_type === \App\Models\Contact::class)
+                                    <a href="{{ route('admin.contacts.show', $credit->creditable_id) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $credit->display_name }}</a>
+                                    @if($credit->ipi_number)
+                                        <span class="inline-flex items-center gap-1 text-xs" title="{{ $credit->matched_ipi['name'] ?? '' }}">
+                                            <span class="px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-mono">IPI</span>
+                                            <span class="font-mono text-gray-600 dark:text-gray-300">{{ $credit->ipi_number }}</span>
+                                        </span>
+                                        @if($credit->creditable && $credit->display_name !== $credit->creditable->full_name)
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">(Kontakt: {{ $credit->creditable->full_name }})</span>
+                                        @endif
+                                    @endif
+                                @elseif($credit->creditable_type === \App\Models\Organization::class)
+                                    <a href="{{ route('admin.organizations.show', $credit->creditable_id) }}" class="text-purple-600 hover:text-purple-800">{{ $credit->display_name }}</a>
+                                @endif
+                            </div>
                         @endforeach
                     </dd>
                 </div>

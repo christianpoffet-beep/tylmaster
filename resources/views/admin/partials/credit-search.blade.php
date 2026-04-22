@@ -3,13 +3,31 @@
 
 @php
     $selectedJson = ($selected ?? collect())->map(function ($credit) {
+        $isContact = $credit->creditable_type === \App\Models\Contact::class;
+        $ipiNumber = $credit->ipi_number ?? null;
+        $ipiName = null;
+        $contactFullName = null;
+        if ($isContact && $credit->creditable) {
+            $contactFullName = $credit->creditable->full_name;
+            if ($ipiNumber) {
+                $match = collect($credit->creditable->ipis ?? [])->firstWhere('number', $ipiNumber);
+                $ipiName = $match['name'] ?? null;
+            }
+        }
+
+        $displayName = $ipiName ?: $credit->display_name;
+        $detail = $isContact
+            ? ($ipiNumber ? $contactFullName : ($credit->creditable->company ?? null))
+            : ($credit->creditable->type ?? null);
+
         return [
             'id' => $credit->creditable_id,
-            'type' => $credit->creditable_type === \App\Models\Contact::class ? 'contact' : 'organization',
-            'name' => $credit->display_name,
-            'detail' => $credit->creditable_type === \App\Models\Contact::class
-                ? ($credit->creditable->company ?? null)
-                : ($credit->creditable->type ?? null),
+            'type' => $isContact ? 'contact' : 'organization',
+            'name' => $displayName,
+            'detail' => $detail,
+            'ipi_number' => $ipiNumber,
+            'ipi_name' => $ipiName,
+            'kind' => $ipiNumber ? 'ipi' : ($isContact ? 'contact' : 'organization'),
         ];
     })->values();
 @endphp
@@ -19,23 +37,31 @@
 
     {{-- Search input --}}
     <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="open = results.length > 0"
-        placeholder="Kontakt oder Organisation suchen..." class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+        placeholder="Kontakt, IPI-Name oder Organisation suchen..." class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
 
     {{-- Results dropdown --}}
     <div x-show="open && results.length > 0" @click.away="open = false" x-cloak
-        class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-        <template x-for="result in results" :key="result.type + ':' + result.id">
+        class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-72 overflow-y-auto">
+        <template x-for="result in results" :key="result.type + ':' + result.id + ':' + (result.ipi_number || '')">
             <button type="button" @click="addCredit(result)"
                 class="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 last:border-0"
                 :class="isSelected(result) ? 'opacity-50 cursor-not-allowed' : ''"
                 :disabled="isSelected(result)">
                 <div class="min-w-0">
-                    <span class="text-sm text-gray-900 dark:text-gray-100" x-text="result.name"></span>
-                    <span x-show="result.detail" class="text-xs text-gray-400 ml-1" x-text="result.detail"></span>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-sm text-gray-900 dark:text-gray-100" x-text="result.name"></span>
+                        <template x-if="result.kind === 'ipi' && result.ipi_number">
+                            <span class="inline-flex items-center gap-1 text-xs">
+                                <span class="px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-mono">IPI</span>
+                                <span class="font-mono text-gray-600 dark:text-gray-300" x-text="result.ipi_number"></span>
+                            </span>
+                        </template>
+                    </div>
+                    <span x-show="result.detail" class="block text-xs text-gray-400 mt-0.5" x-text="result.detail"></span>
                 </div>
                 <span class="text-xs px-1.5 py-0.5 rounded flex-shrink-0 ml-2"
-                    :class="result.type === 'contact' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300' : 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300'"
-                    x-text="result.type === 'contact' ? 'Kontakt' : 'Organisation'"></span>
+                    :class="result.kind === 'ipi' ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300' : (result.type === 'contact' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300' : 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300')"
+                    x-text="result.kind === 'ipi' ? 'IPI' : (result.type === 'contact' ? 'Kontakt' : 'Organisation')"></span>
             </button>
         </template>
     </div>
@@ -52,12 +78,16 @@
 
     {{-- Selected credits as chips --}}
     <div x-show="selected.length > 0" class="flex flex-wrap gap-2 mt-2">
-        <template x-for="item in selected" :key="item.type + ':' + item.id">
-            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
-                :class="item.type === 'contact' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300' : 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300'">
+        <template x-for="item in selected" :key="item.type + ':' + item.id + ':' + (item.ipi_number || '')">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+                :class="item.kind === 'ipi' ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300' : (item.type === 'contact' ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300' : 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300')"
+                :title="item.kind === 'ipi' && item.detail ? 'Kontakt: ' + item.detail : ''">
                 <span x-text="item.name"></span>
+                <template x-if="item.kind === 'ipi' && item.ipi_number">
+                    <span class="font-mono text-[10px] px-1 rounded bg-white/50 dark:bg-black/20" x-text="'IPI ' + item.ipi_number"></span>
+                </template>
                 <button type="button" @click="removeCredit(item)" class="hover:text-red-600">&times;</button>
-                <input type="hidden" :name="'credits[{{ $role }}][]'" :value="item.type + ':' + item.id">
+                <input type="hidden" :name="'credits[{{ $role }}][]'" :value="item.type + ':' + item.id + (item.ipi_number ? ':ipi:' + item.ipi_number : '')">
             </span>
         </template>
     </div>
@@ -167,11 +197,15 @@ function creditSearch_{{ $role }}() {
         },
 
         removeCredit(item) {
-            this.selected = this.selected.filter(s => !(s.type === item.type && s.id === item.id));
+            this.selected = this.selected.filter(s =>
+                !(s.type === item.type && s.id === item.id && (s.ipi_number || null) === (item.ipi_number || null))
+            );
         },
 
         isSelected(item) {
-            return this.selected.some(s => s.type === item.type && s.id === item.id);
+            return this.selected.some(s =>
+                s.type === item.type && s.id === item.id && (s.ipi_number || null) === (item.ipi_number || null)
+            );
         },
 
         async createContact() {
@@ -198,7 +232,15 @@ function creditSearch_{{ $role }}() {
                     return;
                 }
                 const contact = await response.json();
-                this.selected.push(contact);
+                this.selected.push({
+                    id: contact.id,
+                    type: 'contact',
+                    name: contact.name,
+                    detail: contact.detail || null,
+                    ipi_number: null,
+                    ipi_name: null,
+                    kind: 'contact',
+                });
                 this.newFirstName = '';
                 this.newLastName = '';
                 this.showCreateContact = false;
@@ -232,7 +274,15 @@ function creditSearch_{{ $role }}() {
                     return;
                 }
                 const org = await response.json();
-                this.selected.push({ id: org.id, type: 'organization', name: org.primary_name, detail: org.type });
+                this.selected.push({
+                    id: org.id,
+                    type: 'organization',
+                    name: org.primary_name,
+                    detail: org.type,
+                    ipi_number: null,
+                    ipi_name: null,
+                    kind: 'organization',
+                });
                 this.newOrgType = '';
                 this.newOrgName = '';
                 this.showCreateOrg = false;

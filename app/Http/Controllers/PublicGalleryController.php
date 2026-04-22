@@ -26,7 +26,7 @@ class PublicGalleryController extends Controller
             ->where('photo_folder_id', $folder->id)
             ->firstOrFail();
 
-        $photo->load('folder');
+        $photo->load(['folder', 'credits.creditable']);
 
         return view('public.photo', compact('photo'));
     }
@@ -34,7 +34,7 @@ class PublicGalleryController extends Controller
     public function showGallery(string $token)
     {
         $folder = PhotoFolder::where('share_token', $token)->firstOrFail();
-        $folder->load(['photos.folder', 'children' => function ($q) {
+        $folder->load(['photos.folder', 'photos.credits.creditable', 'children' => function ($q) {
             $q->withCount('photos');
         }]);
 

@@ -22,16 +22,20 @@
         @endif
 
         <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-            @if($photo->photographer)
+            @php
+                $photographerDisplay = $photo->creditsDisplay('photographer');
+                $graphicArtistDisplay = $photo->creditsDisplay('graphic_artist');
+            @endphp
+            @if($photographerDisplay)
                 <div>
                     <span class="text-gray-500">Fotograf:in:</span>
-                    <span class="text-gray-300">{{ $photo->photographer }}</span>
+                    <span class="text-gray-300">{{ $photographerDisplay }}</span>
                 </div>
             @endif
-            @if($photo->graphic_artist)
+            @if($graphicArtistDisplay)
                 <div>
                     <span class="text-gray-500">Grafic Artist:</span>
-                    <span class="text-gray-300">{{ $photo->graphic_artist }}</span>
+                    <span class="text-gray-300">{{ $graphicArtistDisplay }}</span>
                 </div>
             @endif
             @if($photo->location)

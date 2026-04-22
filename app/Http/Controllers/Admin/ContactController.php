@@ -312,22 +312,75 @@ class ContactController extends Controller
     public function search(Request $request)
     {
         $query = Contact::query();
+        $q = $request->input('q');
 
-        if ($q = $request->input('q')) {
-            $query->where(function ($qb) use ($q) {
+        if ($q) {
+            $parts = array_values(array_filter(preg_split('/\s+/', trim($q))));
+            $query->where(function ($qb) use ($q, $parts) {
                 $qb->where('first_name', 'like', "%{$q}%")
                    ->orWhere('last_name', 'like', "%{$q}%")
                    ->orWhere('email', 'like', "%{$q}%")
                    ->orWhere('phone', 'like', "%{$q}%")
-                   ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$q}%"]);
+                   ->orWhere('ipis', 'like', "%{$q}%");
+                if (count($parts) >= 2) {
+                    $qb->orWhere(function ($q2) use ($parts) {
+                        foreach ($parts as $part) {
+                            $q2->where(function ($q3) use ($part) {
+                                $q3->where('first_name', 'like', "%{$part}%")
+                                   ->orWhere('last_name', 'like', "%{$part}%");
+                            });
+                        }
+                    });
+                }
             });
         }
 
-        $results = $query->orderBy('last_name')->limit(200)->get()->map(fn ($c) => [
-            'id' => $c->id,
-            'name' => $c->full_name,
-            'email' => $c->email,
-        ]);
+        $contacts = $query->orderBy('last_name')->limit(200)->get();
+
+        $results = [];
+        $needle = $q ? mb_strtolower($q) : null;
+        foreach ($contacts as $c) {
+            $contactMatches = !$needle
+                || str_contains(mb_strtolower($c->first_name ?? ''), $needle)
+                || str_contains(mb_strtolower($c->last_name ?? ''), $needle)
+                || str_contains(mb_strtolower($c->email ?? ''), $needle)
+                || str_contains(mb_strtolower($c->phone ?? ''), $needle);
+
+            if ($contactMatches) {
+                $results[] = [
+                    'key' => 'c:' . $c->id,
+                    'contact_id' => $c->id,
+                    'name' => $c->full_name,
+                    'subtitle' => $c->email,
+                    'kind' => 'contact',
+                    'ipi_number' => null,
+                    'ipi_name' => null,
+                ];
+            }
+
+            foreach ($c->ipis ?? [] as $ipi) {
+                $ipiNumber = $ipi['number'] ?? '';
+                $ipiName = $ipi['name'] ?? '';
+                if ($ipiNumber === '' && $ipiName === '') continue;
+
+                $ipiMatches = !$needle
+                    || str_contains(mb_strtolower($ipiName), $needle)
+                    || str_contains(mb_strtolower($ipiNumber), $needle);
+
+                // Include the IPI if it matches, OR if the contact matched (show all IPIs as alternatives)
+                if (!$ipiMatches && !$contactMatches) continue;
+
+                $results[] = [
+                    'key' => 'i:' . $c->id . ':' . $ipiNumber,
+                    'contact_id' => $c->id,
+                    'name' => $ipiName !== '' ? $ipiName : $c->full_name,
+                    'subtitle' => $c->full_name,
+                    'kind' => 'ipi',
+                    'ipi_number' => $ipiNumber !== '' ? $ipiNumber : null,
+                    'ipi_name' => $ipiName !== '' ? $ipiName : null,
+                ];
+            }
+        }
 
         return response()->json($results);
     }

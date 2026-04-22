@@ -53,7 +53,7 @@ class ArtworkController extends Controller
             'logos.*.comment' => 'nullable|string|max:255',
             'credits' => 'nullable|array',
             'credits.*' => 'nullable|array',
-            'credits.*.*' => ['nullable', 'string', 'regex:/^(contact|organization):\d+$/'],
+            'credits.*.*' => ['nullable', 'string', 'regex:/^(contact|organization):\d+(?::ipi:.+)?$/'],
         ]);
 
         $artworkData = [
@@ -133,7 +133,7 @@ class ArtworkController extends Controller
             'logos.*.comment' => 'nullable|string|max:255',
             'credits' => 'nullable|array',
             'credits.*' => 'nullable|array',
-            'credits.*.*' => ['nullable', 'string', 'regex:/^(contact|organization):\d+$/'],
+            'credits.*.*' => ['nullable', 'string', 'regex:/^(contact|organization):\d+(?::ipi:.+)?$/'],
         ]);
 
         $artworkData = [
@@ -302,17 +302,64 @@ class ArtworkController extends Controller
             return response()->json([]);
         }
 
-        $contacts = Contact::where(function ($query) use ($q) {
+        $parts = array_values(array_filter(preg_split('/\s+/', trim($q))));
+        $contacts = Contact::where(function ($query) use ($q, $parts) {
             $query->where('first_name', 'like', "%{$q}%")
                   ->orWhere('last_name', 'like', "%{$q}%")
                   ->orWhere('email', 'like', "%{$q}%")
-                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$q}%"]);
-        })->limit(50)->get()->map(fn ($c) => [
-            'id' => $c->id,
-            'type' => 'contact',
-            'name' => $c->full_name,
-            'detail' => $c->email,
-        ]);
+                  ->orWhere('ipis', 'like', "%{$q}%");
+            if (count($parts) >= 2) {
+                $query->orWhere(function ($q2) use ($parts) {
+                    foreach ($parts as $part) {
+                        $q2->where(function ($q3) use ($part) {
+                            $q3->where('first_name', 'like', "%{$part}%")
+                               ->orWhere('last_name', 'like', "%{$part}%");
+                        });
+                    }
+                });
+            }
+        })->limit(50)->get();
+
+        $needle = mb_strtolower($q);
+        $contactResults = [];
+        foreach ($contacts as $c) {
+            $contactMatches = str_contains(mb_strtolower($c->first_name ?? ''), $needle)
+                || str_contains(mb_strtolower($c->last_name ?? ''), $needle)
+                || str_contains(mb_strtolower($c->email ?? ''), $needle);
+
+            if ($contactMatches) {
+                $contactResults[] = [
+                    'id' => $c->id,
+                    'type' => 'contact',
+                    'name' => $c->full_name,
+                    'detail' => $c->email,
+                    'ipi_number' => null,
+                    'ipi_name' => null,
+                    'kind' => 'contact',
+                ];
+            }
+
+            foreach ($c->ipis ?? [] as $ipi) {
+                $ipiNumber = $ipi['number'] ?? '';
+                $ipiName = $ipi['name'] ?? '';
+                if ($ipiNumber === '' && $ipiName === '') continue;
+
+                $ipiMatches = str_contains(mb_strtolower($ipiName), $needle)
+                    || str_contains(mb_strtolower($ipiNumber), $needle);
+
+                if (!$ipiMatches && !$contactMatches) continue;
+
+                $contactResults[] = [
+                    'id' => $c->id,
+                    'type' => 'contact',
+                    'name' => $ipiName !== '' ? $ipiName : $c->full_name,
+                    'detail' => $c->full_name,
+                    'ipi_number' => $ipiNumber !== '' ? $ipiNumber : null,
+                    'ipi_name' => $ipiName !== '' ? $ipiName : null,
+                    'kind' => 'ipi',
+                ];
+            }
+        }
 
         $organizations = Organization::where(function ($query) use ($q) {
             $query->whereRaw('LOWER(CAST(names AS CHAR)) LIKE ?', ['%' . mb_strtolower($q) . '%'])
@@ -322,9 +369,12 @@ class ArtworkController extends Controller
             'type' => 'organization',
             'name' => $o->primary_name,
             'detail' => $o->type,
+            'ipi_number' => null,
+            'ipi_name' => null,
+            'kind' => 'organization',
         ]);
 
-        return response()->json($contacts->concat($organizations)->values());
+        return response()->json(collect($contactResults)->concat($organizations)->values());
     }
 
     private function syncCredits(Artwork $artwork, array $credits): void
@@ -334,12 +384,13 @@ class ArtworkController extends Controller
         foreach ($credits as $role => $entries) {
             if (!is_array($entries)) continue;
             foreach ($entries as $entry) {
-                if (!$entry || !preg_match('/^(contact|organization):(\d+)$/', $entry, $m)) continue;
+                if (!$entry || !preg_match('/^(contact|organization):(\d+)(?::ipi:(.+))?$/', $entry, $m)) continue;
                 $type = $m[1] === 'contact' ? Contact::class : Organization::class;
                 $artwork->credits()->create([
                     'role' => $role,
                     'creditable_type' => $type,
                     'creditable_id' => (int) $m[2],
+                    'ipi_number' => $m[3] ?? null,
                 ]);
             }
         }

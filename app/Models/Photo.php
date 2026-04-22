@@ -44,6 +44,16 @@ class Photo extends Model
         return $this->belongsTo(PhotoFolder::class, 'photo_folder_id');
     }
 
+    public function credits()
+    {
+        return $this->hasMany(PhotoCredit::class);
+    }
+
+    public function creditsForRole(string $role)
+    {
+        return $this->credits()->where('role', $role)->with('creditable')->get();
+    }
+
     public function getPhotoUrlAttribute(): ?string
     {
         return $this->file_path ? Storage::disk('public')->url($this->file_path) : null;
@@ -57,5 +67,24 @@ class Photo extends Model
     public function getDisplayTitleAttribute(): string
     {
         return $this->title ?: $this->original_name;
+    }
+
+    public function creditsDisplay(string $role): string
+    {
+        $names = $this->credits
+            ->where('role', $role)
+            ->map(fn ($c) => $c->display_name)
+            ->filter(fn ($n) => $n && $n !== '-')
+            ->values();
+
+        if ($names->isNotEmpty()) {
+            return $names->join(', ');
+        }
+
+        return match ($role) {
+            'photographer' => (string) ($this->photographer ?? ''),
+            'graphic_artist' => (string) ($this->graphic_artist ?? ''),
+            default => '',
+        };
     }
 }

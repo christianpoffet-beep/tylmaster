@@ -37,15 +37,17 @@
                         <input type="text" name="title" id="title" value="{{ old('title', $photo->title) }}" placeholder="{{ $photo->original_name }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
 
-                    <div>
-                        <label for="photographer" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fotograf:in</label>
-                        <input type="text" name="photographer" id="photographer" value="{{ old('photographer', $photo->photographer) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
+                    @include('admin.partials.credit-search', ['role' => 'photographer', 'label' => 'Fotograf:in', 'selected' => $photo->creditsForRole('photographer')])
 
-                    <div>
-                        <label for="graphic_artist" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grafic Artist</label>
-                        <input type="text" name="graphic_artist" id="graphic_artist" value="{{ old('graphic_artist', $photo->graphic_artist) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
+                    @include('admin.partials.credit-search', ['role' => 'graphic_artist', 'label' => 'Grafic Artist', 'selected' => $photo->creditsForRole('graphic_artist')])
+
+                    @if($photo->photographer || $photo->graphic_artist)
+                        <div class="text-xs text-gray-500 dark:text-gray-400 border-l-2 border-gray-300 dark:border-gray-600 pl-2">
+                            <p class="font-medium mb-0.5">Alte Credits (nur Text, vor der Kontakt-Umstellung):</p>
+                            @if($photo->photographer)<p>Fotograf:in: {{ $photo->photographer }}</p>@endif
+                            @if($photo->graphic_artist)<p>Grafic Artist: {{ $photo->graphic_artist }}</p>@endif
+                        </div>
+                    @endif
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>

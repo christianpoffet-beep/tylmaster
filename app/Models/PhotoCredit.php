@@ -5,17 +5,17 @@ namespace App\Models;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
-class ArtworkCredit extends Model
+class PhotoCredit extends Model
 {
     use LogsActivity;
 
     protected $fillable = [
-        'artwork_id', 'role', 'creditable_type', 'creditable_id', 'ipi_number',
+        'photo_id', 'role', 'creditable_type', 'creditable_id', 'ipi_number',
     ];
 
-    public function artwork()
+    public function photo()
     {
-        return $this->belongsTo(Artwork::class);
+        return $this->belongsTo(Photo::class);
     }
 
     public function creditable()
@@ -51,14 +51,5 @@ class ArtworkCredit extends Model
         }
 
         return '-';
-    }
-
-    public function getTypeLabelAttribute(): string
-    {
-        return match ($this->creditable_type) {
-            Contact::class => 'Kontakt',
-            Organization::class => 'Organisation',
-            default => '-',
-        };
     }
 }
