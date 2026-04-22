@@ -126,7 +126,7 @@ class Track extends Model
 
     public function contacts()
     {
-        return $this->belongsToMany(Contact::class, 'track_contact')->withPivot('role', 'instrument');
+        return $this->belongsToMany(Contact::class, 'track_contact')->withPivot('role', 'instrument', 'ipi_number');
     }
 
     public function projects()

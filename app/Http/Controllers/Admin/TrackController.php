@@ -142,12 +142,24 @@ class TrackController extends Controller
             'publishers' => $track->organizations->where('type', 'publishing')->map(fn($o) => [
                 'id' => $o->id, 'name' => $o->primary_name,
             ])->values(),
-            'credits' => $track->contacts->map(fn($c) => [
-                'contact_id' => $c->id,
-                'name' => $c->full_name,
-                'role' => $c->pivot->role,
-                'instrument' => $c->pivot->instrument,
-            ])->values(),
+            'credits' => $track->contacts->map(function ($c) {
+                $pivotIpi = $c->pivot->ipi_number ?? null;
+                $matched = null;
+                if ($pivotIpi) {
+                    $matched = collect($c->ipis ?? [])->first(fn ($i) => ($i['number'] ?? null) === $pivotIpi);
+                }
+                $displayName = ($matched && !empty($matched['name'])) ? $matched['name'] : $c->full_name;
+                return [
+                    'contact_id' => $c->id,
+                    'name' => $displayName,
+                    'contact_name' => $c->full_name,
+                    'display_name' => $displayName,
+                    'role' => $c->pivot->role,
+                    'instrument' => $c->pivot->instrument,
+                    'ipi_number' => $pivotIpi,
+                    'ipi_name' => $matched['name'] ?? null,
+                ];
+            })->values(),
             'releases' => $track->releases->map(fn($r) => [
                 'id' => $r->id, 'title' => $r->title,
                 'track_number' => $r->pivot->track_number,
@@ -165,7 +177,7 @@ class TrackController extends Controller
 
     public function show(Track $track)
     {
-        $track->load(['releases.artworks.logos', 'releases.artworks.credits.creditable', 'contacts', 'projects', 'contracts', 'organizations', 'documents']);
+        $track->load(['releases.artworks.images', 'releases.artworks.logos', 'releases.artworks.credits.creditable', 'contacts', 'projects', 'contracts', 'organizations', 'documents']);
         return view('admin.music.tracks.show', compact('track'));
     }
 
@@ -308,13 +320,17 @@ class TrackController extends Controller
 
     private function syncCredits(Track $track, Request $request): void
     {
-        // Delete all existing credits and re-insert (allows same contact with multiple roles)
+        // Delete all existing credits and re-insert (allows same contact with multiple roles / IPIs)
         $track->contacts()->detach();
 
         $credits = $request->input('credits', []);
         foreach ($credits as $credit) {
             if (!empty($credit['contact_id']) && !empty($credit['role'])) {
-                $pivot = ['role' => $credit['role'], 'instrument' => null];
+                $pivot = [
+                    'role' => $credit['role'],
+                    'instrument' => null,
+                    'ipi_number' => !empty($credit['ipi_number']) ? $credit['ipi_number'] : null,
+                ];
                 if ($credit['role'] === 'instrumentalist' && !empty($credit['instrument'])) {
                     $pivot['instrument'] = $credit['instrument'];
                 }

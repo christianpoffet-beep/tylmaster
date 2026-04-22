@@ -98,16 +98,20 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a2 2 0 002 2h14a2 2 0 002-2v-3"/></svg>
                     </a>
                 </div>
-                @if($photo->title || $photo->photographer || $photo->graphic_artist || $photo->location || $photo->photo_date || $photo->story || $photo->info)
+                @php
+                    $photographerDisplay = $photo->creditsDisplay('photographer');
+                    $graphicArtistDisplay = $photo->creditsDisplay('graphic_artist');
+                @endphp
+                @if($photo->title || $photographerDisplay || $graphicArtistDisplay || $photo->location || $photo->photo_date || $photo->story || $photo->info)
                 <div class="mt-2 px-0.5 space-y-0.5">
                     @if($photo->title)
                         <p class="text-xs text-gray-300 font-medium">{{ $photo->title }}</p>
                     @endif
-                    @if($photo->photographer)
-                        <p class="text-xs text-gray-500"><span class="text-gray-600">Fotograf:in:</span> {{ $photo->photographer }}</p>
+                    @if($photographerDisplay)
+                        <p class="text-xs text-gray-500"><span class="text-gray-600">Fotograf:in:</span> {{ $photographerDisplay }}</p>
                     @endif
-                    @if($photo->graphic_artist)
-                        <p class="text-xs text-gray-500"><span class="text-gray-600">Grafic Artist:</span> {{ $photo->graphic_artist }}</p>
+                    @if($graphicArtistDisplay)
+                        <p class="text-xs text-gray-500"><span class="text-gray-600">Grafic Artist:</span> {{ $graphicArtistDisplay }}</p>
                     @endif
                     @if($photo->location)
                         <p class="text-xs text-gray-500"><span class="text-gray-600">Ort:</span> {{ $photo->location }}</p>

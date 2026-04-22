@@ -73,7 +73,7 @@
                                     <template x-for="(c, i) in data.credits" :key="'credit-'+i">
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 credit-cb" :value="i" @change="toggleItem('selectedCredits', i, $event.target.checked)">
-                                            <span x-text="c.name + ' (' + c.role + (c.instrument ? ', ' + c.instrument : '') + ')'"></span>
+                                            <span x-text="c.name + (c.ipi_number ? ' [IPI ' + c.ipi_number + ']' : '') + ' (' + c.role + (c.instrument ? ', ' + c.instrument : '') + ')'"></span>
                                         </label>
                                     </template>
                                 </div>
@@ -242,7 +242,7 @@
                                 <a href="{{ route('admin.releases.show', $release) }}">
                                     <img src="{{ Storage::disk('public')->url($release->cover_image_path) }}" alt="{{ $release->title }}" class="w-20 h-20 object-cover rounded-lg shadow-sm flex-shrink-0">
                                 </a>
-                            @elseif($primaryArtwork?->artwork_path)
+                            @elseif($primaryArtwork && $primaryArtwork->artwork_url)
                                 <a href="{{ route('admin.releases.show', $release) }}">
                                     <img src="{{ $primaryArtwork->artwork_url }}" alt="{{ $release->title }}" class="w-20 h-20 object-cover rounded-lg shadow-sm flex-shrink-0">
                                 </a>
@@ -320,9 +320,30 @@
         <x-admin.collapsible-card title="Credits" :count="$track->contacts->count()" class="mt-6">
             <div class="space-y-2">
                 @foreach($track->contacts as $contact)
-                    <div class="flex items-center justify-between py-1">
-                        <a href="{{ route('admin.contacts.show', $contact) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800">{{ $contact->full_name }}</a>
-                        <div class="flex items-center gap-1.5">
+                    @php
+                        $pivotIpi = $contact->pivot->ipi_number ?? null;
+                        $matchedIpi = null;
+                        if ($pivotIpi) {
+                            $matchedIpi = collect($contact->ipis ?? [])->first(fn ($i) => ($i['number'] ?? null) === $pivotIpi);
+                        }
+                        $displayName = ($matchedIpi && !empty($matchedIpi['name'])) ? $matchedIpi['name'] : $contact->full_name;
+                    @endphp
+                    <div class="flex items-center justify-between py-1 gap-2">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <a href="{{ route('admin.contacts.show', $contact) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800">{{ $displayName }}</a>
+                                @if($pivotIpi)
+                                    <span class="inline-flex items-center gap-1 text-xs" title="{{ $matchedIpi['name'] ?? '' }}">
+                                        <span class="px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-mono">IPI</span>
+                                        <span class="font-mono text-gray-600 dark:text-gray-300">{{ $pivotIpi }}</span>
+                                    </span>
+                                @endif
+                            </div>
+                            @if($pivotIpi && $displayName !== $contact->full_name)
+                                <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">Kontakt: {{ $contact->full_name }}</span>
+                            @endif
+                        </div>
+                        <div class="flex items-center gap-1.5 flex-shrink-0">
                             <span class="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{{ $roleLabels[$contact->pivot->role] ?? $contact->pivot->role }}</span>
                             @if($contact->pivot->instrument)
                                 <span class="text-xs px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300">{{ $contact->pivot->instrument }}</span>

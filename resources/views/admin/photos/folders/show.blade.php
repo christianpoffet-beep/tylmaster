@@ -123,8 +123,9 @@
                     </a>
                     <div class="p-2 border-t border-gray-200 dark:border-gray-700">
                         <p class="text-xs text-gray-700 truncate" title="{{ $photo->display_title }}">{{ $photo->display_title }}</p>
-                        @if($photo->photographer)
-                            <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ $photo->photographer }}</p>
+                        @php $photographerDisplay = $photo->creditsDisplay('photographer'); @endphp
+                        @if($photographerDisplay)
+                            <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ $photographerDisplay }}</p>
                         @endif
                     </div>
                     <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">

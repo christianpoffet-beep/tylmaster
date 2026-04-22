@@ -70,7 +70,7 @@ class PhotoController extends Controller
     {
         $folder->load(['children' => function ($q) {
             $q->withCount('photos');
-        }, 'photos', 'contacts', 'organizations', 'projects', 'parent']);
+        }, 'photos.credits.creditable', 'contacts', 'organizations', 'projects', 'parent']);
 
         return view('admin.photos.folders.show', compact('folder'));
     }
@@ -166,7 +166,7 @@ class PhotoController extends Controller
 
     public function showPhoto(Photo $photo)
     {
-        $photo->load('folder');
+        $photo->load(['folder', 'credits.creditable']);
         return view('admin.photos.show', compact('photo'));
     }
 
@@ -178,11 +178,20 @@ class PhotoController extends Controller
             'photo_date' => 'nullable|date',
             'story' => 'nullable|string',
             'info' => 'nullable|string',
-            'photographer' => 'nullable|string|max:255',
-            'graphic_artist' => 'nullable|string|max:255',
+            'credits' => 'nullable|array',
+            'credits.*' => 'nullable|array',
+            'credits.*.*' => ['nullable', 'string', 'regex:/^(contact|organization):\d+(?::ipi:.+)?$/'],
         ]);
 
-        $photo->update($validated);
+        $photo->update([
+            'title' => $validated['title'] ?? null,
+            'location' => $validated['location'] ?? null,
+            'photo_date' => $validated['photo_date'] ?? null,
+            'story' => $validated['story'] ?? null,
+            'info' => $validated['info'] ?? null,
+        ]);
+
+        $this->syncPhotoCredits($photo, $request->input('credits', []));
 
         // Update document title if photo title changed
         Document::where('documentable_type', Photo::class)
@@ -190,6 +199,25 @@ class PhotoController extends Controller
             ->update(['title' => $photo->display_title]);
 
         return back()->with('success', 'Foto aktualisiert.');
+    }
+
+    private function syncPhotoCredits(Photo $photo, array $credits): void
+    {
+        $photo->credits()->delete();
+
+        foreach ($credits as $role => $entries) {
+            if (!is_array($entries)) continue;
+            foreach ($entries as $entry) {
+                if (!$entry || !preg_match('/^(contact|organization):(\d+)(?::ipi:(.+))?$/', $entry, $m)) continue;
+                $type = $m[1] === 'contact' ? Contact::class : Organization::class;
+                $photo->credits()->create([
+                    'role' => $role,
+                    'creditable_type' => $type,
+                    'creditable_id' => (int) $m[2],
+                    'ipi_number' => $m[3] ?? null,
+                ]);
+            }
+        }
     }
 
     public function destroyPhoto(Photo $photo)

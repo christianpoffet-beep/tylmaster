@@ -1,76 +1,135 @@
-{{-- Public preview for shared content posts --}}
+{{-- Public preview for shared content posts — simulates the real social feed --}}
 @extends('public.layouts.gallery')
 
 @section('title', $post->title ?: 'Beitrags-Vorschau')
 
+@php
+    $platform = $post->platform ?: 'instagram';
+    $imageCount = $post->images->count();
+    $username = 'theyellinglight';
+    $displayName = 'The Yelling Light';
+    $captionHtml = $post->renderCaptionHtml();
+    $scheduled = $post->scheduled_at?->format('d.m.Y · H:i');
+@endphp
+
 @section('content')
-<div class="max-w-lg mx-auto">
-    {{-- Platform badge --}}
-    <div class="flex items-center justify-between mb-6">
-        <span class="inline-flex items-center gap-2 text-sm text-gray-400">
-            @if($post->platform === 'instagram')
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-            @elseif($post->platform === 'facebook')
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-            @else
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            @endif
-            {{ $post->platform_label }}
-        </span>
-        @if($post->scheduled_at)
-            <span class="text-sm text-gray-500">{{ $post->scheduled_at->format('d.m.Y H:i') }}</span>
-        @endif
-    </div>
+<div x-data="contentPreview({
+        total: {{ $imageCount }},
+        platform: '{{ $platform }}',
+     })"
+     x-init="init()"
+     @keydown.window.arrow-left.prevent="prev()"
+     @keydown.window.arrow-right.prevent="next()"
+     class="mx-auto"
+     :class="mobileFrame ? 'max-w-sm' : 'max-w-xl'">
 
-    {{-- Images carousel --}}
-    @if($post->images->count())
-        <div class="rounded-xl overflow-hidden mb-5 bg-gray-900" x-data="{ current: 0, total: {{ $post->images->count() }} }">
-            <div class="relative">
-                @foreach($post->images as $i => $img)
-                    <div x-show="current === {{ $i }}" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
-                        <img src="{{ $img->url }}" alt="" class="w-full object-contain max-h-[600px]">
-                    </div>
-                @endforeach
-
-                @if($post->images->count() > 1)
-                    <button @click="current = (current - 1 + total) % total" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    </button>
-                    <button @click="current = (current + 1) % total" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </button>
-                    <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                        @foreach($post->images as $i => $img)
-                            <button @click="current = {{ $i }}" :class="current === {{ $i }} ? 'bg-white' : 'bg-white/50'" class="w-2 h-2 rounded-full transition-colors"></button>
-                        @endforeach
-                    </div>
+    {{-- Top controls --}}
+    <div class="mb-6 space-y-3">
+        {{-- Scheduling / status badges --}}
+        <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
+                    @if($post->status === 'draft') bg-gray-800 text-gray-300
+                    @elseif($post->status === 'planned') bg-yellow-900/50 text-yellow-300
+                    @else bg-green-900/50 text-green-300
+                    @endif">
+                    {{ $post->status_label }}
+                </span>
+                @if($scheduled)
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-900/40 text-blue-300">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Geplant für {{ $scheduled }}
+                    </span>
                 @endif
+                <span class="inline-flex items-center gap-1.5 text-xs text-gray-500">
+                    @if($platform === 'instagram')
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                    @elseif($platform === 'facebook')
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    @else
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    @endif
+                    {{ $post->platform_label }}
+                </span>
             </div>
         </div>
-    @endif
 
-    {{-- Caption --}}
-    <div class="space-y-4">
-        @if($post->title)
-            <h1 class="text-lg font-semibold text-white">{{ $post->title }}</h1>
-        @endif
-
-        <div class="text-sm text-gray-300 whitespace-pre-line leading-relaxed">{{ $post->caption }}</div>
-
-        @if($post->hashtags)
-            <p class="text-sm text-blue-400">{{ $post->hashtags }}</p>
+        {{-- View controls: aspect ratio + mobile frame toggle --}}
+        @if($imageCount > 0)
+        <div class="flex items-center gap-2 flex-wrap border border-gray-800 rounded-lg p-2 bg-gray-900/50">
+            <span class="text-xs text-gray-500 font-medium px-1">Seitenverhältnis</span>
+            <template x-for="r in ratios" :key="r.value">
+                <button type="button" @click="ratio = r.value"
+                    :class="ratio === r.value ? 'bg-sky-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'"
+                    class="px-2.5 py-1 rounded text-xs font-medium transition-colors">
+                    <span x-text="r.label"></span>
+                </button>
+            </template>
+            <button type="button" @click="mobileFrame = !mobileFrame"
+                :class="mobileFrame ? 'bg-sky-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'"
+                class="ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                Mobile-Rahmen
+            </button>
+        </div>
         @endif
     </div>
 
-    {{-- Status --}}
-    <div class="mt-8 pt-6 border-t border-gray-800 text-center">
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
-            @if($post->status === 'draft') bg-gray-800 text-gray-400
-            @elseif($post->status === 'planned') bg-yellow-900/50 text-yellow-400
-            @else bg-green-900/50 text-green-400
-            @endif">
-            {{ $post->status_label }}
-        </span>
+    {{-- Mobile frame wrapper --}}
+    <div :class="mobileFrame ? 'border-[10px] border-gray-900 rounded-[2.5rem] shadow-2xl p-2 bg-black' : ''">
+        <div :class="mobileFrame ? 'rounded-[1.5rem] overflow-hidden' : ''">
+
+            @if($platform === 'instagram')
+                @include('public.partials.feed-instagram', compact('post', 'username', 'displayName', 'captionHtml'))
+            @elseif($platform === 'facebook')
+                @include('public.partials.feed-facebook', compact('post', 'username', 'displayName', 'captionHtml'))
+            @else
+                @include('public.partials.feed-twitter', compact('post', 'username', 'displayName', 'captionHtml'))
+            @endif
+
+        </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+function contentPreview(config) {
+    return {
+        current: 0,
+        total: config.total,
+        platform: config.platform,
+        mobileFrame: false,
+        ratio: 'auto',
+        ratios: [
+            { value: 'auto',  label: 'Original' },
+            { value: '1/1',   label: '1:1' },
+            { value: '4/5',   label: '4:5' },
+            { value: '9/16',  label: '9:16' },
+            { value: '1.91/1',label: '1.91:1' },
+        ],
+        touchStartX: 0,
+        touchStartY: 0,
+
+        init() {},
+
+        prev() { if (this.total > 1) this.current = (this.current - 1 + this.total) % this.total; },
+        next() { if (this.total > 1) this.current = (this.current + 1) % this.total; },
+
+        onTouchStart(e) {
+            const t = e.changedTouches[0];
+            this.touchStartX = t.clientX;
+            this.touchStartY = t.clientY;
+        },
+        onTouchEnd(e) {
+            const t = e.changedTouches[0];
+            const dx = t.clientX - this.touchStartX;
+            const dy = t.clientY - this.touchStartY;
+            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                if (dx < 0) this.next(); else this.prev();
+            }
+        },
+    };
+}
+</script>
+@endpush
 @endsection

@@ -31,6 +31,7 @@
             <a href="#darstellung" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">16. Darstellung (Dark Mode)</a>
             <a href="#navigation" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">17. Navigation</a>
             <a href="#benutzerverwaltung" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">18. Benutzerverwaltung</a>
+            <a href="#content-planer" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">19. Content-Planer & Vorschau</a>
         </div>
     </div>
 
@@ -69,6 +70,10 @@
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Verknüpfungen</h4>
                     <p class="text-sm text-gray-600 dark:text-gray-300">Kontakte können mit Organisationen, Verträgen, Projekten und Tracks verknüpft werden. Diese Verknüpfungen siehst du auf der Detailseite des Kontakts.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">IPI-Nummern (Interested Parties Information)</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Pro Kontakt k&ouml;nnen mehrere IPI-Eintr&auml;ge mit Nummer und Name erfasst werden (Verwertungsgesellschaften-Pseudonyme wie &bdquo;DR GORTIS&ldquo;). In den Credits von Tracks, Artworks und Fotos tauchen diese IPI-Namen als eigene Treffer in der Suche auf &ndash; beim Ausw&auml;hlen wird der IPI-Name als Credit-Name angezeigt (statt des Kontaktnamens). So kannst Du denselben Kontakt unter seinem b&uuml;rgerlichen Namen UND unter einem IPI-Pseudonym in verschiedenen Credits nutzen.</p>
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Neue Felder</h4>
@@ -360,6 +365,18 @@
                     <p class="text-sm text-gray-600 dark:text-gray-300">Erstelle ein Artwork mit Titel und lade eine oder mehrere Bilddateien hoch. Vergib optionale Credits (Fotograf, Designer etc.). In der Übersicht wird automatisch ein Thumbnail angezeigt &ndash; wenn kein Artwork-Bild vorhanden ist, wird das erste Logo als Fallback verwendet.</p>
                 </div>
                 <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Bildvarianten</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Pro Artwork können mehrere <strong>Bildversionen</strong> hochgeladen werden (z.B. Master 3000&times;3000, Web 1500&times;1500, Spotify, Print). Jede Variante erh&auml;lt optional einen <strong>Zweck</strong>. Eine Variante wird als <strong>prim&auml;r</strong> markiert &ndash; sie wird f&uuml;r Thumbnail und Produkt-Detailseite verwendet. Format, Breite&times;H&ouml;he, Dateigr&ouml;sse und DPI werden automatisch erfasst und in der Detailansicht angezeigt. Akzeptierte Formate: JPG, PNG, TIFF, WEBP &ndash; beliebige Aufl&ouml;sung (DPI-Warnung nur informativ).</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Logos</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Mehrere Logos mit optionalem <strong>Zweck</strong>-Label (Dark, Light, Monochrome, Outline, Icon, Wordmark). Eines wird als <strong>prim&auml;r</strong> markiert und dient als Fallback, falls kein Artwork-Bild gesetzt ist.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Credits</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Vier Rollen (Fotograf:in, Artwork by, Logo by, Design by) jeweils als Kontakt- oder Organisations-Suche. Wenn ein Kontakt <strong>IPI-Nummern</strong> hinterlegt hat, erscheinen diese als eigene Treffer in der Suche (z.B. &bdquo;DR GORTIS&ldquo;) und werden als Credit-Name angezeigt &ndash; statt des vollen Kontaktnamens.</p>
+                </div>
+                <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Verknüpfungen</h4>
                     <p class="text-sm text-gray-600 dark:text-gray-300">Artworks können mit Releases, Tracks und Projekten verknüpft werden. Auf der Produkt-Detailseite werden verknüpfte Artworks automatisch mit Vorschaubild, Logos und Credits angezeigt.</p>
                 </div>
@@ -381,7 +398,11 @@
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Metadaten</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Bearbeite Titel, Beschreibung und Credits einzelner Fotos.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Bearbeite Titel, Ort, Datum, Story und Info einzelner Fotos.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Credits</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Fotograf:in und Grafic Artist werden neu als <strong>Kontakt-Suche</strong> erfasst (statt als Freitext). Wenn ein Kontakt IPI-Nummern hinterlegt hat, erscheinen die IPI-Namen als eigene Treffer in der Suche und werden als Credit-Name angezeigt. Alte Text-Eintr&auml;ge bleiben zur Referenz sichtbar, bis sie durch Kontakt-Credits ersetzt werden.</p>
                 </div>
             </div>
         </div>
@@ -826,6 +847,40 @@
                         <li><strong>Alter / Neuer Wert:</strong> Der bisherige und der neue Wert des Felds</li>
                     </ul>
                     <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">Du kannst das Logfile nach Aktion, Bereich, Datum und Suchbegriff filtern. Alle Aktionen &ndash; auch in Adresskreisen und Kampagnen &ndash; werden automatisch protokolliert.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+        {{-- 19. Content-Planer --}}
+        <div id="content-planer" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">19. Content-Planer & Vorschau</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Planung und Vorschau von Social-Media-Beiträgen für Instagram, Facebook und X/Twitter.</p>
+            <div class="space-y-3">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Beitrag erstellen</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Wähle eine Plattform (Instagram, Facebook, X), setze einen optionalen internen Titel, die Caption, Hashtags und ein Planungsdatum. Status: Entwurf, Geplant oder Veröffentlicht.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Bilder hinzufügen</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Lade Bilder direkt hoch, oder wähle aus der Bilddatenbank: <strong>Fotos</strong> (aus Ordnern), <strong>Artworks</strong> und <strong>Artwork-Logos</strong>. Reihenfolge per Drag &amp; Drop anpassbar.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Vorschau teilen</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Über <strong>«Teilen»</strong> generierst Du einen öffentlichen Link. Darüber wird der Beitrag als <strong>Feed-Simulation</strong> der gewählten Plattform gezeigt &ndash; so, wie er später im echten Feed aussehen könnte.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Vorschau-Features</h4>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside mt-1 space-y-0.5">
+                        <li><strong>Plattform-Look:</strong> Eigenes Design pro Plattform (IG dunkel mit Gradient-Avatar, FB hell, X kompakt mit Verified-Checkmark)</li>
+                        <li><strong>Karussell:</strong> Bei mehreren Bildern erscheinen Pfeile, Punkte, ein Zähler (1 / 5) und das Mehrbild-Stapel-Icon</li>
+                        <li><strong>Navigation:</strong> Pfeiltasten ←/→ oder Swipe auf Touch-Geräten</li>
+                        <li><strong>Seitenverhältnis-Toggle:</strong> Original, 1:1, 4:5, 9:16 oder 1.91:1 &ndash; zeigt, wie die Plattform das Bild zuschneiden würde</li>
+                        <li><strong>Mobile-Rahmen:</strong> Ein optischer Telefon-Rahmen, damit Du siehst, wie es am Handy aussieht</li>
+                        <li><strong>Caption-Highlighting:</strong> @mentions, #hashtags und URLs werden eingefärbt, lange Captions werden mit &bdquo;… mehr&ldquo; gekürzt</li>
+                        <li><strong>Scheduling-Badge:</strong> Geplantes Datum prominent über dem Feed</li>
+                    </ul>
                 </div>
             </div>
         </div>

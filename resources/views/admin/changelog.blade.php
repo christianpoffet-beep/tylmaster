@@ -11,6 +11,48 @@
 
     <div class="space-y-6">
 
+        {{-- v1.8.0 --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">v1.8.0</h3>
+                <span class="text-sm text-gray-500 dark:text-gray-400">23.04.2026</span>
+            </div>
+            <div class="space-y-2">
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">IPI-Credits: Pro Kontakt können mehrere IPI-Nummern (Interested Parties Information) erfasst werden. In Track-, Artwork- und Foto-Credits tauchen sie als eigenständige Einträge in der Suche auf (z.B. „DR GORTIS") und werden als Credit-Name angezeigt statt dem Kontaktnamen</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Foto-Credits: Fotograf:in und Grafic Artist nutzen neu die Kontakt-/IPI-/Organisations-Suche (statt reiner Textfelder)</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Artwork-Bildvarianten: Mehrere Bildversionen pro Artwork möglich (z.B. Master 3000×3000, Web 1500×1500, Spotify, Print). Eine wird als primär markiert. Dimensionen, Format und DPI werden pro Variante automatisch erfasst und in der Detailansicht angezeigt</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Artwork-Logos: Mehrere Logos mit optionalem Zweck-Label (Dark, Light, Monochrome etc.), eines als primär markierbar</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 mr-2">Neu</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Content-Vorschau: Plattform-spezifische Feed-Simulation (Instagram, Facebook, X/Twitter) mit Karussell für mehrere Bilder, umschaltbarem Seitenverhältnis (1:1, 4:5, 9:16, 1.91:1), Mobile-Rahmen, Pfeiltasten- und Swipe-Navigation. @mentions, #hashtags und URLs werden hervorgehoben</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Artwork-Formate: JPG, PNG, TIFF und WEBP werden akzeptiert. Die 3000×3000-Pflicht ist aufgehoben — beliebige Auflösungen möglich, DPI-Warnung erfolgt nur noch informativ</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 mr-2">Verbessert</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Kontakt-Suche: Mehrwort-Queries wie „daniel baeriswyl" matchen jetzt über Vor- und Nachname (SQLite-kompatibel, ohne CONCAT)</span>
+                </div>
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 mr-2">Fix</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-300">Storage-URLs: Bilder werden als relative URLs generiert und funktionieren jetzt hostunabhängig (lokal, Produktion und abweichende Domains)</span>
+                </div>
+            </div>
+        </div>
+
         {{-- v1.7.0 --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center justify-between mb-3">

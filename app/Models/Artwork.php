@@ -28,9 +28,14 @@ class Artwork extends Model
             ->withTimestamps();
     }
 
+    public function images()
+    {
+        return $this->hasMany(ArtworkImage::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     public function logos()
     {
-        return $this->hasMany(ArtworkLogo::class);
+        return $this->hasMany(ArtworkLogo::class)->orderBy('sort_order')->orderBy('id');
     }
 
     public function credits()
@@ -43,8 +48,36 @@ class Artwork extends Model
         return $this->credits()->where('role', $role)->with('creditable')->get();
     }
 
+    public function getPrimaryImageAttribute(): ?ArtworkImage
+    {
+        if (!$this->relationLoaded('images')) {
+            $this->load('images');
+        }
+        return $this->images->firstWhere('is_primary', true) ?? $this->images->first();
+    }
+
+    public function getPrimaryLogoAttribute(): ?ArtworkLogo
+    {
+        if (!$this->relationLoaded('logos')) {
+            $this->load('logos');
+        }
+        return $this->logos->firstWhere('is_primary', true) ?? $this->logos->first();
+    }
+
     public function getArtworkUrlAttribute(): ?string
     {
-        return $this->artwork_path ? Storage::disk('public')->url($this->artwork_path) : null;
+        $primary = $this->primary_image;
+        if ($primary && $primary->file_path) {
+            return Storage::disk('public')->url($primary->file_path);
+        }
+        // Legacy fallback (pre-artwork_images migration)
+        return $this->attributes['artwork_path']
+            ? Storage::disk('public')->url($this->attributes['artwork_path'])
+            : null;
+    }
+
+    public function hasAnyImage(): bool
+    {
+        return $this->images->isNotEmpty() || !empty($this->attributes['artwork_path']);
     }
 }
