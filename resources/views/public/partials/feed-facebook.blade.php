@@ -39,12 +39,11 @@
         <div class="relative bg-gray-100 select-none"
              @touchstart="onTouchStart($event)"
              @touchend="onTouchEnd($event)">
-            <div class="relative w-full" :style="ratio === 'auto' ? '' : ('aspect-ratio: ' + ratio + ';')">
+            <div class="relative w-full" style="aspect-ratio: 1 / 1;">
                 @foreach($post->images as $i => $img)
                     <div x-show="current === {{ $i }}"
                          class="absolute inset-0 flex items-center justify-center">
-                        <img src="{{ $img->url }}" alt="" class="w-full h-full"
-                             :class="ratio === 'auto' ? 'object-contain' : 'object-cover'">
+                        <img src="{{ $img->url }}" alt="" class="w-full h-full object-cover">
                     </div>
                 @endforeach
             </div>
@@ -54,12 +53,12 @@
                     <span x-text="current + 1"></span> / {{ $imageCount }}
                 </div>
 
-                <button type="button" @click="prev()" x-show="current > 0"
-                    class="absolute left-3 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-900 rounded-full w-9 h-9 flex items-center justify-center shadow-lg">
+                <button type="button" @click="prev()"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center shadow-lg ring-1 ring-white/40 backdrop-blur-sm transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                 </button>
-                <button type="button" @click="next()" x-show="current < {{ $imageCount - 1 }}"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-900 rounded-full w-9 h-9 flex items-center justify-center shadow-lg">
+                <button type="button" @click="next()"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center shadow-lg ring-1 ring-white/40 backdrop-blur-sm transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </button>
             @endif
