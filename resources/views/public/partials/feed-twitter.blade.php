@@ -34,29 +34,29 @@
                 <div class="mt-3 relative bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 select-none"
                      @touchstart="onTouchStart($event)"
                      @touchend="onTouchEnd($event)">
-                    <div class="relative w-full" style="aspect-ratio: 1 / 1;">
+                    <div class="relative w-full overflow-hidden" style="aspect-ratio: 1 / 1;">
                         @foreach($post->images as $i => $img)
                             <div x-show="current === {{ $i }}"
                                  class="absolute inset-0 flex items-center justify-center">
                                 <img src="{{ $img->url }}" alt="" class="w-full h-full object-cover">
                             </div>
                         @endforeach
+
+                        @if($imageCount > 1)
+                            <div class="absolute top-3 right-3 bg-black/80 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                                <span x-text="current + 1"></span> / {{ $imageCount }}
+                            </div>
+
+                            <button type="button" @click="prev()"
+                                class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-9 h-9 flex items-center justify-center ring-1 ring-white/40 backdrop-blur-sm transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                            </button>
+                            <button type="button" @click="next()"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-9 h-9 flex items-center justify-center ring-1 ring-white/40 backdrop-blur-sm transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                        @endif
                     </div>
-
-                    @if($imageCount > 1)
-                        <div class="absolute top-3 right-3 bg-black/80 text-white text-xs font-semibold px-2 py-1 rounded-full">
-                            <span x-text="current + 1"></span> / {{ $imageCount }}
-                        </div>
-
-                        <button type="button" @click="prev()"
-                            class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-9 h-9 flex items-center justify-center ring-1 ring-white/40 backdrop-blur-sm transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-                        </button>
-                        <button type="button" @click="next()"
-                            class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full w-9 h-9 flex items-center justify-center ring-1 ring-white/40 backdrop-blur-sm transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                        </button>
-                    @endif
                 </div>
 
                 @if($imageCount > 1)

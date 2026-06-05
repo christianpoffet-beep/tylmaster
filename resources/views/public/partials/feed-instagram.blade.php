@@ -25,7 +25,7 @@
         <div class="relative bg-black select-none"
              @touchstart="onTouchStart($event)"
              @touchend="onTouchEnd($event)">
-            <div class="relative w-full" style="aspect-ratio: 1 / 1;">
+            <div class="relative w-full overflow-hidden" style="aspect-ratio: 1 / 1;">
                 @foreach($post->images as $i => $img)
                     <div x-show="current === {{ $i }}"
                          x-transition:enter="transition ease-out duration-150"
@@ -35,32 +35,32 @@
                         <img src="{{ $img->url }}" alt="" class="w-full h-full object-cover">
                     </div>
                 @endforeach
+
+                @if($imageCount > 1)
+                    {{-- Multi-image stack icon (top-right) --}}
+                    <div class="absolute top-3 right-3 pointer-events-none">
+                        <svg class="w-6 h-6 text-white drop-shadow" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M17 3H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2zM7 1h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V5a4 4 0 014-4z" fill-rule="evenodd"/>
+                            <path d="M20 7a1 1 0 011 1v12a3 3 0 01-3 3H8a1 1 0 110-2h10a1 1 0 001-1V8a1 1 0 011-1z"/>
+                        </svg>
+                    </div>
+
+                    {{-- Counter --}}
+                    <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-black/70 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                        <span x-text="current + 1"></span> / {{ $imageCount }}
+                    </div>
+
+                    {{-- Prev / Next — immer sichtbar, kontrastreich, mittig im Bild --}}
+                    <button type="button" @click="prev()"
+                        class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center shadow-lg ring-1 ring-white/40 backdrop-blur-sm transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <button type="button" @click="next()"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center shadow-lg ring-1 ring-white/40 backdrop-blur-sm transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                @endif
             </div>
-
-            {{-- Multi-image stack icon (top-right) --}}
-            @if($imageCount > 1)
-                <div class="absolute top-3 right-3 pointer-events-none">
-                    <svg class="w-6 h-6 text-white drop-shadow" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17 3H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2zM7 1h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V5a4 4 0 014-4z" fill-rule="evenodd"/>
-                        <path d="M20 7a1 1 0 011 1v12a3 3 0 01-3 3H8a1 1 0 110-2h10a1 1 0 001-1V8a1 1 0 011-1z"/>
-                    </svg>
-                </div>
-
-                {{-- Counter --}}
-                <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-black/70 text-white text-xs font-medium px-2 py-0.5 rounded-full">
-                    <span x-text="current + 1"></span> / {{ $imageCount }}
-                </div>
-
-                {{-- Prev / Next — immer sichtbar, kontrastreich --}}
-                <button type="button" @click="prev()"
-                    class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center shadow-lg ring-1 ring-white/40 backdrop-blur-sm transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-                </button>
-                <button type="button" @click="next()"
-                    class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center shadow-lg ring-1 ring-white/40 backdrop-blur-sm transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                </button>
-            @endif
         </div>
 
         {{-- Action bar --}}
