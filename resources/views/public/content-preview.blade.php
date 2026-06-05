@@ -99,7 +99,7 @@ function contentPreview(config) {
         total: config.total,
         platform: config.platform,
         mobileFrame: false,
-        ratio: 'auto',
+        ratio: '1/1',
         ratios: [
             { value: 'auto',  label: 'Original' },
             { value: '1/1',   label: '1:1' },
