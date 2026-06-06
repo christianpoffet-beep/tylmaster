@@ -50,7 +50,11 @@ class ContentPost extends Model
 
     public function generateShareToken(): string
     {
-        $this->share_token = Str::random(48);
+        do {
+            $token = Str::random(9);
+        } while (static::where('share_token', $token)->exists());
+
+        $this->share_token = $token;
         $this->save();
         return $this->share_token;
     }
