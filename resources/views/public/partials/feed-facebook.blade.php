@@ -39,30 +39,14 @@
         <div class="relative bg-gray-100 select-none"
              @touchstart="onTouchStart($event)"
              @touchend="onTouchEnd($event)">
-            <div class="relative w-full" :style="ratio === 'auto' ? '' : ('aspect-ratio: ' + ratio + ';')">
+            <div class="relative w-full overflow-hidden" style="aspect-ratio: 1 / 1;">
                 @foreach($post->images as $i => $img)
                     <div x-show="current === {{ $i }}"
                          class="absolute inset-0 flex items-center justify-center">
-                        <img src="{{ $img->url }}" alt="" class="w-full h-full"
-                             :class="ratio === 'auto' ? 'object-contain' : 'object-cover'">
+                        <img src="{{ $img->url }}" alt="" class="w-full h-full object-cover">
                     </div>
                 @endforeach
             </div>
-
-            @if($imageCount > 1)
-                <div class="absolute top-3 right-3 bg-gray-900/75 text-white text-xs font-medium px-2 py-1 rounded-full">
-                    <span x-text="current + 1"></span> / {{ $imageCount }}
-                </div>
-
-                <button type="button" @click="prev()" x-show="current > 0"
-                    class="absolute left-3 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-900 rounded-full w-9 h-9 flex items-center justify-center shadow-lg">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-                </button>
-                <button type="button" @click="next()" x-show="current < {{ $imageCount - 1 }}"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-100 text-gray-900 rounded-full w-9 h-9 flex items-center justify-center shadow-lg">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                </button>
-            @endif
         </div>
     @endif
 
@@ -96,4 +80,25 @@
             Teilen
         </button>
     </div>
+
+    {{-- Navigation: Pfeile + Punkte, unter der Action-Bar --}}
+    @if($imageCount > 1)
+        <div class="flex items-center justify-center gap-4 px-4 py-3 border-t border-gray-100">
+            <button type="button" @click="prev()" aria-label="Vorheriges Bild"
+                class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <div class="flex items-center gap-1.5">
+                @foreach($post->images as $i => $img)
+                    <button type="button" @click="current = {{ $i }}"
+                        :class="current === {{ $i }} ? 'bg-blue-600 w-4' : 'bg-gray-300 w-1.5'"
+                        class="h-1.5 rounded-full transition-all"></button>
+                @endforeach
+            </div>
+            <button type="button" @click="next()" aria-label="Nächstes Bild"
+                class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+    @endif
 </article>

@@ -20,12 +20,10 @@
      x-init="init()"
      @keydown.window.arrow-left.prevent="prev()"
      @keydown.window.arrow-right.prevent="next()"
-     class="mx-auto"
-     :class="mobileFrame ? 'max-w-sm' : 'max-w-xl'">
+     class="mx-auto max-w-sm">
 
-    {{-- Top controls --}}
-    <div class="mb-6 space-y-3">
-        {{-- Scheduling / status badges --}}
+    {{-- Status badges --}}
+    <div class="mb-6">
         <div class="flex items-center justify-between flex-wrap gap-2">
             <div class="flex items-center gap-2 flex-wrap">
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
@@ -54,30 +52,11 @@
             </div>
         </div>
 
-        {{-- View controls: aspect ratio + mobile frame toggle --}}
-        @if($imageCount > 0)
-        <div class="flex items-center gap-2 flex-wrap border border-gray-800 rounded-lg p-2 bg-gray-900/50">
-            <span class="text-xs text-gray-500 font-medium px-1">Seitenverhältnis</span>
-            <template x-for="r in ratios" :key="r.value">
-                <button type="button" @click="ratio = r.value"
-                    :class="ratio === r.value ? 'bg-sky-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'"
-                    class="px-2.5 py-1 rounded text-xs font-medium transition-colors">
-                    <span x-text="r.label"></span>
-                </button>
-            </template>
-            <button type="button" @click="mobileFrame = !mobileFrame"
-                :class="mobileFrame ? 'bg-sky-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'"
-                class="ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                Mobile-Rahmen
-            </button>
-        </div>
-        @endif
     </div>
 
-    {{-- Mobile frame wrapper --}}
-    <div :class="mobileFrame ? 'border-[10px] border-gray-900 rounded-[2.5rem] shadow-2xl p-2 bg-black' : ''">
-        <div :class="mobileFrame ? 'rounded-[1.5rem] overflow-hidden' : ''">
+    {{-- Mobile frame wrapper (always on) --}}
+    <div class="border-[10px] border-gray-900 rounded-[2.5rem] shadow-2xl p-2 bg-black">
+        <div class="rounded-[1.5rem] overflow-hidden">
 
             @if($platform === 'instagram')
                 @include('public.partials.feed-instagram', compact('post', 'username', 'displayName', 'captionHtml'))
@@ -98,15 +77,7 @@ function contentPreview(config) {
         current: 0,
         total: config.total,
         platform: config.platform,
-        mobileFrame: false,
-        ratio: 'auto',
-        ratios: [
-            { value: 'auto',  label: 'Original' },
-            { value: '1/1',   label: '1:1' },
-            { value: '4/5',   label: '4:5' },
-            { value: '9/16',  label: '9:16' },
-            { value: '1.91/1',label: '1.91:1' },
-        ],
+        ratio: '1/1', // fix 1:1, keine Auswahl mehr
         touchStartX: 0,
         touchStartY: 0,
 
