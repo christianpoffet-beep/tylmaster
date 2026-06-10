@@ -99,17 +99,17 @@
             @endif
 
             @if($contract->rights && count($contract->rights) > 0)
+            @php $rLabels = $contract->resolvedRightsLabels('Partei'); @endphp
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Vergütung / Rechte</h3>
-                @if($contract->rights_label_a || $contract->rights_label_b)
-                    <p class="text-xs text-gray-400 mb-2">{{ $contract->rights_label_a ?? 'Partei 1' }} / {{ $contract->rights_label_b ?? 'Partei 2' }}</p>
-                @endif
+                <p class="text-xs text-gray-400 mb-2">{{ implode(' / ', $rLabels) }}</p>
                 <div class="space-y-1.5">
                     @foreach($contract->rights as $right)
                         <div class="flex items-start gap-2 text-sm">
                             <span class="font-medium text-gray-700 dark:text-gray-300 min-w-0">{{ $right['label'] }}:</span>
                             @if(($right['mode'] ?? 'split') === 'split')
-                                <span class="text-gray-600 dark:text-gray-400">{{ $right['split_a'] ?? 0 }}% {{ $contract->rights_label_a ?? 'Partei 1' }} / {{ $right['split_b'] ?? 0 }}% {{ $contract->rights_label_b ?? 'Partei 2' }}</span>
+                                @php $sv = $contract->rightSplitValues($right); @endphp
+                                <span class="text-gray-600 dark:text-gray-400">@foreach($rLabels as $li => $lname)@if(!$loop->first) / @endif{{ $sv[$li] ?? 0 }}% {{ $lname }}@endforeach</span>
                             @else
                                 <span class="text-gray-600 dark:text-gray-400">{{ $right['custom_text'] ?? '' }}</span>
                             @endif

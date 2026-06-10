@@ -235,6 +235,7 @@
             @include('admin.partials.rights-editor', [
                 'rightsLabelA' => old('rights_label_a', ''),
                 'rightsLabelB' => old('rights_label_b', ''),
+                'rightsLabels' => old('rights_labels', []),
                 'rightsData' => old('rights', []),
             ])
 
@@ -357,7 +358,7 @@ function contractForm() {
             this.$nextTick(() => this.dispatchPartyNames());
         },
         dispatchPartyNames() {
-            const names = this.parties.slice(0, 2).map(p => {
+            const names = this.parties.map(p => {
                 if (p.type === 'organization' && p.organization_id) {
                     return this.orgNames[p.organization_id] || '';
                 } else if (p.type === 'contact' && p.contact_id) {
@@ -366,7 +367,7 @@ function contractForm() {
                 return '';
             });
             window.dispatchEvent(new CustomEvent('party-names-updated', {
-                detail: { party1: names[0] || '', party2: names[1] || '' }
+                detail: { parties: names, party1: names[0] || '', party2: names[1] || '' }
             }));
         },
         getOrgContacts(orgId) {
@@ -412,12 +413,23 @@ function contractForm() {
                     }));
                 }
                 // Apply rights from template
-                const rightsComp = document.querySelector('[x-data="rightsEditor()"]');
-                if (rightsComp && rightsComp.__x) {
-                    const rd = rightsComp.__x.$data;
-                    if (data.rights_label_a) rd.labelA = data.rights_label_a;
-                    if (data.rights_label_b) rd.labelB = data.rights_label_b;
-                    if (data.rights && data.rights.length > 0) rd.rights = data.rights;
+                const rightsEl = document.querySelector('[x-data="rightsEditor()"]');
+                const rd = rightsEl
+                    ? (window.Alpine && window.Alpine.$data ? window.Alpine.$data(rightsEl) : (rightsEl.__x && rightsEl.__x.$data))
+                    : null;
+                if (rd) {
+                    let labels = (data.rights_labels && data.rights_labels.length)
+                        ? data.rights_labels
+                        : [data.rights_label_a || '', data.rights_label_b || ''];
+                    rd.labels = labels.map(l => (l == null ? '' : String(l)));
+                    while (rd.labels.length < 2) rd.labels.push('');
+                    // Match init(): only freeze auto-grow when the template actually carries labels.
+                    rd.autoGrow = !rd.labels.some(l => l !== '');
+                    if (data.rights && data.rights.length > 0) {
+                        rd.rights = data.rights.map(r => rd.normalizeRight(r));
+                    }
+                    // Always re-align existing rights' splits to the new label count.
+                    rd.syncSplits();
                 }
             } catch (e) {
                 console.error('Template laden fehlgeschlagen', e);

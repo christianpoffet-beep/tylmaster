@@ -109,8 +109,12 @@ class ContractController extends Controller
             'rights' => 'nullable|array',
             'rights.*.label' => 'required|string|max:255',
             'rights.*.mode' => 'required|in:split,custom',
+            'rights.*.splits' => 'nullable|array',
+            'rights.*.splits.*' => 'nullable|numeric',
             'rights_label_a' => 'nullable|string|max:50',
             'rights_label_b' => 'nullable|string|max:50',
+            'rights_labels' => 'nullable|array',
+            'rights_labels.*' => 'nullable|string|max:50',
             'project_ids' => 'nullable|array',
             'project_ids.*' => 'exists:projects,id',
             'track_ids' => 'nullable|array',
@@ -129,8 +133,15 @@ class ContractController extends Controller
         $rights = $request->input('rights', []);
         $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
         $validated['rights'] = !empty($rights) ? $rights : null;
-        $validated['rights_label_a'] = $request->input('rights_label_a');
-        $validated['rights_label_b'] = $request->input('rights_label_b');
+
+        // Party labels for the split (dynamic N-party list)
+        $rightsLabels = $request->input('rights_labels', []);
+        $rightsLabels = is_array($rightsLabels) ? array_values($rightsLabels) : [];
+        $hasMeaningfulLabels = count($rightsLabels) > 2
+            || count(array_filter($rightsLabels, fn ($l) => $l !== null && $l !== '')) > 0;
+        $validated['rights_labels'] = $hasMeaningfulLabels ? $rightsLabels : null;
+        $validated['rights_label_a'] = $rightsLabels[0] ?? $request->input('rights_label_a');
+        $validated['rights_label_b'] = $rightsLabels[1] ?? $request->input('rights_label_b');
 
         $this->handleLogo($request, $validated);
 
@@ -251,8 +262,12 @@ class ContractController extends Controller
             'rights' => 'nullable|array',
             'rights.*.label' => 'required|string|max:255',
             'rights.*.mode' => 'required|in:split,custom',
+            'rights.*.splits' => 'nullable|array',
+            'rights.*.splits.*' => 'nullable|numeric',
             'rights_label_a' => 'nullable|string|max:50',
             'rights_label_b' => 'nullable|string|max:50',
+            'rights_labels' => 'nullable|array',
+            'rights_labels.*' => 'nullable|string|max:50',
             'project_ids' => 'nullable|array',
             'project_ids.*' => 'exists:projects,id',
             'track_ids' => 'nullable|array',
@@ -271,8 +286,15 @@ class ContractController extends Controller
         $rights = $request->input('rights', []);
         $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
         $validated['rights'] = !empty($rights) ? $rights : null;
-        $validated['rights_label_a'] = $request->input('rights_label_a');
-        $validated['rights_label_b'] = $request->input('rights_label_b');
+
+        // Party labels for the split (dynamic N-party list)
+        $rightsLabels = $request->input('rights_labels', []);
+        $rightsLabels = is_array($rightsLabels) ? array_values($rightsLabels) : [];
+        $hasMeaningfulLabels = count($rightsLabels) > 2
+            || count(array_filter($rightsLabels, fn ($l) => $l !== null && $l !== '')) > 0;
+        $validated['rights_labels'] = $hasMeaningfulLabels ? $rightsLabels : null;
+        $validated['rights_label_a'] = $rightsLabels[0] ?? $request->input('rights_label_a');
+        $validated['rights_label_b'] = $rightsLabels[1] ?? $request->input('rights_label_b');
 
         $this->handleLogo($request, $validated, $contract);
 

@@ -67,8 +67,12 @@ class ContractTemplateController extends Controller
             'rights' => 'nullable|array',
             'rights.*.label' => 'required|string|max:255',
             'rights.*.mode' => 'required|in:split,custom',
+            'rights.*.splits' => 'nullable|array',
+            'rights.*.splits.*' => 'nullable|numeric',
             'rights_label_a' => 'nullable|string|max:50',
             'rights_label_b' => 'nullable|string|max:50',
+            'rights_labels' => 'nullable|array',
+            'rights_labels.*' => 'nullable|string|max:50',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
@@ -77,6 +81,12 @@ class ContractTemplateController extends Controller
 
         $rights = $request->input('rights', []);
         $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
+
+        $rightsLabels = $request->input('rights_labels', []);
+        $rightsLabels = is_array($rightsLabels) ? array_values($rightsLabels) : [];
+        $hasMeaningfulLabels = count($rightsLabels) > 2
+            || count(array_filter($rightsLabels, fn ($l) => $l !== null && $l !== '')) > 0;
+        $rightsLabels = $hasMeaningfulLabels ? $rightsLabels : null;
 
         ContractTemplate::create([
             'name' => $request->input('name'),
@@ -88,8 +98,9 @@ class ContractTemplateController extends Controller
             'default_relations_note' => $request->input('default_relations_note'),
             'default_parties' => !empty($parties) ? $parties : null,
             'rights' => !empty($rights) ? $rights : null,
-            'rights_label_a' => $request->input('rights_label_a'),
-            'rights_label_b' => $request->input('rights_label_b'),
+            'rights_label_a' => $rightsLabels[0] ?? $request->input('rights_label_a'),
+            'rights_label_b' => $rightsLabels[1] ?? $request->input('rights_label_b'),
+            'rights_labels' => $rightsLabels,
             'sort_order' => $request->input('sort_order', 0),
         ]);
 
@@ -130,8 +141,12 @@ class ContractTemplateController extends Controller
             'rights' => 'nullable|array',
             'rights.*.label' => 'required|string|max:255',
             'rights.*.mode' => 'required|in:split,custom',
+            'rights.*.splits' => 'nullable|array',
+            'rights.*.splits.*' => 'nullable|numeric',
             'rights_label_a' => 'nullable|string|max:50',
             'rights_label_b' => 'nullable|string|max:50',
+            'rights_labels' => 'nullable|array',
+            'rights_labels.*' => 'nullable|string|max:50',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
@@ -140,6 +155,12 @@ class ContractTemplateController extends Controller
 
         $rights = $request->input('rights', []);
         $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
+
+        $rightsLabels = $request->input('rights_labels', []);
+        $rightsLabels = is_array($rightsLabels) ? array_values($rightsLabels) : [];
+        $hasMeaningfulLabels = count($rightsLabels) > 2
+            || count(array_filter($rightsLabels, fn ($l) => $l !== null && $l !== '')) > 0;
+        $rightsLabels = $hasMeaningfulLabels ? $rightsLabels : null;
 
         $contractTemplate->update([
             'name' => $request->input('name'),
@@ -151,8 +172,9 @@ class ContractTemplateController extends Controller
             'default_relations_note' => $request->input('default_relations_note'),
             'default_parties' => !empty($parties) ? $parties : null,
             'rights' => !empty($rights) ? $rights : null,
-            'rights_label_a' => $request->input('rights_label_a'),
-            'rights_label_b' => $request->input('rights_label_b'),
+            'rights_label_a' => $rightsLabels[0] ?? $request->input('rights_label_a'),
+            'rights_label_b' => $rightsLabels[1] ?? $request->input('rights_label_b'),
+            'rights_labels' => $rightsLabels,
             'sort_order' => $request->input('sort_order', 0),
         ]);
 
@@ -178,6 +200,7 @@ class ContractTemplateController extends Controller
             'rights' => $contractTemplate->rights,
             'rights_label_a' => $contractTemplate->rights_label_a,
             'rights_label_b' => $contractTemplate->rights_label_b,
+            'rights_labels' => $contractTemplate->rights_labels,
         ]);
     }
 }

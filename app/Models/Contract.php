@@ -13,7 +13,7 @@ class Contract extends Model
         'contract_number', 'title', 'type', 'status', 'language', 'start_date', 'end_date', 'terms',
         'subject', 'relations_note',
         'has_zession', 'zession_amount', 'zession_currency', 'zession_notes',
-        'territory', 'rights', 'rights_label_a', 'rights_label_b',
+        'territory', 'rights', 'rights_label_a', 'rights_label_b', 'rights_labels',
         'logo_path', 'logo_in_header', 'logo_as_watermark',
     ];
 
@@ -24,9 +24,70 @@ class Contract extends Model
         'zession_amount' => 'decimal:2',
         'territory' => 'array',
         'rights' => 'array',
+        'rights_labels' => 'array',
         'logo_in_header' => 'boolean',
         'logo_as_watermark' => 'boolean',
     ];
+
+    /**
+     * Resolve the party labels used in the rights/remuneration split.
+     * Falls back to the legacy two-label model and fills empty slots with a
+     * numbered default (e.g. "Partei 1"). Always returns at least two entries.
+     */
+    public function resolvedRightsLabels(string $defaultPrefix = 'Partei'): array
+    {
+        $labels = (is_array($this->rights_labels) && count($this->rights_labels) > 0)
+            ? $this->rights_labels
+            : [$this->rights_label_a, $this->rights_label_b];
+
+        // Party names act as the fallback when a label slot was left blank.
+        $partyNames = $this->parties
+            ->map(fn ($p) => $p->organization?->primary_name ?? $p->contact?->full_name)
+            ->values()
+            ->all();
+
+        $resolve = function (int $i, $label) use ($defaultPrefix, $partyNames) {
+            if ($label !== null && $label !== '') {
+                return $label;
+            }
+            if (!empty($partyNames[$i])) {
+                return $partyNames[$i];
+            }
+            return $defaultPrefix . ' ' . ($i + 1);
+        };
+
+        $out = [];
+        foreach (array_values($labels) as $i => $label) {
+            $out[] = $resolve($i, $label);
+        }
+        while (count($out) < 2) {
+            $out[] = $resolve(count($out), null);
+        }
+
+        // Drop phantom trailing slots: blank stored labels beyond the actual
+        // party count (e.g. a party was removed after the rights were saved).
+        $rawLabels = array_values($labels);
+        while (count($out) > 2
+            && count($out) > count($partyNames)
+            && empty($rawLabels[count($out) - 1])) {
+            array_pop($out);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Per-party percentage values for a single right, aligned to the label list.
+     * Falls back to the legacy split_a/split_b pair for older records.
+     */
+    public function rightSplitValues(array $right): array
+    {
+        if (isset($right['splits']) && is_array($right['splits'])) {
+            return array_values($right['splits']);
+        }
+
+        return [$right['split_a'] ?? 0, $right['split_b'] ?? 0];
+    }
 
     /**
      * Translation strings for the contract PDF, keyed by language.
@@ -53,9 +114,11 @@ class Contract extends Model
             'territory_title' => 'Geltungsbereich / Territory',
             'territory_worldwide' => 'Weltweit',
             'rights_title' => 'Vergütung',
-            'rights_intro' => 'Die Einnahmen werden zwischen :a und :b wie folgt aufgeteilt:',
+            'rights_intro' => 'Die Einnahmen werden zwischen :parties wie folgt aufgeteilt:',
             'rights_col_type' => 'Rechtetyp',
             'rights_col_split' => 'Aufteilung',
+            'party_default_prefix' => 'Partei',
+            'list_conjunction' => 'und',
             'relations_title' => 'Verknüpfungen',
             'relations_projects' => 'Projekte',
             'relations_tracks' => 'Tracks',
@@ -89,9 +152,11 @@ class Contract extends Model
             'territory_title' => 'Territory',
             'territory_worldwide' => 'Worldwide',
             'rights_title' => 'Remuneration',
-            'rights_intro' => 'Revenue is split between :a and :b as follows:',
+            'rights_intro' => 'Revenue is split between :parties as follows:',
             'rights_col_type' => 'Type of right',
             'rights_col_split' => 'Split',
+            'party_default_prefix' => 'Party',
+            'list_conjunction' => 'and',
             'relations_title' => 'Linked items',
             'relations_projects' => 'Projects',
             'relations_tracks' => 'Tracks',
@@ -125,9 +190,11 @@ class Contract extends Model
             'territory_title' => 'Territorio',
             'territory_worldwide' => 'Mundial',
             'rights_title' => 'Remuneración',
-            'rights_intro' => 'Los ingresos se reparten entre :a y :b de la siguiente manera:',
+            'rights_intro' => 'Los ingresos se reparten entre :parties de la siguiente manera:',
             'rights_col_type' => 'Tipo de derecho',
             'rights_col_split' => 'Reparto',
+            'party_default_prefix' => 'Parte',
+            'list_conjunction' => 'y',
             'relations_title' => 'Vínculos',
             'relations_projects' => 'Proyectos',
             'relations_tracks' => 'Pistas',

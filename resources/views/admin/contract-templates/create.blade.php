@@ -133,6 +133,7 @@
             @include('admin.partials.rights-editor', [
                 'rightsLabelA' => old('rights_label_a', ''),
                 'rightsLabelB' => old('rights_label_b', ''),
+                'rightsLabels' => old('rights_labels', []),
                 'rightsData' => old('rights', []),
             ])
 
@@ -172,7 +173,7 @@ function templateForm() {
             this.$nextTick(() => this.dispatchPartyNames());
         },
         dispatchPartyNames() {
-            const names = this.parties.slice(0, 2).map(p => {
+            const names = this.parties.map(p => {
                 if (p.type === 'organization' && p.organization_id) {
                     return this.orgNames[p.organization_id] || '';
                 } else if (p.type === 'contact' && p.contact_id) {
@@ -181,7 +182,7 @@ function templateForm() {
                 return '';
             });
             window.dispatchEvent(new CustomEvent('party-names-updated', {
-                detail: { party1: names[0] || '', party2: names[1] || '' }
+                detail: { parties: names, party1: names[0] || '', party2: names[1] || '' }
             }));
         },
         getOrgContacts(orgId) {

@@ -263,12 +263,13 @@
 
         /* Signature area */
         .signatures {
-            margin-top: 50px;
-            page-break-inside: avoid;
+            margin-top: 40px;
         }
         .signature-table {
             width: 100%;
             border-collapse: collapse;
+            page-break-inside: avoid;
+            margin-bottom: 28px;
         }
         .signature-table td {
             width: 45%;
@@ -460,14 +461,14 @@
     {{-- Rights / Vergütung --}}
     @if($contract->rights && count($contract->rights) > 0)
     @php
-        $labelA = $contract->rights_label_a ?: $t['party_default_a'];
-        $labelB = $contract->rights_label_b ?: $t['party_default_b'];
+        $rLabels = $contract->resolvedRightsLabels($t['party_default_prefix']);
+        $rPartiesStr = count($rLabels) > 1
+            ? implode(', ', array_slice($rLabels, 0, -1)) . ' ' . $t['list_conjunction'] . ' ' . end($rLabels)
+            : ($rLabels[0] ?? '');
     @endphp
     <div class="section">
         <div class="section-title">{{ $t['rights_title'] }}</div>
-        @if($contract->rights_label_a || $contract->rights_label_b)
-            <p class="rights-label">{{ strtr($t['rights_intro'], [':a' => $labelA, ':b' => $labelB]) }}</p>
-        @endif
+        <p class="rights-label">{{ strtr($t['rights_intro'], [':parties' => $rPartiesStr]) }}</p>
         <table class="rights-table">
             <thead>
                 <tr>
@@ -481,7 +482,8 @@
                     <td style="font-weight: 600;">{{ $right['label'] }}</td>
                     <td>
                         @if(($right['mode'] ?? 'split') === 'split')
-                            {{ $right['split_a'] ?? 0 }}% {{ $labelA }} / {{ $right['split_b'] ?? 0 }}% {{ $labelB }}
+                            @php $sv = $contract->rightSplitValues($right); @endphp
+                            @foreach($rLabels as $li => $lname)@if(!$loop->first) / @endif{{ $sv[$li] ?? 0 }}% {{ $lname }}@endforeach
                         @else
                             {{ $right['custom_text'] ?? '' }}
                         @endif
@@ -559,44 +561,29 @@
     </div>
     @endif
 
-    {{-- Signature area --}}
+    {{-- Signature area — every party signs --}}
+    @if($contract->parties->count())
     <div class="signatures">
+        @foreach($contract->parties->chunk(2) as $sigRow)
         <table class="signature-table">
-            @php
-                $sigParties = $contract->parties->take(2);
-            @endphp
             <tr>
-                @if($sigParties->count() >= 1)
-                <td>
-                    <div class="signature-line">
-                        <div class="signature-name">
-                            @if($sigParties[0]->organization)
-                                {{ $sigParties[0]->organization->primary_name }}
-                            @elseif($sigParties[0]->contact)
-                                {{ $sigParties[0]->contact->full_name }}
-                            @endif
+                @foreach($sigRow as $sp)
+                    @if(!$loop->first)<td class="spacer"></td>@endif
+                    <td>
+                        <div class="signature-line">
+                            <div class="signature-name">@if($sp->organization){{ $sp->organization->primary_name }}@elseif($sp->contact){{ $sp->contact->full_name }}@endif</div>
+                            {{ $t['signature_line'] }}
                         </div>
-                        {{ $t['signature_line'] }}
-                    </div>
-                </td>
-                @endif
-                <td class="spacer"></td>
-                @if($sigParties->count() >= 2)
-                <td>
-                    <div class="signature-line">
-                        <div class="signature-name">
-                            @if($sigParties[1]->organization)
-                                {{ $sigParties[1]->organization->primary_name }}
-                            @elseif($sigParties[1]->contact)
-                                {{ $sigParties[1]->contact->full_name }}
-                            @endif
-                        </div>
-                        {{ $t['signature_line'] }}
-                    </div>
-                </td>
+                    </td>
+                @endforeach
+                @if($sigRow->count() === 1)
+                    <td class="spacer"></td>
+                    <td></td>
                 @endif
             </tr>
         </table>
+        @endforeach
     </div>
+    @endif
 </body>
 </html>
