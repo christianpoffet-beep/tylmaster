@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ $contract->language ?? 'de' }}">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -36,6 +36,36 @@
             font-size: 9pt;
             color: #6b7280;
             margin: 2px 0 0 0;
+        }
+        .header-logo {
+            max-height: 60px;
+            max-width: 180px;
+        }
+        .header-party {
+            margin-top: 12px;
+            font-size: 8pt;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+        .header-party .party-name {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        /* Watermark */
+        .watermark {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            text-align: center;
+            z-index: 0;
+        }
+        .watermark img {
+            margin-top: 35%;
+            width: 55%;
+            opacity: 0.06;
         }
 
         /* Meta info */
@@ -98,6 +128,11 @@
             text-align: right;
             font-weight: 600;
             white-space: nowrap;
+        }
+        .party-address {
+            font-size: 8pt;
+            color: #6b7280;
+            margin-top: 2px;
         }
 
         /* Zession box */
@@ -194,15 +229,47 @@
             color: #1e3a5f;
             margin-right: 6px;
         }
+        .relations-note {
+            font-size: 9pt;
+            color: #374151;
+            margin-bottom: 12px;
+            white-space: pre-line;
+        }
+        .track-credit-block {
+            margin-bottom: 10px;
+        }
+        .track-credit-title {
+            font-size: 9pt;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+        }
+        .track-credit-isrc {
+            font-size: 8pt;
+            font-weight: normal;
+            color: #9ca3af;
+        }
+        .credit-line {
+            font-size: 8.5pt;
+            color: #374151;
+            padding: 1px 0 1px 10px;
+        }
+        .credit-role {
+            color: #6b7280;
+        }
+        .credit-meta {
+            color: #9ca3af;
+        }
 
         /* Signature area */
         .signatures {
-            margin-top: 50px;
-            page-break-inside: avoid;
+            margin-top: 40px;
         }
         .signature-table {
             width: 100%;
             border-collapse: collapse;
+            page-break-inside: avoid;
+            margin-bottom: 28px;
         }
         .signature-table td {
             width: 45%;
@@ -255,31 +322,60 @@
     </style>
 </head>
 <body>
+    @if($contract->logo_as_watermark && $logoAbsolutePath)
+        <div class="watermark">
+            <img src="{{ $logoAbsolutePath }}" alt="">
+        </div>
+    @endif
+
     <div class="footer">
-        {{ $contract->contract_number ?? '' }} &middot; Generiert am {{ now()->format('d.m.Y H:i') }} &middot; The Yelling Light
+        {{ $contract->contract_number ?? '' }} &middot; {{ $t['generated_on'] }} {{ now()->format('d.m.Y H:i') }} &middot; The Yelling Light
     </div>
 
     <div class="header">
-        <h1>{{ $contract->title }}</h1>
-        @if($contract->contract_number)
-            <p class="contract-number">{{ $contract->contract_number }}</p>
+        <table style="width:100%; border-collapse:collapse;">
+            <tr>
+                <td style="vertical-align:top;">
+                    <h1>{{ $contract->title }}</h1>
+                    @if($contract->contract_number)
+                        <p class="contract-number">{{ $contract->contract_number }}</p>
+                    @endif
+                </td>
+                @if($contract->logo_in_header && $logoAbsolutePath)
+                <td style="vertical-align:top; text-align:right; width:190px;">
+                    <img src="{{ $logoAbsolutePath }}" class="header-logo" alt="Logo">
+                </td>
+                @endif
+            </tr>
+        </table>
+
+        @if($headerParty)
+        <div class="header-party">
+            <span class="party-name">{{ $headerParty['name'] }}</span>@if($headerParty['contact_name']) &middot; {{ $headerParty['contact_name'] }}@endif
+            @foreach($headerParty['address_lines'] as $line)
+                &middot; {{ $line }}
+            @endforeach
+            @if($headerParty['website']) &middot; {{ $headerParty['website'] }}@endif
+            @if($headerParty['phone']) &middot; {{ $t['phone_short'] }} {{ $headerParty['phone'] }}@endif
+            @if($headerParty['email']) &middot; {{ $headerParty['email'] }}@endif
+        </div>
         @endif
     </div>
 
     {{-- Meta Information --}}
     <table class="meta-table">
         <tr>
-            <td class="label">Typ</td>
+            <td class="label">{{ $t['meta_type'] }}</td>
             <td class="value">{{ $typeLabels[$contract->type] ?? ucfirst($contract->type) }}</td>
-            <td class="label">Status</td>
+            <td class="label">{{ $t['meta_status'] }}</td>
             <td class="value">
-                <span class="status-badge status-{{ $contract->status }}">{{ $statusLabels[$contract->status] ?? $contract->status }}</span>
+                <span class="status-badge status-{{ $contract->status }}">{{ $t['status_' . $contract->status] ?? $contract->status }}</span>
             </td>
         </tr>
         <tr>
-            <td class="label">Startdatum</td>
+            <td class="label">{{ $t['meta_start'] }}</td>
             <td class="value">{{ $contract->start_date?->format('d.m.Y') ?? '—' }}</td>
-            <td class="label">Enddatum</td>
+            <td class="label">{{ $t['meta_end'] }}</td>
             <td class="value">{{ $contract->end_date?->format('d.m.Y') ?? '—' }}</td>
         </tr>
     </table>
@@ -287,13 +383,13 @@
     {{-- Parties --}}
     @if($contract->parties->count())
     <div class="section">
-        <div class="section-title">Vertragsparteien</div>
+        <div class="section-title">{{ $t['parties_title'] }}</div>
         <table class="parties-table">
             <thead>
                 <tr>
-                    <th>Partei</th>
-                    <th>Ansprechperson</th>
-                    <th style="text-align: right;">Anteil</th>
+                    <th>{{ $t['parties_col_party'] }}</th>
+                    <th>{{ $t['parties_col_contact'] }}</th>
+                    <th style="text-align: right;">{{ $t['parties_col_share'] }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -304,6 +400,9 @@
                             {{ $party->organization->primary_name }}
                         @elseif($party->contact)
                             {{ $party->contact->full_name }}
+                        @endif
+                        @if(count($party->address_lines))
+                            <div class="party-address">{{ implode(', ', $party->address_lines) }}</div>
                         @endif
                     </td>
                     <td>
@@ -321,13 +420,21 @@
     </div>
     @endif
 
+    {{-- Vertragsgegenstand --}}
+    @if($contract->subject)
+    <div class="section">
+        <div class="section-title">{{ $t['subject_title'] }}</div>
+        <div class="terms-content">{{ $contract->subject }}</div>
+    </div>
+    @endif
+
     {{-- Zession --}}
     @if($contract->has_zession)
     <div class="section">
-        <div class="section-title">Zession (Vorschusszahlung)</div>
+        <div class="section-title">{{ $t['zession_title'] }}</div>
         <div class="zession-box">
             <div class="amount">{{ $contract->zession_currency }} {{ number_format($contract->zession_amount, 2, '.', "'") }}</div>
-            <div class="note">Dieser Betrag wird mit künftigen Einnahmen verrechnet.</div>
+            <div class="note">{{ $t['zession_note'] }}</div>
             @if($contract->zession_notes)
                 <div class="note" style="margin-top: 6px;">{{ $contract->zession_notes }}</div>
             @endif
@@ -338,10 +445,10 @@
     {{-- Territory --}}
     @if($contract->territory && count($contract->territory) > 0)
     <div class="section">
-        <div class="section-title">Geltungsbereich / Territory</div>
+        <div class="section-title">{{ $t['territory_title'] }}</div>
         <div class="territory-list">
             @if(in_array('ALL', $contract->territory))
-                <span class="territory-worldwide">Weltweit</span>
+                <span class="territory-worldwide">{{ $t['territory_worldwide'] }}</span>
             @else
                 @foreach($contract->territory as $code)
                     <span class="territory-badge">{{ $code }}</span>
@@ -353,16 +460,20 @@
 
     {{-- Rights / Vergütung --}}
     @if($contract->rights && count($contract->rights) > 0)
+    @php
+        $rLabels = $contract->resolvedRightsLabels($t['party_default_prefix']);
+        $rPartiesStr = count($rLabels) > 1
+            ? implode(', ', array_slice($rLabels, 0, -1)) . ' ' . $t['list_conjunction'] . ' ' . end($rLabels)
+            : ($rLabels[0] ?? '');
+    @endphp
     <div class="section">
-        <div class="section-title">Vergütung</div>
-        @if($contract->rights_label_a || $contract->rights_label_b)
-            <p class="rights-label">Die Einnahmen werden zwischen {{ $contract->rights_label_a ?? 'Partei 1' }} und {{ $contract->rights_label_b ?? 'Partei 2' }} wie folgt aufgeteilt:</p>
-        @endif
+        <div class="section-title">{{ $t['rights_title'] }}</div>
+        <p class="rights-label">{{ strtr($t['rights_intro'], [':parties' => $rPartiesStr]) }}</p>
         <table class="rights-table">
             <thead>
                 <tr>
-                    <th>Rechtetyp</th>
-                    <th>Aufteilung</th>
+                    <th>{{ $t['rights_col_type'] }}</th>
+                    <th>{{ $t['rights_col_split'] }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -371,7 +482,8 @@
                     <td style="font-weight: 600;">{{ $right['label'] }}</td>
                     <td>
                         @if(($right['mode'] ?? 'split') === 'split')
-                            {{ $right['split_a'] ?? 0 }}% {{ $contract->rights_label_a ?? 'Partei 1' }} / {{ $right['split_b'] ?? 0 }}% {{ $contract->rights_label_b ?? 'Partei 2' }}
+                            @php $sv = $contract->rightSplitValues($right); @endphp
+                            @foreach($rLabels as $li => $lname)@if(!$loop->first) / @endif{{ $sv[$li] ?? 0 }}% {{ $lname }}@endforeach
                         @else
                             {{ $right['custom_text'] ?? '' }}
                         @endif
@@ -384,27 +496,54 @@
     @endif
 
     {{-- Related Projects, Tracks, Releases --}}
-    @if($contract->projects->count() || $contract->tracks->count() || $contract->releases->count())
+    @if($contract->projects->count() || $contract->tracks->count() || $contract->releases->count() || $contract->relations_note)
+    @php
+        $roleLabels = collect(\App\Models\Setting::creditRoles())->flatMap(fn($roles) => $roles)->toArray();
+    @endphp
     <div class="section">
-        <div class="section-title">Verknüpfungen</div>
+        <div class="section-title">{{ $t['relations_title'] }}</div>
+
+        <div class="relations-note">{{ $contract->relations_note ?: $t['relations_intro_default'] }}</div>
+
         @if($contract->projects->count())
-            <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin-bottom: 3px;">Projekte</p>
+            <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin-bottom: 3px;">{{ $t['relations_projects'] }}</p>
             <ul class="relation-list">
                 @foreach($contract->projects as $project)
                     <li>{{ $project->name }}</li>
                 @endforeach
             </ul>
         @endif
+
         @if($contract->tracks->count())
-            <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin: 8px 0 3px;">Tracks</p>
-            <ul class="relation-list">
-                @foreach($contract->tracks as $track)
-                    <li>{{ $track->title }}{{ $track->isrc ? ' (ISRC: ' . $track->isrc . ')' : '' }}</li>
-                @endforeach
-            </ul>
+            <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin: 8px 0 4px;">{{ $t['relations_tracks'] }}</p>
+            @foreach($contract->tracks as $track)
+                <div class="track-credit-block">
+                    <div class="track-credit-title">
+                        {{ $track->display_title }}@if($track->isrc) <span class="track-credit-isrc">{{ $track->isrc_formatted }}</span>@endif
+                    </div>
+                    @if($track->contacts->count())
+                        @foreach($track->contacts as $credit)
+                            @php
+                                $pivotIpi = $credit->pivot->ipi_number ?? null;
+                                $matchedIpi = $pivotIpi ? collect($credit->ipis ?? [])->first(fn($i) => ($i['number'] ?? null) === $pivotIpi) : null;
+                                $creditName = ($matchedIpi && !empty($matchedIpi['name'])) ? $matchedIpi['name'] : $credit->full_name;
+                                $creditMetaParts = [];
+                                if ($credit->pivot->instrument) $creditMetaParts[] = '(' . $credit->pivot->instrument . ')';
+                                if ($pivotIpi) $creditMetaParts[] = '· IPI ' . $pivotIpi;
+                                $creditMeta = implode(' ', $creditMetaParts);
+                            @endphp
+                            <div class="credit-line">
+                                <span class="credit-role">{{ $roleLabels[$credit->pivot->role] ?? $credit->pivot->role }}:</span>
+                                {{ $creditName }}@if($creditMeta) <span class="credit-meta">{{ $creditMeta }}</span>@endif
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+            @endforeach
         @endif
+
         @if($contract->releases->count())
-            <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin: 8px 0 3px;">Produkte</p>
+            <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin: 8px 0 3px;">{{ $t['relations_releases'] }}</p>
             <ul class="relation-list">
                 @foreach($contract->releases as $release)
                     <li>{{ $release->title }}{{ $release->upc ? ' (UPC: ' . $release->upc . ')' : '' }}</li>
@@ -417,49 +556,34 @@
     {{-- Terms --}}
     @if($contract->terms)
     <div class="section">
-        <div class="section-title">Bedingungen / Notizen</div>
+        <div class="section-title">{{ $t['terms_title'] }}</div>
         <div class="terms-content">{{ $contract->terms }}</div>
     </div>
     @endif
 
-    {{-- Signature area --}}
+    {{-- Signature area — every party signs --}}
+    @if($contract->parties->count())
     <div class="signatures">
+        @foreach($contract->parties->chunk(2) as $sigRow)
         <table class="signature-table">
-            @php
-                $sigParties = $contract->parties->take(2);
-            @endphp
             <tr>
-                @if($sigParties->count() >= 1)
-                <td>
-                    <div class="signature-line">
-                        <div class="signature-name">
-                            @if($sigParties[0]->organization)
-                                {{ $sigParties[0]->organization->primary_name }}
-                            @elseif($sigParties[0]->contact)
-                                {{ $sigParties[0]->contact->full_name }}
-                            @endif
+                @foreach($sigRow as $sp)
+                    @if(!$loop->first)<td class="spacer"></td>@endif
+                    <td>
+                        <div class="signature-line">
+                            <div class="signature-name">@if($sp->organization){{ $sp->organization->primary_name }}@elseif($sp->contact){{ $sp->contact->full_name }}@endif</div>
+                            {{ $t['signature_line'] }}
                         </div>
-                        Ort, Datum, Unterschrift
-                    </div>
-                </td>
-                @endif
-                <td class="spacer"></td>
-                @if($sigParties->count() >= 2)
-                <td>
-                    <div class="signature-line">
-                        <div class="signature-name">
-                            @if($sigParties[1]->organization)
-                                {{ $sigParties[1]->organization->primary_name }}
-                            @elseif($sigParties[1]->contact)
-                                {{ $sigParties[1]->contact->full_name }}
-                            @endif
-                        </div>
-                        Ort, Datum, Unterschrift
-                    </div>
-                </td>
+                    </td>
+                @endforeach
+                @if($sigRow->count() === 1)
+                    <td class="spacer"></td>
+                    <td></td>
                 @endif
             </tr>
         </table>
+        @endforeach
     </div>
+    @endif
 </body>
 </html>

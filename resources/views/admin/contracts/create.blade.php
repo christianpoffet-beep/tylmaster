@@ -60,6 +60,7 @@
                     <select name="language" id="language" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="de" {{ old('language', 'de') === 'de' ? 'selected' : '' }}>Deutsch</option>
                         <option value="en" {{ old('language', 'de') === 'en' ? 'selected' : '' }}>English</option>
+                        <option value="es" {{ old('language', 'de') === 'es' ? 'selected' : '' }}>Español</option>
                     </select>
                 </div>
             </div>
@@ -225,13 +226,26 @@
                 <p x-show="Math.abs(totalShare - 100) >= 0.01" class="text-red-500 text-xs mt-1">Die Summe der Anteile muss genau 100% ergeben.</p>
             </div>
 
+            {{-- Vertragsgegenstand --}}
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vertragsgegenstand</label>
+                <textarea name="subject" id="subject" rows="3" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Beschreibung des Vertragsgegenstands...">{{ old('subject') }}</textarea>
+            </div>
+
             @include('admin.partials.rights-editor', [
                 'rightsLabelA' => old('rights_label_a', ''),
                 'rightsLabelB' => old('rights_label_b', ''),
+                'rightsLabels' => old('rights_labels', []),
                 'rightsData' => old('rights', []),
             ])
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <label for="relations_note" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Verknüpfungen</label>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Einleitungstext zu den verknüpften Projekten, Tracks und Produkten (im PDF). Bei Tracks werden die Credits automatisch eingeblendet.</p>
+                <textarea name="relations_note" id="relations_note" rows="2" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('relations_note', 'Folgende Songs sind Bestandteil dieses Vertrages.') }}</textarea>
+            </div>
+
+            <div>
                 @include('admin.partials.project-search', ['selected' => collect()])
             </div>
 
@@ -244,9 +258,11 @@
             </div>
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <label for="terms" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bedingungen / Notizen</label>
+                <label for="terms" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bedingungen</label>
                 <textarea name="terms" id="terms" rows="10" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('terms') }}</textarea>
             </div>
+
+            @include('admin.partials.contract-logo', ['contract' => null])
 
             <div>
                 <label for="document" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vertragsdokument</label>
@@ -342,7 +358,7 @@ function contractForm() {
             this.$nextTick(() => this.dispatchPartyNames());
         },
         dispatchPartyNames() {
-            const names = this.parties.slice(0, 2).map(p => {
+            const names = this.parties.map(p => {
                 if (p.type === 'organization' && p.organization_id) {
                     return this.orgNames[p.organization_id] || '';
                 } else if (p.type === 'contact' && p.contact_id) {
@@ -351,7 +367,7 @@ function contractForm() {
                 return '';
             });
             window.dispatchEvent(new CustomEvent('party-names-updated', {
-                detail: { party1: names[0] || '', party2: names[1] || '' }
+                detail: { parties: names, party1: names[0] || '', party2: names[1] || '' }
             }));
         },
         getOrgContacts(orgId) {
@@ -382,6 +398,12 @@ function contractForm() {
                 if (data.default_terms) {
                     document.getElementById('terms').value = data.default_terms;
                 }
+                if (data.default_subject) {
+                    document.getElementById('subject').value = data.default_subject;
+                }
+                if (data.default_relations_note) {
+                    document.getElementById('relations_note').value = data.default_relations_note;
+                }
                 if (data.default_parties && data.default_parties.length > 0) {
                     this.parties = data.default_parties.map(p => ({
                         type: p.type || 'organization',
@@ -391,12 +413,23 @@ function contractForm() {
                     }));
                 }
                 // Apply rights from template
-                const rightsComp = document.querySelector('[x-data="rightsEditor()"]');
-                if (rightsComp && rightsComp.__x) {
-                    const rd = rightsComp.__x.$data;
-                    if (data.rights_label_a) rd.labelA = data.rights_label_a;
-                    if (data.rights_label_b) rd.labelB = data.rights_label_b;
-                    if (data.rights && data.rights.length > 0) rd.rights = data.rights;
+                const rightsEl = document.querySelector('[x-data="rightsEditor()"]');
+                const rd = rightsEl
+                    ? (window.Alpine && window.Alpine.$data ? window.Alpine.$data(rightsEl) : (rightsEl.__x && rightsEl.__x.$data))
+                    : null;
+                if (rd) {
+                    let labels = (data.rights_labels && data.rights_labels.length)
+                        ? data.rights_labels
+                        : [data.rights_label_a || '', data.rights_label_b || ''];
+                    rd.labels = labels.map(l => (l == null ? '' : String(l)));
+                    while (rd.labels.length < 2) rd.labels.push('');
+                    // Match init(): only freeze auto-grow when the template actually carries labels.
+                    rd.autoGrow = !rd.labels.some(l => l !== '');
+                    if (data.rights && data.rights.length > 0) {
+                        rd.rights = data.rights.map(r => rd.normalizeRight(r));
+                    }
+                    // Always re-align existing rights' splits to the new label count.
+                    rd.syncSplits();
                 }
             } catch (e) {
                 console.error('Template laden fehlgeschlagen', e);

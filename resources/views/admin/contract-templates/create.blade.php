@@ -32,7 +32,7 @@
                 <div>
                     <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sprache *</label>
                     <select name="language" id="language" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                        @foreach(['de' => 'Deutsch', 'en' => 'English', 'fr' => 'Français'] as $code => $label)
+                        @foreach(['de' => 'Deutsch', 'en' => 'English', 'es' => 'Español'] as $code => $label)
                             <option value="{{ $code }}" {{ old('language', 'de') === $code ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
@@ -124,16 +124,30 @@
                 </div>
             </div>
 
+            {{-- Standard-Vertragsgegenstand --}}
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <label for="default_subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Standard-Vertragsgegenstand</label>
+                <textarea name="default_subject" id="default_subject" rows="3" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Wird beim Erstellen eines neuen Vertrags ins Feld «Vertragsgegenstand» übernommen.">{{ old('default_subject') }}</textarea>
+            </div>
+
             @include('admin.partials.rights-editor', [
                 'rightsLabelA' => old('rights_label_a', ''),
                 'rightsLabelB' => old('rights_label_b', ''),
+                'rightsLabels' => old('rights_labels', []),
                 'rightsData' => old('rights', []),
             ])
+
+            {{-- Standard-Verknüpfungstext --}}
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <label for="default_relations_note" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Standard-Verknüpfungstext</label>
+                <textarea name="default_relations_note" id="default_relations_note" rows="2" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Einleitungstext zu den Verknüpfungen, z.B. «Folgende Songs sind Bestandteil dieses Vertrages.»">{{ old('default_relations_note') }}</textarea>
+                <p class="text-xs text-gray-400 mt-1">Wird beim Erstellen eines neuen Vertrags ins Feld «Verknüpfungen» übernommen.</p>
+            </div>
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <label for="default_terms" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Standard-Bedingungen / Vertragstext</label>
                 <textarea name="default_terms" id="default_terms" rows="12" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500 font-mono" placeholder="Vertragstext, der beim Erstellen eines neuen Vertrags vorausgefüllt wird...">{{ old('default_terms') }}</textarea>
-                <p class="text-xs text-gray-400 mt-1">Dieser Text wird beim Erstellen eines neuen Vertrags in das Feld «Bedingungen / Notizen» übernommen.</p>
+                <p class="text-xs text-gray-400 mt-1">Dieser Text wird beim Erstellen eines neuen Vertrags in das Feld «Bedingungen» übernommen.</p>
             </div>
         </div>
 
@@ -159,7 +173,7 @@ function templateForm() {
             this.$nextTick(() => this.dispatchPartyNames());
         },
         dispatchPartyNames() {
-            const names = this.parties.slice(0, 2).map(p => {
+            const names = this.parties.map(p => {
                 if (p.type === 'organization' && p.organization_id) {
                     return this.orgNames[p.organization_id] || '';
                 } else if (p.type === 'contact' && p.contact_id) {
@@ -168,7 +182,7 @@ function templateForm() {
                 return '';
             });
             window.dispatchEvent(new CustomEvent('party-names-updated', {
-                detail: { party1: names[0] || '', party2: names[1] || '' }
+                detail: { parties: names, party1: names[0] || '', party2: names[1] || '' }
             }));
         },
         getOrgContacts(orgId) {

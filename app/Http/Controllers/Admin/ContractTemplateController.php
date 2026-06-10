@@ -54,9 +54,11 @@ class ContractTemplateController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:contract_templates,name',
             'contract_type_slug' => 'required|exists:contract_types,slug',
-            'language' => 'required|in:de,en,fr',
+            'language' => 'required|in:de,en,es',
             'default_status' => 'nullable|in:draft,active,expired,terminated',
             'default_terms' => 'nullable|string',
+            'default_subject' => 'nullable|string',
+            'default_relations_note' => 'nullable|string',
             'parties' => 'nullable|array',
             'parties.*.type' => 'required|in:organization,contact',
             'parties.*.organization_id' => 'nullable',
@@ -65,8 +67,12 @@ class ContractTemplateController extends Controller
             'rights' => 'nullable|array',
             'rights.*.label' => 'required|string|max:255',
             'rights.*.mode' => 'required|in:split,custom',
+            'rights.*.splits' => 'nullable|array',
+            'rights.*.splits.*' => 'nullable|numeric',
             'rights_label_a' => 'nullable|string|max:50',
             'rights_label_b' => 'nullable|string|max:50',
+            'rights_labels' => 'nullable|array',
+            'rights_labels.*' => 'nullable|string|max:50',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
@@ -76,16 +82,25 @@ class ContractTemplateController extends Controller
         $rights = $request->input('rights', []);
         $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
 
+        $rightsLabels = $request->input('rights_labels', []);
+        $rightsLabels = is_array($rightsLabels) ? array_values($rightsLabels) : [];
+        $hasMeaningfulLabels = count($rightsLabels) > 2
+            || count(array_filter($rightsLabels, fn ($l) => $l !== null && $l !== '')) > 0;
+        $rightsLabels = $hasMeaningfulLabels ? $rightsLabels : null;
+
         ContractTemplate::create([
             'name' => $request->input('name'),
             'contract_type_slug' => $request->input('contract_type_slug'),
             'language' => $request->input('language', 'de'),
             'default_status' => $request->input('default_status'),
             'default_terms' => $request->input('default_terms'),
+            'default_subject' => $request->input('default_subject'),
+            'default_relations_note' => $request->input('default_relations_note'),
             'default_parties' => !empty($parties) ? $parties : null,
             'rights' => !empty($rights) ? $rights : null,
-            'rights_label_a' => $request->input('rights_label_a'),
-            'rights_label_b' => $request->input('rights_label_b'),
+            'rights_label_a' => $rightsLabels[0] ?? $request->input('rights_label_a'),
+            'rights_label_b' => $rightsLabels[1] ?? $request->input('rights_label_b'),
+            'rights_labels' => $rightsLabels,
             'sort_order' => $request->input('sort_order', 0),
         ]);
 
@@ -113,9 +128,11 @@ class ContractTemplateController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:contract_templates,name,' . $contractTemplate->id,
             'contract_type_slug' => 'required|exists:contract_types,slug',
-            'language' => 'required|in:de,en,fr',
+            'language' => 'required|in:de,en,es',
             'default_status' => 'nullable|in:draft,active,expired,terminated',
             'default_terms' => 'nullable|string',
+            'default_subject' => 'nullable|string',
+            'default_relations_note' => 'nullable|string',
             'parties' => 'nullable|array',
             'parties.*.type' => 'required|in:organization,contact',
             'parties.*.organization_id' => 'nullable',
@@ -124,8 +141,12 @@ class ContractTemplateController extends Controller
             'rights' => 'nullable|array',
             'rights.*.label' => 'required|string|max:255',
             'rights.*.mode' => 'required|in:split,custom',
+            'rights.*.splits' => 'nullable|array',
+            'rights.*.splits.*' => 'nullable|numeric',
             'rights_label_a' => 'nullable|string|max:50',
             'rights_label_b' => 'nullable|string|max:50',
+            'rights_labels' => 'nullable|array',
+            'rights_labels.*' => 'nullable|string|max:50',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
@@ -135,16 +156,25 @@ class ContractTemplateController extends Controller
         $rights = $request->input('rights', []);
         $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
 
+        $rightsLabels = $request->input('rights_labels', []);
+        $rightsLabels = is_array($rightsLabels) ? array_values($rightsLabels) : [];
+        $hasMeaningfulLabels = count($rightsLabels) > 2
+            || count(array_filter($rightsLabels, fn ($l) => $l !== null && $l !== '')) > 0;
+        $rightsLabels = $hasMeaningfulLabels ? $rightsLabels : null;
+
         $contractTemplate->update([
             'name' => $request->input('name'),
             'contract_type_slug' => $request->input('contract_type_slug'),
             'language' => $request->input('language', 'de'),
             'default_status' => $request->input('default_status'),
             'default_terms' => $request->input('default_terms'),
+            'default_subject' => $request->input('default_subject'),
+            'default_relations_note' => $request->input('default_relations_note'),
             'default_parties' => !empty($parties) ? $parties : null,
             'rights' => !empty($rights) ? $rights : null,
-            'rights_label_a' => $request->input('rights_label_a'),
-            'rights_label_b' => $request->input('rights_label_b'),
+            'rights_label_a' => $rightsLabels[0] ?? $request->input('rights_label_a'),
+            'rights_label_b' => $rightsLabels[1] ?? $request->input('rights_label_b'),
+            'rights_labels' => $rightsLabels,
             'sort_order' => $request->input('sort_order', 0),
         ]);
 
@@ -164,10 +194,13 @@ class ContractTemplateController extends Controller
             'default_status' => $contractTemplate->default_status,
             'language' => $contractTemplate->language ?? 'de',
             'default_terms' => $contractTemplate->default_terms,
+            'default_subject' => $contractTemplate->default_subject,
+            'default_relations_note' => $contractTemplate->default_relations_note,
             'default_parties' => $contractTemplate->default_parties,
             'rights' => $contractTemplate->rights,
             'rights_label_a' => $contractTemplate->rights_label_a,
             'rights_label_b' => $contractTemplate->rights_label_b,
+            'rights_labels' => $contractTemplate->rights_labels,
         ]);
     }
 }

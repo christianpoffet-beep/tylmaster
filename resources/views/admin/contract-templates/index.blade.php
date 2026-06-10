@@ -13,7 +13,7 @@
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Vorlage suchen..." class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500 w-48">
         <select name="language" onchange="this.form.submit()" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             <option value="">Alle Sprachen</option>
-            @foreach(['de' => 'Deutsch', 'en' => 'English', 'fr' => 'Français'] as $code => $label)
+            @foreach(['de' => 'Deutsch', 'en' => 'English', 'es' => 'Español'] as $code => $label)
                 <option value="{{ $code }}" {{ request('language') === $code ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>

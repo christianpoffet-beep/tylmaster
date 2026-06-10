@@ -46,4 +46,26 @@ class ContractParty extends Model
         }
         return '—';
     }
+
+    /**
+     * Address lines (Strasse, PLZ Ort) of this party's primary entity,
+     * skipping any that are empty.
+     */
+    public function getAddressLinesAttribute(): array
+    {
+        $entity = $this->organization ?? $this->contact;
+        if (!$entity) {
+            return [];
+        }
+
+        $lines = [];
+        if ($entity->street) {
+            $lines[] = $entity->street;
+        }
+        if ($entity->zip || $entity->city) {
+            $lines[] = trim(($entity->zip ?? '') . ' ' . ($entity->city ?? ''));
+        }
+
+        return $lines;
+    }
 }

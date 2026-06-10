@@ -25,7 +25,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                 <div><span class="text-gray-500 dark:text-gray-400">Typ:</span> <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ml-1 {{ $typeColors[$contract->type] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300' }}">{{ $typeLabels[$contract->type] ?? ucfirst($contract->type) }}</span></div>
-                <div><span class="text-gray-500 dark:text-gray-400">Sprache:</span> <span class="text-gray-900 dark:text-gray-100 ml-1">{{ ($contract->language ?? 'de') === 'de' ? 'Deutsch' : 'English' }}</span></div>
+                <div><span class="text-gray-500 dark:text-gray-400">Sprache:</span> <span class="text-gray-900 dark:text-gray-100 ml-1">{{ ['de' => 'Deutsch', 'en' => 'English', 'es' => 'Español'][$contract->language ?? 'de'] ?? 'Deutsch' }}</span></div>
                 <div><span class="text-gray-500 dark:text-gray-400">Laufzeit:</span> <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $contract->start_date?->format('d.m.Y') ?? '-' }} — {{ $contract->end_date?->format('d.m.Y') ?? '-' }}</span></div>
             </div>
 
@@ -34,7 +34,7 @@
                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Vertragsparteien</h3>
                 <div class="space-y-2">
                     @foreach($contract->parties as $party)
-                        <div class="flex items-center justify-between py-1.5">
+                        <div class="flex items-start justify-between py-1.5">
                             <div class="text-sm">
                                 @if($party->organization)
                                     <a href="{{ route('admin.organizations.show', $party->organization) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $party->organization->primary_name }}</a>
@@ -45,11 +45,21 @@
                                 @elseif($party->contact)
                                     <a href="{{ route('admin.contacts.show', $party->contact) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $party->contact->full_name }}</a>
                                 @endif
+                                @if(count($party->address_lines))
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ implode(', ', $party->address_lines) }}</div>
+                                @endif
                             </div>
-                            <span class="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{{ number_format($party->share, 2) }}%</span>
+                            <span class="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full flex-shrink-0 ml-2">{{ number_format($party->share, 2) }}%</span>
                         </div>
                     @endforeach
                 </div>
+            </div>
+            @endif
+
+            @if($contract->subject)
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Vertragsgegenstand</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $contract->subject }}</p>
             </div>
             @endif
 
@@ -89,17 +99,17 @@
             @endif
 
             @if($contract->rights && count($contract->rights) > 0)
+            @php $rLabels = $contract->resolvedRightsLabels('Partei'); @endphp
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Vergütung / Rechte</h3>
-                @if($contract->rights_label_a || $contract->rights_label_b)
-                    <p class="text-xs text-gray-400 mb-2">{{ $contract->rights_label_a ?? 'Partei 1' }} / {{ $contract->rights_label_b ?? 'Partei 2' }}</p>
-                @endif
+                <p class="text-xs text-gray-400 mb-2">{{ implode(' / ', $rLabels) }}</p>
                 <div class="space-y-1.5">
                     @foreach($contract->rights as $right)
                         <div class="flex items-start gap-2 text-sm">
                             <span class="font-medium text-gray-700 dark:text-gray-300 min-w-0">{{ $right['label'] }}:</span>
                             @if(($right['mode'] ?? 'split') === 'split')
-                                <span class="text-gray-600 dark:text-gray-400">{{ $right['split_a'] ?? 0 }}% {{ $contract->rights_label_a ?? 'Partei 1' }} / {{ $right['split_b'] ?? 0 }}% {{ $contract->rights_label_b ?? 'Partei 2' }}</span>
+                                @php $sv = $contract->rightSplitValues($right); @endphp
+                                <span class="text-gray-600 dark:text-gray-400">@foreach($rLabels as $li => $lname)@if(!$loop->first) / @endif{{ $sv[$li] ?? 0 }}% {{ $lname }}@endforeach</span>
                             @else
                                 <span class="text-gray-600 dark:text-gray-400">{{ $right['custom_text'] ?? '' }}</span>
                             @endif
@@ -109,9 +119,47 @@
             </div>
             @endif
 
+            @if($contract->tracks->count() || $contract->relations_note)
+            @php
+                $roleLabels = collect(\App\Models\Setting::creditRoles())->flatMap(fn($roles) => $roles)->toArray();
+            @endphp
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Verknüpfungen</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line mb-3">{{ $contract->relations_note ?: 'Folgende Songs sind Bestandteil dieses Vertrages.' }}</p>
+
+                @foreach($contract->tracks as $track)
+                    <div class="mb-3 last:mb-0">
+                        <div class="text-sm font-medium text-gray-800 dark:text-gray-200">
+                            <a href="{{ route('admin.tracks.show', $track) }}" class="hover:text-blue-600 dark:hover:text-blue-400">{{ $track->display_title }}</a>
+                            @if($track->isrc)<span class="text-xs text-gray-400 font-normal ml-1">{{ $track->isrc_formatted }}</span>@endif
+                        </div>
+                        @if($track->contacts->count())
+                            <div class="mt-1 pl-3 border-l-2 border-gray-100 dark:border-gray-700 space-y-0.5">
+                                @foreach($track->contacts as $credit)
+                                    @php
+                                        $pivotIpi = $credit->pivot->ipi_number ?? null;
+                                        $matchedIpi = $pivotIpi ? collect($credit->ipis ?? [])->first(fn($i) => ($i['number'] ?? null) === $pivotIpi) : null;
+                                        $creditName = ($matchedIpi && !empty($matchedIpi['name'])) ? $matchedIpi['name'] : $credit->full_name;
+                                    @endphp
+                                    <div class="text-xs text-gray-600 dark:text-gray-400">
+                                        <span class="text-gray-400">{{ $roleLabels[$credit->pivot->role] ?? $credit->pivot->role }}:</span>
+                                        <span class="text-gray-700 dark:text-gray-300">{{ $creditName }}</span>
+                                        @if($credit->pivot->instrument)<span class="text-gray-400">({{ $credit->pivot->instrument }})</span>@endif
+                                        @if($pivotIpi)<span class="text-gray-400 font-mono">· IPI {{ $pivotIpi }}</span>@endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-xs text-gray-400 pl-3 mt-0.5">Keine Credits erfasst.</p>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+            @endif
+
             @if($contract->terms)
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Bedingungen / Notizen</h3>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Bedingungen</h3>
                 <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $contract->terms }}</p>
             </div>
             @endif
