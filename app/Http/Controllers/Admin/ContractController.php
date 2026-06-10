@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Artwork;
+use App\Models\ArtworkLogo;
 use App\Models\Contract;
 use App\Models\Contact;
 use App\Models\ContractParty;
@@ -81,11 +83,18 @@ class ContractController extends Controller
             'title' => 'required|string|max:255',
             'type' => 'required|exists:contract_types,slug',
             'status' => 'required|in:draft,active,expired,terminated',
-            'language' => 'nullable|in:de,en',
+            'language' => 'nullable|in:de,en,es',
             'start_date' => 'nullable|date',
             'document' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,txt,jpg,jpeg,png|max:51200',
+            'logo_source' => 'nullable|in:keep,none,artwork,upload',
+            'artwork_logo_id' => 'nullable|exists:artwork_logos,id',
+            'logo_file' => 'nullable|file|image|max:51200',
+            'logo_in_header' => 'nullable|boolean',
+            'logo_as_watermark' => 'nullable|boolean',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'terms' => 'nullable|string',
+            'subject' => 'nullable|string',
+            'relations_note' => 'nullable|string',
             'has_zession' => 'nullable|boolean',
             'zession_amount' => 'nullable|numeric|min:0',
             'zession_currency' => 'nullable|in:CHF,EUR,USD',
@@ -123,6 +132,8 @@ class ContractController extends Controller
         $validated['rights_label_a'] = $request->input('rights_label_a');
         $validated['rights_label_b'] = $request->input('rights_label_b');
 
+        $this->handleLogo($request, $validated);
+
         $validated['contract_number'] = Contract::generateNumber();
         $validated['has_zession'] = $request->boolean('has_zession');
         if (!$validated['has_zession']) {
@@ -134,7 +145,10 @@ class ContractController extends Controller
             $validated['territory'] = ['ALL'];
         }
         $parties = $validated['parties'];
-        unset($validated['parties'], $validated['project_ids'], $validated['track_ids'], $validated['release_ids']);
+        unset(
+            $validated['parties'], $validated['project_ids'], $validated['track_ids'], $validated['release_ids'],
+            $validated['logo_source'], $validated['artwork_logo_id'], $validated['logo_file']
+        );
 
         $contract = Contract::create($validated);
 
@@ -169,7 +183,7 @@ class ContractController extends Controller
 
     public function show(Contract $contract)
     {
-        $contract->load(['parties.organization', 'parties.contact', 'projects', 'tracks', 'releases']);
+        $contract->load(['parties.organization', 'parties.contact', 'projects', 'tracks.contacts', 'releases']);
         $contract->setRelation('documents', $contract->documents()->withTrashed()->get());
         $contractTypes = ContractType::orderBy('sort_order')->get();
         return view('admin.contracts.show', compact('contract', 'contractTypes'));
@@ -211,15 +225,22 @@ class ContractController extends Controller
             'title' => 'required|string|max:255',
             'type' => 'required|exists:contract_types,slug',
             'status' => 'required|in:draft,active,expired,terminated',
-            'language' => 'nullable|in:de,en',
+            'language' => 'nullable|in:de,en,es',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'terms' => 'nullable|string',
+            'subject' => 'nullable|string',
+            'relations_note' => 'nullable|string',
             'has_zession' => 'nullable|boolean',
             'zession_amount' => 'nullable|numeric|min:0',
             'zession_currency' => 'nullable|in:CHF,EUR,USD',
             'zession_notes' => 'nullable|string',
             'document' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,txt,jpg,jpeg,png|max:51200',
+            'logo_source' => 'nullable|in:keep,none,artwork,upload',
+            'artwork_logo_id' => 'nullable|exists:artwork_logos,id',
+            'logo_file' => 'nullable|file|image|max:51200',
+            'logo_in_header' => 'nullable|boolean',
+            'logo_as_watermark' => 'nullable|boolean',
             'territory' => 'nullable|array',
             'territory.*' => 'string|size:2',
             'parties' => 'required|array|min:2',
@@ -253,6 +274,8 @@ class ContractController extends Controller
         $validated['rights_label_a'] = $request->input('rights_label_a');
         $validated['rights_label_b'] = $request->input('rights_label_b');
 
+        $this->handleLogo($request, $validated, $contract);
+
         $validated['has_zession'] = $request->boolean('has_zession');
         if (!$validated['has_zession']) {
             $validated['zession_amount'] = null;
@@ -263,7 +286,10 @@ class ContractController extends Controller
         }
 
         $parties = $validated['parties'];
-        unset($validated['parties'], $validated['project_ids'], $validated['track_ids'], $validated['release_ids']);
+        unset(
+            $validated['parties'], $validated['project_ids'], $validated['track_ids'], $validated['release_ids'],
+            $validated['logo_source'], $validated['artwork_logo_id'], $validated['logo_file']
+        );
 
         $contract->update($validated);
 
@@ -314,13 +340,22 @@ class ContractController extends Controller
 
     public function pdf(Request $request, Contract $contract)
     {
-        $contract->load(['parties.organization', 'parties.contact', 'projects', 'tracks', 'releases']);
+        $contract->load(['parties.organization', 'parties.contact', 'projects', 'tracks.contacts', 'releases']);
 
         $contractTypes = ContractType::orderBy('sort_order')->get();
         $typeLabels = $contractTypes->pluck('name', 'slug')->toArray();
-        $statusLabels = ['draft' => 'Entwurf', 'active' => 'Aktiv', 'expired' => 'Ausgelaufen', 'terminated' => 'Gekündigt'];
 
-        $pdf = Pdf::loadView('admin.contracts.pdf', compact('contract', 'typeLabels', 'statusLabels'));
+        // Language-specific strings for the PDF
+        $t = Contract::pdfStrings($contract->language);
+        $headerParty = $contract->header_party;
+
+        // Absolute filesystem path for the logo (dompdf needs a local path)
+        $logoAbsolutePath = null;
+        if ($contract->logo_path && Storage::disk('public')->exists($contract->logo_path)) {
+            $logoAbsolutePath = Storage::disk('public')->path($contract->logo_path);
+        }
+
+        $pdf = Pdf::loadView('admin.contracts.pdf', compact('contract', 'typeLabels', 't', 'headerParty', 'logoAbsolutePath'));
         $pdf->setPaper('A4', 'portrait');
 
         $filename = ($contract->contract_number ?? 'Vertrag') . '_' . now()->format('Ymd_His') . '.pdf';
@@ -373,5 +408,81 @@ class ContractController extends Controller
         ]);
 
         return response()->json($results);
+    }
+
+    /**
+     * Search artwork logos for the contract logo picker.
+     */
+    public function logoSearch(Request $request)
+    {
+        $q = $request->input('q', '');
+
+        $artworks = Artwork::query()
+            ->when($q, fn ($query) => $query->where('title', 'like', "%{$q}%"))
+            ->with('logos')
+            ->orderBy('title')
+            ->limit(30)
+            ->get();
+
+        $results = [];
+        foreach ($artworks as $artwork) {
+            foreach ($artwork->logos as $logo) {
+                $results[] = [
+                    'id' => $logo->id,
+                    'path' => $logo->file_path,
+                    'url' => $logo->url,
+                    'label' => $artwork->title . ($logo->comment ? ' — ' . $logo->comment : ''),
+                ];
+            }
+        }
+
+        return response()->json($results);
+    }
+
+    /**
+     * Resolve the contract logo from the request and write logo_* keys into $validated.
+     *
+     * logo_source: keep | none | artwork | upload
+     *  - keep    → leave the existing logo_path untouched (default)
+     *  - none    → remove the logo
+     *  - artwork → reference an existing ArtworkLogo's file
+     *  - upload  → store the freshly uploaded file
+     */
+    private function handleLogo(Request $request, array &$validated, ?Contract $contract = null): void
+    {
+        $validated['logo_in_header'] = $request->boolean('logo_in_header');
+        $validated['logo_as_watermark'] = $request->boolean('logo_as_watermark');
+
+        $source = $request->input('logo_source', 'keep');
+
+        switch ($source) {
+            case 'none':
+                $validated['logo_path'] = null;
+                break;
+
+            case 'upload':
+                if ($request->hasFile('logo_file')) {
+                    $validated['logo_path'] = $request->file('logo_file')->store('contracts/logos', 'public');
+                } else {
+                    unset($validated['logo_path']); // nothing uploaded → keep current
+                }
+                break;
+
+            case 'artwork':
+                $logo = $request->filled('artwork_logo_id')
+                    ? ArtworkLogo::find($request->input('artwork_logo_id'))
+                    : null;
+                if ($logo) {
+                    $validated['logo_path'] = $logo->file_path;
+                } else {
+                    unset($validated['logo_path']);
+                }
+                break;
+
+            case 'keep':
+            default:
+                unset($validated['logo_path']); // do not modify
+                break;
+        }
     }
 }

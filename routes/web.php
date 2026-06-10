@@ -132,6 +132,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('contacts-search', [ContactController::class, 'search'])->name('contacts.search');
     Route::get('projects-search', [ProjectController::class, 'search'])->name('projects.search');
     Route::get('contracts-search', [ContractController::class, 'search'])->name('contracts.search');
+    Route::get('contracts-logo-search', [ContractController::class, 'logoSearch'])->name('contracts.logo-search');
     Route::get('tracks-search', [TrackController::class, 'search'])->name('tracks.search');
     Route::get('artworks-search', [ArtworkController::class, 'search'])->name('artworks.search');
     Route::get('releases-search', [ReleaseController::class, 'search'])->name('releases.search');
