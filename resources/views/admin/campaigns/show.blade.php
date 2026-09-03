@@ -123,9 +123,12 @@
                     </div>
                 @endif
             @elseif($campaign->status === 'sending')
-                <p class="text-sm text-yellow-600 dark:text-yellow-400 mb-3">Versand hängt — erneut versuchen:</p>
+                <p class="text-sm text-yellow-600 dark:text-yellow-400 mb-1">Versand hängt — erneut versuchen:</p>
+                @if($sendStats['sent'] > 0)
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Die {{ $sendStats['sent'] }} bereits zugestellten Empfänger werden dabei übersprungen.</p>
+                @endif
                 <form method="POST" action="{{ route('admin.campaigns.send', $campaign) }}"
-                      onsubmit="return confirm('Versand erneut starten?')">
+                      onsubmit="return confirm('Versand erneut starten? Bereits zugestellte Empfänger werden übersprungen.')">
                     @csrf
                     <button type="submit" class="w-full px-4 py-2.5 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium">
                         Erneut senden
