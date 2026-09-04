@@ -154,6 +154,28 @@ class Track extends Model
         return $this->belongsToMany(Organization::class);
     }
 
+    /**
+     * Everything the tracklist filter matches against: title and ISRC plus the
+     * linked organizations (band, label, publisher) and the credited people.
+     * Lowercased once here so the filter can compare directly.
+     */
+    public function getSearchHaystackAttribute(): string
+    {
+        $parts = array_merge(
+            [$this->display_title, $this->title, $this->isrc, $this->isrc_formatted],
+            $this->organizations->map(fn ($o) => $o->primary_name)->all(),
+            $this->contacts->map(fn ($c) => $c->full_name)->all(),
+        );
+
+        return mb_strtolower(implode(' ', array_filter($parts)));
+    }
+
+    /** Band names for display next to the track title. */
+    public function getBandNamesAttribute(): string
+    {
+        return $this->organizations->where('type', 'band')->map(fn ($o) => $o->primary_name)->join(', ');
+    }
+
     public function getFormattedDurationAttribute(): string
     {
         if (!$this->duration_seconds) return '--:--';
