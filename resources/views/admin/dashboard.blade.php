@@ -57,7 +57,20 @@
                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                 Anstehende Aufgaben
             </h2>
-            <a href="{{ route('admin.tasks.create') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">+ Neue Aufgabe</a>
+            <div class="flex items-center gap-3">
+                @if($taskProjects->isNotEmpty())
+                    <form method="GET" action="{{ route('admin.dashboard') }}">
+                        <select name="project" onchange="this.form.submit()"
+                                class="text-xs py-1 pl-2 pr-7 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">Alle Projekte</option>
+                            @foreach($taskProjects as $taskProject)
+                                <option value="{{ $taskProject->id }}" @selected($projectFilter === $taskProject->id)>{{ $taskProject->name }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+                @endif
+                <a href="{{ route('admin.tasks.create') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 whitespace-nowrap">+ Neue Aufgabe</a>
+            </div>
         </div>
         <div class="p-5">
             @forelse($upcomingTasks as $task)
@@ -82,7 +95,14 @@
                     @endif
                 </div>
             @empty
-                <p class="text-sm text-gray-500 dark:text-gray-400">Keine anstehenden Aufgaben.</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    @if($projectFilter)
+                        Keine anstehenden Aufgaben in diesem Projekt.
+                        <a href="{{ route('admin.dashboard') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Filter aufheben</a>
+                    @else
+                        Keine anstehenden Aufgaben.
+                    @endif
+                </p>
             @endforelse
         </div>
     </div>

@@ -9,28 +9,43 @@ use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\MusicSubmission;
 use App\Models\Task;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    /** Active project statuses, in the order they should appear. */
+    protected const ACTIVE_PROJECT_STATUSES = ['in_progress', 'planned'];
+
+    public function index(Request $request)
     {
         $stats = [
             'contacts' => Contact::count(),
             'contracts' => Contract::where('status', 'active')->count(),
-            'projects' => Project::whereIn('status', ['planned', 'in_progress'])->count(),
+            'projects' => Project::whereIn('status', self::ACTIVE_PROJECT_STATUSES)->count(),
             'open_invoices' => Invoice::where('status', 'open')->count(),
             'open_tasks' => Task::where('is_completed', false)->count(),
             'submissions' => MusicSubmission::where('status', 'new')->count(),
         ];
 
         $recentContacts = Contact::latest()->take(5)->get();
-        $activeProjects = Project::whereIn('status', ['planned', 'in_progress'])
+
+        // In-progress before planned, then by deadline with undated projects last
+        $activeProjects = Project::whereIn('status', self::ACTIVE_PROJECT_STATUSES)
+            ->orderByRaw("CASE status WHEN 'in_progress' THEN 0 ELSE 1 END")
+            ->orderByRaw('CASE WHEN deadline IS NULL THEN 1 ELSE 0 END')
             ->orderBy('deadline')
             ->get();
+
         $overdueInvoices = Invoice::where('status', 'open')
             ->where('due_date', '<', now())
             ->get();
-        $upcomingTasks = Task::with('project')->where('is_completed', false)
+
+        // Optional filter on the task list; 0 and non-numeric input mean "all"
+        $projectFilter = $request->integer('project') ?: null;
+
+        $upcomingTasks = Task::with('project')
+            ->where('is_completed', false)
+            ->when($projectFilter, fn ($q) => $q->where('project_id', $projectFilter))
             ->where(function ($q) {
                 $q->where('due_date', '<=', now()->addDays(7))
                   ->orWhereNull('due_date');
@@ -38,6 +53,11 @@ class DashboardController extends Controller
             ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date ASC')
             ->take(10)
             ->get();
+
+        // Only offer projects that actually have open tasks, so no option comes up empty
+        $taskProjects = Project::whereHas('tasks', fn ($q) => $q->where('is_completed', false))
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         // Upcoming birthdays (next 21 days)
         $today = now()->startOfDay();
@@ -58,6 +78,9 @@ class DashboardController extends Controller
             ->sortBy('next_birthday')
             ->values();
 
-        return view('admin.dashboard', compact('stats', 'recentContacts', 'activeProjects', 'overdueInvoices', 'upcomingTasks', 'upcomingBirthdays'));
+        return view('admin.dashboard', compact(
+            'stats', 'recentContacts', 'activeProjects', 'overdueInvoices',
+            'upcomingTasks', 'upcomingBirthdays', 'taskProjects', 'projectFilter'
+        ));
     }
 }
