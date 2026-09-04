@@ -16,7 +16,7 @@ class ProjectController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Project::with('tasks')->withCount(['contacts', 'tasks']);
+        $query = Project::with(['tasks', 'linkedTasks'])->withCount('contacts');
 
         if ($search = $request->input('search')) {
             $query->where('name', 'like', "%{$search}%");
@@ -78,7 +78,7 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        $project->load(['contacts', 'contracts', 'tracks', 'releases', 'tasks', 'artworks.images', 'artworks.logos', 'organizations', 'genres']);
+        $project->load(['contacts', 'contracts', 'tracks', 'releases', 'tasks', 'linkedTasks', 'artworks.images', 'artworks.logos', 'organizations', 'genres']);
         $projectTypes = ProjectType::orderBy('sort_order')->get();
         return view('admin.projects.show', compact('project', 'projectTypes'));
     }

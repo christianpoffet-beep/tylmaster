@@ -51,8 +51,8 @@
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($projects as $project)
                     @php
-                        $totalTasks = $project->tasks_count ?? 0;
-                        $completedTasks = $project->tasks->whereIn('status', \App\Models\Task::CLOSED_STATUSES)->count();
+                        $totalTasks = $project->all_tasks->count();
+                        $completedTasks = $project->all_tasks->whereIn('status', \App\Models\Task::CLOSED_STATUSES)->count();
                     @endphp
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
                         <td class="px-4 py-3">
@@ -87,8 +87,8 @@
 <div class="md:hidden space-y-3">
     @forelse($projects as $project)
         @php
-            $totalTasks = $project->tasks_count ?? 0;
-            $completedTasks = $project->tasks->whereIn('status', \App\Models\Task::CLOSED_STATUSES)->count();
+            $totalTasks = $project->all_tasks->count();
+            $completedTasks = $project->all_tasks->whereIn('status', \App\Models\Task::CLOSED_STATUSES)->count();
         @endphp
         <a href="{{ route('admin.projects.show', $project) }}" class="block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:border-blue-300 dark:hover:border-blue-600 transition-colors">
             <div class="flex items-start justify-between mb-2">
