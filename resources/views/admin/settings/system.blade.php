@@ -124,5 +124,34 @@
             </div>
         </div>
     </div>
+    {{-- Deploy: Migrationen & Cache --}}
+    @if(auth()->user()?->isAdmin())
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">Deploy abschliessen</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Fuehrt offene Migrationen aus und leert die Caches. Nach jedem Deploy einmal ausfuehren.
+        </p>
+
+        <form method="POST" action="{{ route('admin.deploy-refresh') }}"
+              onsubmit="return confirm('Migrationen ausfuehren und Caches leeren?')">
+            @csrf
+            <button type="submit" class="px-4 py-2 text-sm bg-gray-800 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">
+                Migrationen &amp; Cache
+            </button>
+        </form>
+
+        @if(session('deployOutput'))
+            <div class="mt-4 space-y-3">
+                @foreach(session('deployOutput') as $command => $result)
+                    <div>
+                        <div class="text-xs font-mono text-gray-500 dark:text-gray-400 mb-1">{{ $command }}</div>
+                        <pre class="text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap text-gray-700 dark:text-gray-300">{{ $result ?: '(keine Ausgabe)' }}</pre>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
+    @endif
+
 </div>
 @endsection
