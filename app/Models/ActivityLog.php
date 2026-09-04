@@ -186,7 +186,7 @@ class ActivityLog extends Model
         'assigned_to' => 'Zugewiesen an',
 
         // Aufgaben
-        'is_completed' => 'Erledigt',
+        'status' => 'Status',
         'due_at' => 'Fällig am',
         'project_id' => 'Projekt',
 

@@ -47,17 +47,17 @@ class DashboardTest extends TestCase
         $alpha = Project::create(['name' => 'Alpha', 'status' => 'in_progress']);
         $beta = Project::create(['name' => 'Beta', 'status' => 'in_progress']);
 
-        Task::create(['title' => 'Alpha-Aufgabe', 'project_id' => $alpha->id, 'is_completed' => false]);
-        Task::create(['title' => 'Beta-Aufgabe', 'project_id' => $beta->id, 'is_completed' => false]);
-        Task::create(['title' => 'Ohne Projekt', 'is_completed' => false]);
+        Task::create(['title' => 'Alpha-Aufgabe', 'project_id' => $alpha->id, 'status' => 'open']);
+        Task::create(['title' => 'Beta-Aufgabe', 'project_id' => $beta->id, 'status' => 'open']);
+        Task::create(['title' => 'Ohne Projekt', 'status' => 'open']);
 
         // Unfiltered: everything shows
         $all = $this->actingAsUser()->get('/admin');
-        $this->assertCount(3, $all->viewData('upcomingTasks'));
+        $this->assertCount(3, $all->viewData('openTasks'));
 
         // Filtered: only that project's tasks
         $filtered = $this->actingAsUser()->get('/admin?project=' . $alpha->id);
-        $titles = $filtered->viewData('upcomingTasks')->pluck('title')->all();
+        $titles = $filtered->viewData('openTasks')->pluck('title')->all();
 
         $this->assertSame(['Alpha-Aufgabe'], $titles);
         $this->assertSame($alpha->id, $filtered->viewData('projectFilter'));
@@ -72,8 +72,8 @@ class DashboardTest extends TestCase
         $done = Project::create(['name' => 'Nur erledigte', 'status' => 'in_progress']);
         Project::create(['name' => 'Ganz ohne', 'status' => 'in_progress']);
 
-        Task::create(['title' => 'offen', 'project_id' => $withTask->id, 'is_completed' => false]);
-        Task::create(['title' => 'erledigt', 'project_id' => $done->id, 'is_completed' => true]);
+        Task::create(['title' => 'offen', 'project_id' => $withTask->id, 'status' => 'open']);
+        Task::create(['title' => 'erledigt', 'project_id' => $done->id, 'status' => 'completed']);
 
         $names = $this->actingAsUser()->get('/admin')->viewData('taskProjects')->pluck('name')->all();
 
@@ -83,13 +83,50 @@ class DashboardTest extends TestCase
     public function test_invalid_project_filter_falls_back_to_all_tasks(): void
     {
         $project = Project::create(['name' => 'Alpha', 'status' => 'in_progress']);
-        Task::create(['title' => 'Alpha-Aufgabe', 'project_id' => $project->id, 'is_completed' => false]);
-        Task::create(['title' => 'Ohne Projekt', 'is_completed' => false]);
+        Task::create(['title' => 'Alpha-Aufgabe', 'project_id' => $project->id, 'status' => 'open']);
+        Task::create(['title' => 'Ohne Projekt', 'status' => 'open']);
 
         $response = $this->actingAsUser()->get('/admin?project=keine-zahl');
 
         $response->assertOk();
         $this->assertNull($response->viewData('projectFilter'));
-        $this->assertCount(2, $response->viewData('upcomingTasks'));
+        $this->assertCount(2, $response->viewData('openTasks'));
+    }
+
+    /**
+     * The dashboard lists what can be worked on: on hold and not implemented
+     * are both kept out, alongside completed.
+     */
+    public function test_dashboard_lists_only_open_tasks(): void
+    {
+        $project = Project::create(['name' => 'Alpha', 'status' => 'in_progress']);
+
+        foreach (['open', 'on_hold', 'not_implemented', 'completed'] as $status) {
+            Task::create(['title' => 'Aufgabe ' . $status, 'project_id' => $project->id, 'status' => $status]);
+        }
+
+        $response = $this->actingAsUser()->get('/admin');
+        $titles = $response->viewData('openTasks')->pluck('title')->all();
+
+        $this->assertSame(['Aufgabe open'], $titles);
+        $this->assertSame(1, $response->viewData('stats')['open_tasks']);
+    }
+
+    /**
+     * The old list only reached seven days ahead and stopped at ten entries.
+     */
+    public function test_dashboard_lists_every_open_task_regardless_of_due_date(): void
+    {
+        for ($i = 0; $i < 14; $i++) {
+            Task::create([
+                'title' => 'Aufgabe ' . $i,
+                'status' => 'open',
+                'due_date' => now()->addDays($i * 30),
+            ]);
+        }
+
+        $tasks = $this->actingAsUser()->get('/admin')->viewData('openTasks');
+
+        $this->assertCount(14, $tasks);
     }
 }

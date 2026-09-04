@@ -8,6 +8,8 @@ export default {
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
+        // Models build class strings too (status_color and friends)
+        './app/**/*.php',
     ],
 
     theme: {

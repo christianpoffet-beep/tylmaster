@@ -139,7 +139,7 @@ class ProjectController extends Controller
 
     public function toggleTask(Project $project, \App\Models\Task $task)
     {
-        $task->update(['is_completed' => !$task->is_completed]);
+        $task->update(['status' => $task->isCompleted() ? 'open' : 'completed']);
         return back();
     }
 

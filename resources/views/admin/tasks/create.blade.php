@@ -25,6 +25,14 @@
                     <input type="date" name="due_date" id="due_date" value="{{ old('due_date') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
                 <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                    <select name="status" id="status" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        @foreach(\App\Models\Task::STATUSES as $value => $label)
+                            <option value="{{ $value }}" {{ old('status', 'open') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
                     <label for="priority" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priorität</label>
                     <select name="priority" id="priority" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">Keine</option>
