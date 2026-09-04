@@ -54,12 +54,27 @@ class SendCampaignJob implements ShouldQueue
             return;
         }
 
+        // Remember addresses already delivered, so a retry never mails them twice
+        $alreadySent = $campaign->sends()
+            ->where('status', 'sent')
+            ->pluck('email')
+            ->map(fn ($email) => mb_strtolower($email))
+            ->flip()
+            ->all();
+
         $sentCount = 0;
         $failCount = 0;
+        $skipCount = 0;
 
         foreach ($recipients as $recipient) {
             // Skip if no email
             if (empty($recipient['email'])) {
+                continue;
+            }
+
+            // Skip anyone who already received this campaign
+            if (isset($alreadySent[mb_strtolower($recipient['email'])])) {
+                $skipCount++;
                 continue;
             }
 
@@ -109,10 +124,10 @@ class SendCampaignJob implements ShouldQueue
         $campaign->update([
             'status' => 'sent',
             'sent_at' => now(),
-            'recipients_count' => $sentCount,
+            'recipients_count' => $campaign->sends()->where('status', 'sent')->count(),
         ]);
 
-        Log::info("Campaign #{$campaign->id} sent. {$sentCount} delivered, {$failCount} failed.");
+        Log::info("Campaign #{$campaign->id} sent. {$sentCount} delivered, {$failCount} failed, {$skipCount} skipped (already sent).");
     }
 
     protected function collectRecipients($addressCircle): array
@@ -146,10 +161,10 @@ class SendCampaignJob implements ShouldQueue
                     'type' => 'organization',
                     'id' => $org->id,
                     'email' => $email,
-                    'name' => $org->name,
+                    'name' => $org->primary_name,
                     'first_name' => '',
                     'last_name' => '',
-                    'organization' => $org->name,
+                    'organization' => $org->primary_name,
                 ];
             }
         }

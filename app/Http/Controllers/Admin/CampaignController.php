@@ -191,8 +191,16 @@ class CampaignController extends Controller
             return back()->with('error', 'Brevo API-Key ist nicht konfiguriert. Bitte in .env eintragen.');
         }
 
-        // Clear previous sends if any (e.g. from a failed attempt)
-        $campaign->sends()->delete();
+        // Remember addresses already delivered, so a retry never mails them twice
+        $alreadySent = $campaign->sends()
+            ->where('status', 'sent')
+            ->pluck('email')
+            ->map(fn ($email) => mb_strtolower($email))
+            ->flip()
+            ->all();
+
+        // Only discard failed/pending records from an earlier attempt, keep 'sent'
+        $campaign->sends()->where('status', '!=', 'sent')->delete();
         $campaign->update(['status' => 'sending']);
 
         $addressCircle = $campaign->addressCircle;
@@ -206,9 +214,15 @@ class CampaignController extends Controller
         set_time_limit(300);
         $sentCount = 0;
         $failCount = 0;
+        $skipCount = 0;
 
         foreach ($recipients as $recipient) {
             if (empty($recipient['email'])) continue;
+
+            if (isset($alreadySent[mb_strtolower($recipient['email'])])) {
+                $skipCount++;
+                continue;
+            }
 
             $send = CampaignSend::create([
                 'campaign_id' => $campaign->id,
@@ -253,10 +267,13 @@ class CampaignController extends Controller
         $campaign->update([
             'status' => 'sent',
             'sent_at' => now(),
-            'recipients_count' => $sentCount,
+            'recipients_count' => $campaign->sends()->where('status', 'sent')->count(),
         ]);
 
         $message = "{$sentCount} E-Mails gesendet.";
+        if ($skipCount > 0) {
+            $message .= " {$skipCount} bereits zugestellt, übersprungen.";
+        }
         if ($failCount > 0) {
             $message .= " {$failCount} fehlgeschlagen.";
         }
@@ -293,10 +310,10 @@ class CampaignController extends Controller
                     'type' => 'organization',
                     'id' => $org->id,
                     'email' => $email,
-                    'name' => $org->name,
+                    'name' => $org->primary_name,
                     'first_name' => '',
                     'last_name' => '',
-                    'organization' => $org->name,
+                    'organization' => $org->primary_name,
                 ];
             }
         }
