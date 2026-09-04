@@ -69,6 +69,8 @@ function orgSearch_{{ $componentId }}() {
 </script>
 
 <div x-data="orgSearch_{{ $componentId }}()" class="relative" id="org-search-{{ $componentId }}" @paste-orgs-{{ strtolower($componentId) }}.window="$event.detail.forEach(o => { if (!isSelected(o.id)) selected.push(o); })">
+    {{-- Marker: set by Alpine, so a section that never rendered cannot trigger a sync that wipes existing links --}}
+    <input type="hidden" name="{{ str_replace('[]', '', $inputName) }}_submitted" value="" x-bind:value="'1'">
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $label }}</label>
 
     {{-- Search input --}}

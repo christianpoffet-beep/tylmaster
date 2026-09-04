@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\SyncsFormRelations;
 use App\Http\Controllers\Controller;
 use App\Models\Artwork;
 use App\Models\Project;
@@ -14,6 +15,8 @@ use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
+    use SyncsFormRelations;
+
     public function index(Request $request)
     {
         $query = Project::with(['tasks', 'linkedTasks'])->withCount('contacts');
@@ -63,15 +66,13 @@ class ProjectController extends Controller
 
         $project = Project::create($validated);
 
-        if ($request->has('contacts')) {
-            $project->contacts()->sync($request->input('contacts'));
-        }
+        $this->syncSubmitted($request, $project->contacts(), 'contacts');
 
-        $project->organizations()->sync($request->input('organization_ids', []));
-        $project->artworks()->sync($request->input('artwork_ids', []));
+        $this->syncSubmitted($request, $project->organizations(), 'organization_ids');
+        $this->syncSubmitted($request, $project->artworks(), 'artwork_ids');
         $project->genres()->sync($request->input('genre_ids', []));
-        $project->tracks()->sync($request->input('track_ids', []));
-        $project->contracts()->sync($request->input('contract_ids', []));
+        $this->syncSubmitted($request, $project->tracks(), 'track_ids');
+        $this->syncSubmitted($request, $project->contracts(), 'contract_ids');
 
         return redirect()->route('admin.projects.show', $project)->with('success', 'Projekt erstellt.');
     }
@@ -107,15 +108,13 @@ class ProjectController extends Controller
 
         $project->update($validated);
 
-        if ($request->has('contacts')) {
-            $project->contacts()->sync($request->input('contacts'));
-        }
+        $this->syncSubmitted($request, $project->contacts(), 'contacts');
 
-        $project->organizations()->sync($request->input('organization_ids', []));
-        $project->artworks()->sync($request->input('artwork_ids', []));
+        $this->syncSubmitted($request, $project->organizations(), 'organization_ids');
+        $this->syncSubmitted($request, $project->artworks(), 'artwork_ids');
         $project->genres()->sync($request->input('genre_ids', []));
-        $project->tracks()->sync($request->input('track_ids', []));
-        $project->contracts()->sync($request->input('contract_ids', []));
+        $this->syncSubmitted($request, $project->tracks(), 'track_ids');
+        $this->syncSubmitted($request, $project->contracts(), 'contract_ids');
 
         return redirect()->route('admin.projects.show', $project)->with('success', 'Projekt aktualisiert.');
     }

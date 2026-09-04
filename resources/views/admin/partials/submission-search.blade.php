@@ -8,6 +8,8 @@
 @endphp
 
 <div x-data="submissionSearch()" class="relative">
+    {{-- Marker: set by Alpine. Without it the section never rendered and the controller must not sync. --}}
+    <input type="hidden" name="{{ str_replace('[]', '', $submissionInputName) }}_submitted" value="" x-bind:value="'1'">
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Submissions</label>
 
     <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="if(query.length >= 1 || results.length) open = true; else { search(); }"

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\SyncsFormRelations;
 use App\Http\Controllers\Controller;
 use App\Models\AddressCircle;
 use App\Models\Contact;
@@ -15,6 +16,8 @@ use Illuminate\Http\Request;
 
 class AddressCircleController extends Controller
 {
+    use SyncsFormRelations;
+
     public function index(Request $request)
     {
         $query = AddressCircle::query();
@@ -57,8 +60,8 @@ class AddressCircleController extends Controller
         ]);
 
         $circle = AddressCircle::create($request->only('name', 'info'));
-        $circle->organizations()->sync($request->input('organization_ids', []));
-        $circle->projects()->sync($request->input('project_ids', []));
+        $this->syncSubmitted($request, $circle->organizations(), 'organization_ids');
+        $this->syncSubmitted($request, $circle->projects(), 'project_ids');
 
         return redirect()->route('admin.address-circles.edit', $circle)->with('success', 'Adresskreis erstellt. Du kannst jetzt Mitglieder hinzufügen.');
     }
@@ -89,8 +92,8 @@ class AddressCircleController extends Controller
         ]);
 
         $addressCircle->update($request->only('name', 'info'));
-        $addressCircle->organizations()->sync($request->input('organization_ids', []));
-        $addressCircle->projects()->sync($request->input('project_ids', []));
+        $this->syncSubmitted($request, $addressCircle->organizations(), 'organization_ids');
+        $this->syncSubmitted($request, $addressCircle->projects(), 'project_ids');
 
         return redirect()->route('admin.address-circles.edit', $addressCircle)->with('success', 'Adresskreis aktualisiert.');
     }

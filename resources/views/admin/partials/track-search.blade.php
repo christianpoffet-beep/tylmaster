@@ -8,6 +8,8 @@
 @endphp
 
 <div x-data="trackSearch()" class="relative" @paste-tracks.window="$event.detail.forEach(t => { if (!isSelected(t.id)) selected.push(t); })">
+    {{-- Marker: set by Alpine. Without it the section never rendered and the controller must not sync. --}}
+    <input type="hidden" name="{{ str_replace('[]', '', $trackInputName) }}_submitted" value="" x-bind:value="'1'">
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tracks</label>
 
     <div class="flex gap-2 mb-2">

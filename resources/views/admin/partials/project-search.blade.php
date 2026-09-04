@@ -8,6 +8,8 @@
 @endphp
 
 <div x-data="projectSearch()" class="relative" @paste-projects.window="$event.detail.forEach(p => { if (!isSelected(p.id)) selected.push(p); })">
+    {{-- Marker: set by Alpine, so a section that never rendered cannot trigger a sync that wipes existing links --}}
+    <input type="hidden" name="{{ str_replace('[]', '', $projectInputName) }}_submitted" value="" x-bind:value="'1'">
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Projekte</label>
 
     <div class="flex gap-2 mb-2">

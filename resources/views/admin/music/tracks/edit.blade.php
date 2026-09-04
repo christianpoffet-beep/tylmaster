@@ -165,7 +165,8 @@
             removeRow(index) { this.rows.splice(index, 1); }
         }" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mt-6">
             {{-- Hidden inputs OUTSIDE collapse, always in DOM --}}
-            <input type="hidden" name="release_ids_submitted" value="1">
+            {{-- value set by Alpine: without it the section never rendered and must not sync --}}
+            <input type="hidden" name="release_ids_submitted" value="" x-bind:value="'1'">
             <template x-for="(row, index) in rows" :key="'hidden-'+index">
                 <div>
                     <input type="hidden" :name="'release_ids[' + index + ']'" :value="row.release_id">

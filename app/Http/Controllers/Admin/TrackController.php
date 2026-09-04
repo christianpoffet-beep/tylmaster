@@ -99,23 +99,7 @@ class TrackController extends Controller
 
         $track = Track::create($validated);
 
-        // Sync bands + labels + publishers as organizations
-        $orgIds = array_merge(
-            $request->input('band_ids', []),
-            $request->input('label_ids', []),
-            $request->input('publisher_ids', [])
-        );
-        $track->organizations()->sync($orgIds);
-
-        // Sync credits (contacts with roles)
-        $this->syncCredits($track, $request);
-
-        // Sync releases (N:M)
-        $this->syncReleases($track, $request);
-
-        // Sync projects & contracts
-        $track->projects()->sync($request->input('project_ids', []));
-        $track->contracts()->sync($request->input('contract_ids', []));
+        $this->syncRelations($track, $request);
 
         return redirect()->route('admin.tracks.show', $track)->with('success', 'Track erstellt.');
     }
@@ -228,23 +212,7 @@ class TrackController extends Controller
 
         $track->update($validated);
 
-        // Sync bands + labels + publishers as organizations
-        $orgIds = array_merge(
-            $request->input('band_ids', []),
-            $request->input('label_ids', []),
-            $request->input('publisher_ids', [])
-        );
-        $track->organizations()->sync($orgIds);
-
-        // Sync credits (contacts with roles)
-        $this->syncCredits($track, $request);
-
-        // Sync releases (N:M)
-        $this->syncReleases($track, $request);
-
-        // Sync projects & contracts
-        $track->projects()->sync($request->input('project_ids', []));
-        $track->contracts()->sync($request->input('contract_ids', []));
+        $this->syncRelations($track, $request);
 
         return redirect()->route('admin.tracks.show', $track)->with('success', 'Track aktualisiert.');
     }
@@ -296,6 +264,45 @@ class TrackController extends Controller
         return back()->with('success', count($ids) . ' Tracks aktualisiert.');
     }
 
+    /**
+     * All of these form sections render their inputs through Alpine. If Alpine
+     * never ran - a JS error, or the form submitted before it hydrated - the
+     * fields are simply absent from the request, and an unguarded sync() would
+     * read that as "the user removed everything" and wipe the links.
+     *
+     * Each section therefore submits a marker that Alpine itself fills in. No
+     * marker means the section did not report in, and its relation is left
+     * untouched.
+     */
+    private function syncRelations(Track $track, Request $request): void
+    {
+        // Bands, labels and publishers share one relation but three sections
+        $orgMarkers = ['band_ids_submitted', 'label_ids_submitted', 'publisher_ids_submitted'];
+        if (collect($orgMarkers)->contains(fn ($m) => $request->filled($m))) {
+            $track->organizations()->sync(array_merge(
+                $request->input('band_ids', []),
+                $request->input('label_ids', []),
+                $request->input('publisher_ids', [])
+            ));
+        }
+
+        if ($request->filled('credits_submitted')) {
+            $this->syncCredits($track, $request);
+        }
+
+        if ($request->filled('release_ids_submitted')) {
+            $this->syncReleases($track, $request);
+        }
+
+        if ($request->filled('project_ids_submitted')) {
+            $track->projects()->sync($request->input('project_ids', []));
+        }
+
+        if ($request->filled('contract_ids_submitted')) {
+            $track->contracts()->sync($request->input('contract_ids', []));
+        }
+    }
+
     private function syncReleases(Track $track, Request $request): void
     {
         $releaseIds = $request->input('release_ids', []);
@@ -313,9 +320,7 @@ class TrackController extends Controller
             ];
         }
 
-        if ($request->has('release_ids_submitted')) {
-            $track->releases()->sync($syncData);
-        }
+        $track->releases()->sync($syncData);
     }
 
     private function syncCredits(Track $track, Request $request): void

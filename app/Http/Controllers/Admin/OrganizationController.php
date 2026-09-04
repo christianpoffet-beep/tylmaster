@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\SyncsFormRelations;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Models\Contact;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Storage;
 
 class OrganizationController extends Controller
 {
+    use SyncsFormRelations;
+
     private function applyFilters(Request $request)
     {
         $query = Organization::with('genres');
@@ -176,11 +179,11 @@ class OrganizationController extends Controller
 
         $organization = Organization::create($validated);
 
-        $organization->contacts()->sync($request->input('contact_ids', []));
-        $organization->projects()->sync($request->input('project_ids', []));
-        $organization->tracks()->sync($request->input('track_ids', []));
-        $organization->releases()->sync($request->input('release_ids', []));
-        $organization->contracts()->sync($request->input('contract_ids', []));
+        $this->syncSubmitted($request, $organization->contacts(), 'contact_ids');
+        $this->syncSubmitted($request, $organization->projects(), 'project_ids');
+        $this->syncSubmitted($request, $organization->tracks(), 'track_ids');
+        $this->syncSubmitted($request, $organization->releases(), 'release_ids');
+        $this->syncSubmitted($request, $organization->contracts(), 'contract_ids');
         $organization->genres()->sync($request->input('genre_ids', []));
 
         if ($request->hasFile('document')) {
@@ -275,11 +278,11 @@ class OrganizationController extends Controller
 
         $organization->update($validated);
 
-        $organization->contacts()->sync($request->input('contact_ids', []));
-        $organization->projects()->sync($request->input('project_ids', []));
-        $organization->tracks()->sync($request->input('track_ids', []));
-        $organization->releases()->sync($request->input('release_ids', []));
-        $organization->contracts()->sync($request->input('contract_ids', []));
+        $this->syncSubmitted($request, $organization->contacts(), 'contact_ids');
+        $this->syncSubmitted($request, $organization->projects(), 'project_ids');
+        $this->syncSubmitted($request, $organization->tracks(), 'track_ids');
+        $this->syncSubmitted($request, $organization->releases(), 'release_ids');
+        $this->syncSubmitted($request, $organization->contracts(), 'contract_ids');
         $organization->genres()->sync($request->input('genre_ids', []));
 
         if ($request->hasFile('document')) {

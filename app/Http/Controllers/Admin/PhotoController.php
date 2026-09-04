@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\SyncsFormRelations;
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Models\Document;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Storage;
 
 class PhotoController extends Controller
 {
+    use SyncsFormRelations;
+
     public function index(Request $request)
     {
         $query = PhotoFolder::whereNull('parent_id')->withCount(['photos', 'children']);
@@ -59,9 +62,9 @@ class PhotoController extends Controller
             'parent_id' => $validated['parent_id'] ?? null,
         ]);
 
-        $folder->contacts()->sync($request->input('contact_ids', []));
-        $folder->organizations()->sync($request->input('organization_ids', []));
-        $folder->projects()->sync($request->input('project_ids', []));
+        $this->syncSubmitted($request, $folder->contacts(), 'contact_ids');
+        $this->syncSubmitted($request, $folder->organizations(), 'organization_ids');
+        $this->syncSubmitted($request, $folder->projects(), 'project_ids');
 
         return redirect()->route('admin.photos.folders.show', $folder)->with('success', 'Ordner erstellt.');
     }
@@ -106,9 +109,9 @@ class PhotoController extends Controller
             'parent_id' => $validated['parent_id'] ?? null,
         ]);
 
-        $folder->contacts()->sync($request->input('contact_ids', []));
-        $folder->organizations()->sync($request->input('organization_ids', []));
-        $folder->projects()->sync($request->input('project_ids', []));
+        $this->syncSubmitted($request, $folder->contacts(), 'contact_ids');
+        $this->syncSubmitted($request, $folder->organizations(), 'organization_ids');
+        $this->syncSubmitted($request, $folder->projects(), 'project_ids');
 
         return redirect()->route('admin.photos.folders.show', $folder)->with('success', 'Ordner aktualisiert.');
     }
