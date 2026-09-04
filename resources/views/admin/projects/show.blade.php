@@ -188,10 +188,10 @@
     @endif
 
     <!-- Tasks -->
-    <x-admin.collapsible-card title="Aufgaben" :count="$project->tasks->count()" class="mt-6">
-        @if($project->tasks->count())
+    <x-admin.collapsible-card title="Aufgaben" :count="$project->all_tasks->count()" class="mt-6">
+        @if($project->all_tasks->count())
             <div class="space-y-2 mb-6">
-                @foreach($project->tasks as $task)
+                @foreach($project->all_tasks as $task)
                     <div class="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <div class="flex items-center gap-3">
                             <form method="POST" action="{{ route('admin.projects.tasks.toggle', [$project, $task]) }}">
