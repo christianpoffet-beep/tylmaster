@@ -73,7 +73,7 @@
             </div>
         </div>
         <div class="p-5">
-            @forelse($upcomingTasks as $task)
+            @forelse($openTasks as $task)
                 <div class="flex justify-between items-center py-2 {{ !$loop->last ? 'border-b border-gray-100 dark:border-gray-700' : '' }}">
                     <div class="flex items-center gap-2">
                         <form method="POST" action="{{ route('admin.tasks.toggle', $task) }}">

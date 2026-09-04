@@ -8,8 +8,9 @@
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Suche..." class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
         <select name="status" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             <option value="">Alle</option>
-            <option value="open" {{ request('status') === 'open' ? 'selected' : '' }}>Offen</option>
-            <option value="done" {{ request('status') === 'done' ? 'selected' : '' }}>Erledigt</option>
+            @foreach(\App\Models\Task::STATUSES as $value => $label)
+                <option value="{{ $value }}" {{ request('status') === $value ? 'selected' : '' }}>{{ $label }}</option>
+            @endforeach
         </select>
         <select name="priority" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             <option value="">Alle Prioritäten</option>
@@ -41,20 +42,23 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($tasks as $task)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 {{ $task->is_completed ? 'opacity-50' : '' }}">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 {{ $task->isClosed() ? 'opacity-50' : '' }}">
                         <td class="px-4 py-3">
                             <form method="POST" action="{{ route('admin.tasks.toggle', $task) }}">
                                 @csrf
                                 @method('PATCH')
-                                <button type="submit" class="w-5 h-5 rounded border-2 flex items-center justify-center {{ $task->is_completed ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 hover:border-blue-400' }}">
-                                    @if($task->is_completed)
+                                <button type="submit" class="w-5 h-5 rounded border-2 flex items-center justify-center {{ $task->isCompleted() ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 hover:border-blue-400' }}">
+                                    @if($task->isCompleted())
                                         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                                     @endif
                                 </button>
                             </form>
                         </td>
                         <td class="px-4 py-3 text-sm">
-                            <a href="{{ route('admin.tasks.show', $task) }}" class="font-medium {{ $task->is_completed ? 'line-through text-gray-400' : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400' }}">{{ $task->title }}</a>
+                            <a href="{{ route('admin.tasks.show', $task) }}" class="font-medium {{ $task->isClosed() ? 'line-through text-gray-400' : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400' }}">{{ $task->title }}</a>
+                            @if($task->status !== 'open')
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $task->status_color }}">{{ $task->status_label }}</span>
+                            @endif
                         </td>
                         <td class="px-4 py-3">
                             @if($task->priority === 'high')
@@ -92,20 +96,23 @@
 {{-- Mobile: Karten --}}
 <div class="md:hidden space-y-2">
     @forelse($tasks as $task)
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 {{ $task->is_completed ? 'opacity-50' : '' }} {{ $task->isOverdue() ? 'border-l-4 border-l-red-400' : '' }}">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 {{ $task->isClosed() ? 'opacity-50' : '' }} {{ $task->isOverdue() ? 'border-l-4 border-l-red-400' : '' }}">
             <div class="flex items-start gap-3">
                 <form method="POST" action="{{ route('admin.tasks.toggle', $task) }}" class="pt-0.5">
                     @csrf
                     @method('PATCH')
-                    <button type="submit" class="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 {{ $task->is_completed ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 hover:border-blue-400' }}">
-                        @if($task->is_completed)
+                    <button type="submit" class="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 {{ $task->isCompleted() ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 hover:border-blue-400' }}">
+                        @if($task->isCompleted())
                             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                         @endif
                     </button>
                 </form>
                 <div class="flex-1 min-w-0">
-                    <a href="{{ route('admin.tasks.show', $task) }}" class="text-sm font-medium {{ $task->is_completed ? 'line-through text-gray-400' : 'text-gray-900' }}">{{ $task->title }}</a>
+                    <a href="{{ route('admin.tasks.show', $task) }}" class="text-sm font-medium {{ $task->isClosed() ? 'line-through text-gray-400' : 'text-gray-900' }}">{{ $task->title }}</a>
                     <div class="flex flex-wrap items-center gap-2 mt-1.5 text-xs">
+                        @if($task->status !== 'open')
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $task->status_color }}">{{ $task->status_label }}</span>
+                        @endif
                         @if($task->priority)
                             @if($task->priority === 'high')
                                 <span class="inline-flex items-center px-2 py-0.5 rounded font-medium bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300">Hoch</span>

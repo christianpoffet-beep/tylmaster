@@ -197,13 +197,13 @@
                             <form method="POST" action="{{ route('admin.projects.tasks.toggle', [$project, $task]) }}">
                                 @csrf
                                 @method('PATCH')
-                                <button type="submit" class="flex items-center justify-center w-5 h-5 rounded border {{ $task->is_completed ? 'bg-blue-600 border-blue-600' : 'border-gray-300 hover:border-blue-500' }}">
-                                    @if($task->is_completed)
+                                <button type="submit" class="flex items-center justify-center w-5 h-5 rounded border {{ $task->isCompleted() ? 'bg-blue-600 border-blue-600' : 'border-gray-300 hover:border-blue-500' }}">
+                                    @if($task->isCompleted())
                                         <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                     @endif
                                 </button>
                             </form>
-                            <a href="{{ route('admin.tasks.show', $task) }}" class="text-sm {{ $task->is_completed ? 'line-through text-gray-400' : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400' }}">{{ $task->title }}</a>
+                            <a href="{{ route('admin.tasks.show', $task) }}" class="text-sm {{ $task->isClosed() ? 'line-through text-gray-400' : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400' }}">{{ $task->title }}</a>
                         </div>
                         @if($task->due_date)
                             <span class="text-xs text-gray-500 dark:text-gray-400">{{ $task->due_date->format('d.m.Y') }}</span>

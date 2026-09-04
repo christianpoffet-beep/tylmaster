@@ -23,7 +23,7 @@ class DashboardController extends Controller
             'contracts' => Contract::where('status', 'active')->count(),
             'projects' => Project::whereIn('status', self::ACTIVE_PROJECT_STATUSES)->count(),
             'open_invoices' => Invoice::where('status', 'open')->count(),
-            'open_tasks' => Task::where('is_completed', false)->count(),
+            'open_tasks' => Task::open()->count(),
             'submissions' => MusicSubmission::where('status', 'new')->count(),
         ];
 
@@ -43,19 +43,16 @@ class DashboardController extends Controller
         // Optional filter on the task list; 0 and non-numeric input mean "all"
         $projectFilter = $request->integer('project') ?: null;
 
-        $upcomingTasks = Task::with('project')
-            ->where('is_completed', false)
+        // Every open task, not just the ones due soon. On hold and not
+        // implemented stay out - the dashboard shows what can be worked on.
+        $openTasks = Task::with('project')
+            ->open()
             ->when($projectFilter, fn ($q) => $q->where('project_id', $projectFilter))
-            ->where(function ($q) {
-                $q->where('due_date', '<=', now()->addDays(7))
-                  ->orWhereNull('due_date');
-            })
             ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date ASC')
-            ->take(10)
             ->get();
 
         // Only offer projects that actually have open tasks, so no option comes up empty
-        $taskProjects = Project::whereHas('tasks', fn ($q) => $q->where('is_completed', false))
+        $taskProjects = Project::whereHas('tasks', fn ($q) => $q->open())
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -80,7 +77,7 @@ class DashboardController extends Controller
 
         return view('admin.dashboard', compact(
             'stats', 'recentContacts', 'activeProjects', 'overdueInvoices',
-            'upcomingTasks', 'upcomingBirthdays', 'taskProjects', 'projectFilter'
+            'openTasks', 'upcomingBirthdays', 'taskProjects', 'projectFilter'
         ));
     }
 }

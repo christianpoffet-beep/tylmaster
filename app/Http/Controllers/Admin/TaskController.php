@@ -23,22 +23,24 @@ class TaskController extends Controller
             $query->where('title', 'like', "%{$search}%");
         }
 
-        if ($request->input('status') === 'open') {
-            $query->where('is_completed', false);
-        } elseif ($request->input('status') === 'done') {
-            $query->where('is_completed', true);
+        $status = $request->input('status');
+        if ($status === 'done') {
+            $status = 'completed'; // legacy value from older bookmarks
+        }
+        if ($status && array_key_exists($status, Task::STATUSES)) {
+            $query->where('status', $status);
         }
 
         if ($priority = $request->input('priority')) {
             $query->where('priority', $priority);
         }
 
-        $allowedSorts = ['title', 'priority', 'due_date', 'is_completed', 'created_at'];
+        $allowedSorts = ['title', 'priority', 'due_date', 'status', 'created_at'];
         if ($request->input('sort') && in_array($request->input('sort'), $allowedSorts)) {
             $sortDir = in_array($request->input('dir'), ['asc', 'desc']) ? $request->input('dir') : 'asc';
             $tasks = $query->orderBy($request->input('sort'), $sortDir)->paginate(30)->withQueryString();
         } else {
-            $tasks = $query->orderByRaw('is_completed ASC, CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date ASC')->paginate(30)->withQueryString();
+            $tasks = $query->orderByRaw("CASE status WHEN 'open' THEN 0 WHEN 'on_hold' THEN 1 ELSE 2 END, CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date ASC")->paginate(30)->withQueryString();
         }
 
         return view('admin.tasks.index', compact('tasks'));
@@ -62,6 +64,7 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
             'priority' => 'nullable|in:low,medium,high',
+            'status' => 'nullable|in:open,on_hold,not_implemented,completed',
             'project_id' => 'nullable|exists:projects,id',
             'doc_files.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,csv,txt,jpg,jpeg,png,zip|max:51200',
         ]);
@@ -99,6 +102,7 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
             'priority' => 'nullable|in:low,medium,high',
+            'status' => 'nullable|in:open,on_hold,not_implemented,completed',
             'project_id' => 'nullable|exists:projects,id',
             'doc_files.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,csv,txt,jpg,jpeg,png,zip|max:51200',
         ]);
@@ -122,8 +126,8 @@ class TaskController extends Controller
 
     public function toggle(Task $task)
     {
-        $task->update(['is_completed' => !$task->is_completed]);
-        return back()->with('success', $task->is_completed ? 'Aufgabe erledigt.' : 'Aufgabe wieder geöffnet.');
+        $task->update(['status' => $task->isCompleted() ? 'open' : 'completed']);
+        return back()->with('success', $task->isCompleted() ? 'Aufgabe erledigt.' : 'Aufgabe wieder geöffnet.');
     }
 
     public function destroyDocument(Task $task, Document $document)
