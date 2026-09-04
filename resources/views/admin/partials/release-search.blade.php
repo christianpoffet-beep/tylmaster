@@ -6,6 +6,8 @@
 @endphp
 
 <div x-data="releaseSearch()" class="relative" @paste-releases.window="$event.detail.forEach(r => { if (!isSelected(r.id)) selected.push(r); })">
+    {{-- Marker: set by Alpine. Without it the section never rendered and the controller must not sync. --}}
+    <input type="hidden" name="{{ str_replace('[]', '', $releaseInputName) }}_submitted" value="" x-bind:value="'1'">
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Produkte</label>
 
     <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="if(query.length >= 1 || results.length) open = true; else { search(); }"

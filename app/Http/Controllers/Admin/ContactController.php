@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\SyncsFormRelations;
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Models\ContactType;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Storage;
 
 class ContactController extends Controller
 {
+    use SyncsFormRelations;
+
     private function applyFilters(Request $request)
     {
         $query = Contact::with('genres');
@@ -189,11 +192,9 @@ class ContactController extends Controller
             $contact->tags()->sync($request->input('tags'));
         }
 
-        if ($request->has('project_ids')) {
-            $contact->projects()->sync($request->input('project_ids'));
-        }
+        $this->syncSubmitted($request, $contact->projects(), 'project_ids');
 
-        $contact->organizations()->sync($request->input('organization_ids', []));
+        $this->syncSubmitted($request, $contact->organizations(), 'organization_ids');
         $contact->genres()->sync($request->input('genre_ids', []));
 
         return redirect()->route('admin.contacts.show', $contact)->with('success', 'Kontakt erstellt.');
@@ -275,8 +276,8 @@ class ContactController extends Controller
         $contact->update($validated);
 
         $contact->tags()->sync($request->input('tags', []));
-        $contact->projects()->sync($request->input('project_ids', []));
-        $contact->organizations()->sync($request->input('organization_ids', []));
+        $this->syncSubmitted($request, $contact->projects(), 'project_ids');
+        $this->syncSubmitted($request, $contact->organizations(), 'organization_ids');
         $contact->genres()->sync($request->input('genre_ids', []));
 
         return redirect()->route('admin.contacts.show', $contact)->with('success', 'Kontakt aktualisiert.');

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\SyncsFormRelations;
 use App\Http\Controllers\Controller;
 use App\Models\Artwork;
 use App\Models\ArtworkCredit;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Storage;
 
 class ArtworkController extends Controller
 {
+    use SyncsFormRelations;
+
     public function index(Request $request)
     {
         $query = Artwork::with(['images', 'logos'])->withCount(['images', 'logos']);
@@ -50,7 +53,7 @@ class ArtworkController extends Controller
             'yoc' => $validated['yoc'] ?? null,
         ]);
 
-        $artwork->projects()->sync($request->input('project_ids', []));
+        $this->syncSubmitted($request, $artwork->projects(), 'project_ids');
         $this->syncCredits($artwork, $request->input('credits', []));
 
         $dpiWarnings = [];
@@ -92,7 +95,7 @@ class ArtworkController extends Controller
             'yoc' => $validated['yoc'] ?? null,
         ]);
 
-        $artwork->projects()->sync($request->input('project_ids', []));
+        $this->syncSubmitted($request, $artwork->projects(), 'project_ids');
         $this->syncCredits($artwork, $request->input('credits', []));
 
         $this->updateExistingImages($artwork, $request->input('existing_images', []));

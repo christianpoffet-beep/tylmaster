@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\SyncsFormRelations;
 use App\Http\Controllers\Controller;
 use App\Models\Artwork;
 use App\Models\ArtworkLogo;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\Storage;
 
 class ContractController extends Controller
 {
+    use SyncsFormRelations;
+
     public function index(Request $request)
     {
         $query = Contract::query();
@@ -172,9 +175,9 @@ class ContractController extends Controller
             ]);
         }
 
-        $contract->projects()->sync($request->input('project_ids', []));
-        $contract->tracks()->sync($request->input('track_ids', []));
-        $contract->releases()->sync($request->input('release_ids', []));
+        $this->syncSubmitted($request, $contract->projects(), 'project_ids');
+        $this->syncSubmitted($request, $contract->tracks(), 'track_ids');
+        $this->syncSubmitted($request, $contract->releases(), 'release_ids');
 
         if ($request->hasFile('document')) {
             $file = $request->file('document');
@@ -325,9 +328,9 @@ class ContractController extends Controller
             ]);
         }
 
-        $contract->projects()->sync($request->input('project_ids', []));
-        $contract->tracks()->sync($request->input('track_ids', []));
-        $contract->releases()->sync($request->input('release_ids', []));
+        $this->syncSubmitted($request, $contract->projects(), 'project_ids');
+        $this->syncSubmitted($request, $contract->tracks(), 'track_ids');
+        $this->syncSubmitted($request, $contract->releases(), 'release_ids');
 
         if ($request->hasFile('document')) {
             $file = $request->file('document');

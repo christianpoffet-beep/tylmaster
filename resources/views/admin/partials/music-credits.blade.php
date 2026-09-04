@@ -139,6 +139,8 @@ function musicCredits() {
 </script>
 
 <div x-data="musicCredits()" class="space-y-4" @paste-credits.window="pasteCredits($event.detail)">
+    {{-- Marker: set by Alpine, so a section that never rendered cannot trigger a sync that wipes existing links --}}
+    <input type="hidden" name="credits_submitted" value="" x-bind:value="'1'">
     {{-- Credits list grouped by (contact, ipi) --}}
     <div x-show="contacts.length > 0" class="space-y-3">
         <template x-for="(contact, ci) in contacts" :key="ci">

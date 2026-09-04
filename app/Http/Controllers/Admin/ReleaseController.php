@@ -2,31 +2,33 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\SyncsFormRelations;
 use App\Http\Controllers\Controller;
+use App\Models\Artwork;
+use App\Models\Contract;
+use App\Models\Organization;
+use App\Models\ProductTemplate;
+use App\Models\Project;
 use App\Models\Release;
 use App\Models\Track;
-use App\Models\Contract;
-use App\Models\Project;
-use App\Models\Artwork;
-use App\Models\ProductTemplate;
-use App\Models\Setting;
-use App\Models\Organization;
 use Illuminate\Http\Request;
 
 class ReleaseController extends Controller
 {
+    use SyncsFormRelations;
+
     public function index(Request $request)
     {
-        $query = Release::withCount('tracks')->with(['organizations' => fn($q) => $q->where('type', 'label')]);
+        $query = Release::withCount('tracks')->with(['organizations' => fn ($q) => $q->where('type', 'label')]);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('ean_upc', 'like', "%{$search}%")
-                  ->orWhere('upc', 'like', "%{$search}%")
-                  ->orWhere('catalog_number', 'like', "%{$search}%")
-                  ->orWhere('label_name', 'like', "%{$search}%")
-                  ->orWhere('main_artist', 'like', "%{$search}%");
+                    ->orWhere('ean_upc', 'like', "%{$search}%")
+                    ->orWhere('upc', 'like', "%{$search}%")
+                    ->orWhere('catalog_number', 'like', "%{$search}%")
+                    ->orWhere('label_name', 'like', "%{$search}%")
+                    ->orWhere('main_artist', 'like', "%{$search}%");
             });
         }
 
@@ -37,10 +39,15 @@ class ReleaseController extends Controller
         $sortField = $request->input('sort', 'release_date');
         $sortDir = $request->input('dir', 'desc');
         $allowedSorts = ['title', 'release_date', 'created_at'];
-        if (!in_array($sortField, $allowedSorts)) $sortField = 'release_date';
-        if (!in_array($sortDir, ['asc', 'desc'])) $sortDir = 'desc';
+        if (! in_array($sortField, $allowedSorts)) {
+            $sortField = 'release_date';
+        }
+        if (! in_array($sortDir, ['asc', 'desc'])) {
+            $sortDir = 'desc';
+        }
 
         $releases = $query->orderBy($sortField, $sortDir)->paginate(20)->withQueryString();
+
         return view('admin.music.releases.index', compact('releases'));
     }
 
@@ -55,8 +62,9 @@ class ReleaseController extends Controller
         // organizations and contacts feed the tracklist filter
         $allTracks = Track::with(['organizations', 'contacts'])->orderBy('title')->get();
         $catalogs = Organization::where('type', 'label')->whereNotNull('catalogs')->get()
-            ->flatMap(fn($org) => collect($org->catalogs)->map(fn($c) => ['prefix' => $c, 'label' => $org->primary_name]))
+            ->flatMap(fn ($org) => collect($org->catalogs)->map(fn ($c) => ['prefix' => $c, 'label' => $org->primary_name]))
             ->unique('prefix')->sortBy('prefix')->values();
+
         return view('admin.music.releases.create', compact('territoryPresets', 'projects', 'contracts', 'artworks', 'templates', 'allTracks', 'catalogs'));
     }
 
@@ -97,23 +105,26 @@ class ReleaseController extends Controller
 
         $release = Release::create($validated);
 
-        // Sync organizations
-        $orgIds = array_merge(
-            $request->input('band_ids', []),
-            $request->input('label_ids', []),
-            $request->input('publisher_ids', [])
-        );
-        $release->organizations()->sync($orgIds);
+        // Bands, labels and publishers share one relation but three sections
+        if ($this->sectionSubmitted($request, 'band_ids', 'label_ids', 'publisher_ids')) {
+            $release->organizations()->sync(array_merge(
+                $request->input('band_ids', []),
+                $request->input('label_ids', []),
+                $request->input('publisher_ids', [])
+            ));
+        }
 
         // Sync credits
-        $release->contacts()->detach();
-        foreach ($request->input('credits', []) as $credit) {
-            if (!empty($credit['contact_id']) && !empty($credit['role'])) {
-                $pivot = ['role' => $credit['role'], 'instrument' => null];
-                if ($credit['role'] === 'instrumentalist' && !empty($credit['instrument'])) {
-                    $pivot['instrument'] = $credit['instrument'];
+        if ($this->sectionSubmitted($request, 'credits')) {
+            $release->contacts()->detach();
+            foreach ($request->input('credits', []) as $credit) {
+                if (! empty($credit['contact_id']) && ! empty($credit['role'])) {
+                    $pivot = ['role' => $credit['role'], 'instrument' => null];
+                    if ($credit['role'] === 'instrumentalist' && ! empty($credit['instrument'])) {
+                        $pivot['instrument'] = $credit['instrument'];
+                    }
+                    $release->contacts()->attach($credit['contact_id'], $pivot);
                 }
-                $release->contacts()->attach($credit['contact_id'], $pivot);
             }
         }
 
@@ -124,8 +135,8 @@ class ReleaseController extends Controller
         $this->syncArtworks($release, $request);
 
         // Sync projects & contracts
-        $release->projects()->sync($request->input('project_ids', []));
-        $release->contracts()->sync($request->input('contract_ids', []));
+        $this->syncSubmitted($request, $release->projects(), 'project_ids');
+        $this->syncSubmitted($request, $release->contracts(), 'contract_ids');
 
         // Auto-fill label_name from tracks
         $release->load('tracks.organizations');
@@ -141,6 +152,7 @@ class ReleaseController extends Controller
             'contacts', 'organizations', 'projects', 'contracts',
             'artworks.images', 'artworks.logos', 'artworks.credits.creditable',
         ]);
+
         return view('admin.music.releases.show', compact('release'));
     }
 
@@ -155,8 +167,9 @@ class ReleaseController extends Controller
         // organizations and contacts feed the tracklist filter
         $allTracks = Track::with(['organizations', 'contacts'])->orderBy('title')->get();
         $catalogs = Organization::where('type', 'label')->whereNotNull('catalogs')->get()
-            ->flatMap(fn($org) => collect($org->catalogs)->map(fn($c) => ['prefix' => $c, 'label' => $org->primary_name]))
+            ->flatMap(fn ($org) => collect($org->catalogs)->map(fn ($c) => ['prefix' => $c, 'label' => $org->primary_name]))
             ->unique('prefix')->sortBy('prefix')->values();
+
         return view('admin.music.releases.edit', compact('release', 'territoryPresets', 'projects', 'contracts', 'artworks', 'templates', 'allTracks', 'catalogs'));
     }
 
@@ -196,29 +209,32 @@ class ReleaseController extends Controller
         unset($validated['cover_image']);
 
         // Ensure product_type is always set (even as empty array)
-        if (!isset($validated['product_type'])) {
+        if (! isset($validated['product_type'])) {
             $validated['product_type'] = [];
         }
 
         $release->update($validated);
 
-        // Sync organizations
-        $orgIds = array_merge(
-            $request->input('band_ids', []),
-            $request->input('label_ids', []),
-            $request->input('publisher_ids', [])
-        );
-        $release->organizations()->sync($orgIds);
+        // Bands, labels and publishers share one relation but three sections
+        if ($this->sectionSubmitted($request, 'band_ids', 'label_ids', 'publisher_ids')) {
+            $release->organizations()->sync(array_merge(
+                $request->input('band_ids', []),
+                $request->input('label_ids', []),
+                $request->input('publisher_ids', [])
+            ));
+        }
 
         // Sync credits
-        $release->contacts()->detach();
-        foreach ($request->input('credits', []) as $credit) {
-            if (!empty($credit['contact_id']) && !empty($credit['role'])) {
-                $pivot = ['role' => $credit['role'], 'instrument' => null];
-                if ($credit['role'] === 'instrumentalist' && !empty($credit['instrument'])) {
-                    $pivot['instrument'] = $credit['instrument'];
+        if ($this->sectionSubmitted($request, 'credits')) {
+            $release->contacts()->detach();
+            foreach ($request->input('credits', []) as $credit) {
+                if (! empty($credit['contact_id']) && ! empty($credit['role'])) {
+                    $pivot = ['role' => $credit['role'], 'instrument' => null];
+                    if ($credit['role'] === 'instrumentalist' && ! empty($credit['instrument'])) {
+                        $pivot['instrument'] = $credit['instrument'];
+                    }
+                    $release->contacts()->attach($credit['contact_id'], $pivot);
                 }
-                $release->contacts()->attach($credit['contact_id'], $pivot);
             }
         }
 
@@ -229,8 +245,8 @@ class ReleaseController extends Controller
         $this->syncArtworks($release, $request);
 
         // Sync projects & contracts
-        $release->projects()->sync($request->input('project_ids', []));
-        $release->contracts()->sync($request->input('contract_ids', []));
+        $this->syncSubmitted($request, $release->projects(), 'project_ids');
+        $this->syncSubmitted($request, $release->contracts(), 'contract_ids');
 
         // Auto-fill label_name from tracks
         $release->load('tracks.organizations');
@@ -242,6 +258,7 @@ class ReleaseController extends Controller
     public function destroy(Release $release)
     {
         $release->delete();
+
         return redirect()->route('admin.releases.index')->with('success', 'Produkt gelöscht.');
     }
 
@@ -252,7 +269,9 @@ class ReleaseController extends Controller
 
         $syncData = [];
         foreach ($trackIds as $trackId) {
-            if (!$trackId) continue;
+            if (! $trackId) {
+                continue;
+            }
             $syncData[$trackId] = [
                 'track_number' => $trackNumbers[$trackId] ?? null,
                 'disc_number' => 1,
@@ -267,6 +286,10 @@ class ReleaseController extends Controller
         $artworkIds = $request->input('artwork_ids', []);
         $primaryId = $request->input('primary_artwork_id');
 
+        if (! $this->sectionSubmitted($request, 'artwork_ids')) {
+            return;
+        }
+
         $syncData = [];
         foreach ($artworkIds as $id) {
             $syncData[$id] = ['is_primary' => ($id == $primaryId)];
@@ -277,13 +300,13 @@ class ReleaseController extends Controller
     public function nextCatalogNumber(Request $request)
     {
         $prefix = $request->input('prefix', '');
-        if (!$prefix) {
+        if (! $prefix) {
             // Return all available catalogs from label organizations
             $catalogs = Organization::where('type', 'label')
                 ->whereNotNull('catalogs')
                 ->get()
                 ->flatMap(function ($org) {
-                    return collect($org->catalogs)->map(fn($c) => [
+                    return collect($org->catalogs)->map(fn ($c) => [
                         'prefix' => $c,
                         'label' => $org->primary_name,
                     ]);
@@ -296,10 +319,11 @@ class ReleaseController extends Controller
         }
 
         // Find all existing catalog numbers with this prefix
-        $existing = Release::where('catalog_number', 'like', $prefix . '%')
+        $existing = Release::where('catalog_number', 'like', $prefix.'%')
             ->pluck('catalog_number')
             ->map(function ($cn) use ($prefix) {
                 $numPart = substr($cn, strlen($prefix));
+
                 return is_numeric($numPart) ? (int) $numPart : null;
             })
             ->filter()
@@ -316,7 +340,7 @@ class ReleaseController extends Controller
             }
         }
 
-        $catalogNumber = $prefix . str_pad($next, 3, '0', STR_PAD_LEFT);
+        $catalogNumber = $prefix.str_pad($next, 3, '0', STR_PAD_LEFT);
 
         return response()->json(['catalog_number' => $catalogNumber]);
     }

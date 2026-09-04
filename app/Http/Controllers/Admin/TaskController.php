@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\SyncsFormRelations;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\Contact;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Storage;
 
 class TaskController extends Controller
 {
+    use SyncsFormRelations;
+
     public function index(Request $request)
     {
         $query = Task::with('project');
@@ -143,11 +146,11 @@ class TaskController extends Controller
 
     private function syncRelationships(Task $task, Request $request): void
     {
-        $task->contacts()->sync($request->input('contact_ids', []));
-        $task->contracts()->sync($request->input('contract_ids', []));
-        $task->tracks()->sync($request->input('track_ids', []));
-        $task->projects()->sync($request->input('linked_project_ids', []));
-        $task->submissions()->sync($request->input('submission_ids', []));
+        $this->syncSubmitted($request, $task->contacts(), 'contact_ids');
+        $this->syncSubmitted($request, $task->contracts(), 'contract_ids');
+        $this->syncSubmitted($request, $task->tracks(), 'track_ids');
+        $this->syncSubmitted($request, $task->projects(), 'linked_project_ids');
+        $this->syncSubmitted($request, $task->submissions(), 'submission_ids');
     }
 
     private function handleDocumentUploads(Task $task, Request $request): void

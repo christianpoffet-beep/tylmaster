@@ -8,6 +8,8 @@
 @endphp
 
 <div x-data="contactSearch_{{ $componentId }}()" class="relative">
+    {{-- Marker: set by Alpine. Without it the section never rendered and the controller must not sync. --}}
+    <input type="hidden" name="{{ str_replace('[]', '', $inputName) }}_submitted" value="" x-bind:value="'1'">
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ $label }}</label>
 
     {{-- Search input --}}

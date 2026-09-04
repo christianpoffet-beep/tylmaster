@@ -8,6 +8,8 @@
 @endphp
 
 <div x-data="contractSearch()" class="relative" @paste-contracts.window="$event.detail.forEach(c => { if (!isSelected(c.id)) selected.push(c); })">
+    {{-- Marker: set by Alpine, so a section that never rendered cannot trigger a sync that wipes existing links --}}
+    <input type="hidden" name="{{ str_replace('[]', '', $contractInputName) }}_submitted" value="" x-bind:value="'1'">
     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Verträge</label>
 
     <div class="flex gap-2 mb-2">
