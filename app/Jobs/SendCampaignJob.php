@@ -161,10 +161,10 @@ class SendCampaignJob implements ShouldQueue
                     'type' => 'organization',
                     'id' => $org->id,
                     'email' => $email,
-                    'name' => $org->name,
+                    'name' => $org->primary_name,
                     'first_name' => '',
                     'last_name' => '',
-                    'organization' => $org->name,
+                    'organization' => $org->primary_name,
                 ];
             }
         }
