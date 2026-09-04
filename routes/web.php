@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\ContractTypeController;
 use App\Http\Controllers\Admin\InvoiceTemplateController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AddressCircleController;
+use App\Http\Controllers\Admin\DeployController;
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CampaignTemplateController;
 use App\Http\Controllers\Admin\ContentPostController;
@@ -45,25 +46,6 @@ Route::get('gallery/{token}', [PublicGalleryController::class, 'showGallery']);
 
 // Public content post preview (no auth)
 Route::get('preview/content/{token}', [ContentPreviewController::class, 'show'])->name('content-preview.show');
-
-// Temporary deploy route (remove after use)
-Route::get('deploy-refresh/{key}', function (string $key) {
-    if ($key !== 'tyl-deploy-2024x') {
-        abort(404);
-    }
-    $output = [];
-    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-    $output[] = 'migrate: ' . \Illuminate\Support\Facades\Artisan::output();
-    \Illuminate\Support\Facades\Artisan::call('view:clear');
-    $output[] = 'view:clear: ' . \Illuminate\Support\Facades\Artisan::output();
-    \Illuminate\Support\Facades\Artisan::call('cache:clear');
-    $output[] = 'cache:clear: ' . \Illuminate\Support\Facades\Artisan::output();
-    \Illuminate\Support\Facades\Artisan::call('route:clear');
-    $output[] = 'route:clear: ' . \Illuminate\Support\Facades\Artisan::output();
-    \Illuminate\Support\Facades\Artisan::call('config:clear');
-    $output[] = 'config:clear: ' . \Illuminate\Support\Facades\Artisan::output();
-    return '<pre>' . implode("\n", $output) . '</pre>';
-});
 
 // Redirect root to admin dashboard
 Route::redirect('/', '/admin');
@@ -203,6 +185,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('settings/appearance', [SettingsController::class, 'appearance'])->name('settings.appearance');
     Route::get('settings/system', [SettingsController::class, 'system'])->name('settings.system');
     Route::post('settings/system', [SettingsController::class, 'updateSystem'])->name('settings.system.update');
+
+    // Deploy helper: runs migrations and clears caches (no SSH on this hosting)
+    Route::post('deploy-refresh', [DeployController::class, 'refresh'])->name('deploy-refresh');
 
     // Musik-Settings
     Route::get('settings/credit-roles', [MusicSettingsController::class, 'creditRoles'])->name('settings.credit-roles');
