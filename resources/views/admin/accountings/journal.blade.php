@@ -6,10 +6,10 @@
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
     <div>
         <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Buchungsjournal</h2>
-        <p class="text-sm text-gray-500 mt-1">{{ $accounting->name }} · {{ $accounting->accountable_name }}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ $accounting->name }} · {{ $accounting->accountable_name }}</p>
     </div>
     <div class="flex items-center gap-2">
-        <a href="{{ route('admin.accountings.show', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Zurück</a>
+        <a href="{{ route('admin.accountings.show', $accounting) }}" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Zurück</a>
         @if(!$accounting->is_closed)
             <a href="{{ route('admin.bookings.create', $accounting) }}" class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600">+ Neue Buchung</a>
         @endif
@@ -44,9 +44,9 @@
             @endforeach
         </select>
     @endif
-    <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Filtern</button>
+    <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
     @if(request('from') || request('to') || request('project_id') || request('contact_id') || request('organization_id'))
-        <a href="{{ route('admin.accountings.journal', $accounting) }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-100">Zurücksetzen</a>
+        <a href="{{ route('admin.accountings.journal', $accounting) }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-400">Zurücksetzen</a>
     @endif
 </form>
 
@@ -66,12 +66,12 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($bookings as $booking)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">{{ $booking->booking_date->format('d.m.Y') }}</td>
-                        <td class="px-4 py-2 text-sm text-gray-400">
+                        <td class="px-4 py-2 text-sm text-gray-400 dark:text-gray-500">
                             {{ $booking->reference ?? '—' }}
                             @if($booking->documents->count())
-                                <svg class="w-3.5 h-3.5 inline ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="{{ $booking->documents->count() }} Beleg(e)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                <svg class="w-3.5 h-3.5 inline ml-1 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="{{ $booking->documents->count() }} Beleg(e)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                             @endif
                         </td>
                         <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
@@ -82,7 +82,7 @@
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300">{{ $booking->project->name }}</span>
                                     @endif
                                     @if($booking->organization)
-                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 text-teal-700">{{ $booking->organization->primary_name }}</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300">{{ $booking->organization->primary_name }}</span>
                                     @endif
                                     @if($booking->contact)
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">{{ $booking->contact->full_name }}</span>

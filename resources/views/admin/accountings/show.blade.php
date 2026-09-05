@@ -11,7 +11,7 @@
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
     <div>
         <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ $accounting->name }}</h2>
-        <p class="text-sm text-gray-500 mt-1">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {{ $accounting->accountable_name }}
             · {{ $accounting->period_start->format('d.m.Y') }} – {{ $accounting->period_end->format('d.m.Y') }}
             · {{ $accounting->currency }}
@@ -21,7 +21,7 @@
         @if($accounting->status === 'open')
             <form method="POST" action="{{ route('admin.accountings.close', $accounting) }}" onsubmit="return confirm('Buchhaltung abschliessen?')">
                 @csrf @method('PATCH')
-                <button class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Abschliessen</button>
+                <button class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Abschliessen</button>
             </form>
         @else
             <form method="POST" action="{{ route('admin.accountings.reopen', $accounting) }}">
@@ -29,7 +29,7 @@
                 <button class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">Wieder öffnen</button>
             </form>
         @endif
-        <a href="{{ route('admin.accountings.edit', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Bearbeiten</a>
+        <a href="{{ route('admin.accountings.edit', $accounting) }}" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Bearbeiten</a>
     </div>
 </div>
 
@@ -48,40 +48,40 @@
         <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
             Buchungen
             <span x-data="{ show: false }" class="relative inline-block ml-1">
-                <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
+                <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-xs hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none">?</button>
                 <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg normal-case">
                     Anzahl aller erfassten Buchungen in dieser Buchhaltung (Soll an Haben).
                     <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
                 </div>
             </span>
         </p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ $bookingsCount }}</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ $bookingsCount }}</p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
         <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
             Ertrag
             <span x-data="{ show: false }" class="relative inline-block ml-1">
-                <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
+                <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-xs hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none">?</button>
                 <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg normal-case">
                     Summe aller Einnahmen (Ertragskonten 3xxx-8xxx). Buchungen, die auf Ertragskonten gutgeschrieben wurden.
                     <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
                 </div>
             </span>
         </p>
-        <p class="text-2xl font-bold text-green-600 mt-1">{{ number_format($totalIncome, 2, '.', "'") }} {{ $accounting->currency }}</p>
+        <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{{ number_format($totalIncome, 2, '.', "'") }} {{ $accounting->currency }}</p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
         <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
             Aufwand
             <span x-data="{ show: false }" class="relative inline-block ml-1">
-                <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
+                <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-xs hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none">?</button>
                 <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg normal-case">
                     Summe aller Ausgaben (Aufwandkonten 4xxx-7xxx). Buchungen, die Aufwandkonten belastet haben.
                     <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
                 </div>
             </span>
         </p>
-        <p class="text-2xl font-bold text-red-600 mt-1">{{ number_format($totalExpenses, 2, '.', "'") }} {{ $accounting->currency }}</p>
+        <p class="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{{ number_format($totalExpenses, 2, '.', "'") }} {{ $accounting->currency }}</p>
     </div>
 </div>
 
@@ -97,7 +97,7 @@
                 <canvas id="revenueExpenseChart"></canvas>
             </div>
             <div class="min-w-0">
-                <p class="text-xs {{ $profit >= 0 ? 'text-green-600' : 'text-red-600' }} font-semibold">
+                <p class="text-xs {{ $profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }} font-semibold">
                     {{ $profit >= 0 ? 'Gewinn' : 'Verlust' }}: {{ $profit >= 0 ? '+' : '' }}{{ number_format($profit, 2, '.', "'") }}
                 </p>
             </div>
@@ -128,12 +128,12 @@
 
 {{-- Navigation Links --}}
 <div class="flex flex-wrap gap-3 mb-6">
-    <a href="{{ route('admin.accountings.journal', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Buchungsjournal</a>
-    <a href="{{ route('admin.accountings.trialBalance', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Probebilanz</a>
+    <a href="{{ route('admin.accountings.journal', $accounting) }}" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Buchungsjournal</a>
+    <a href="{{ route('admin.accountings.trialBalance', $accounting) }}" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Probebilanz</a>
     <div class="relative inline-flex items-center gap-1">
-        <a href="{{ route('admin.accountings.balanceSheet', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Bilanz</a>
+        <a href="{{ route('admin.accountings.balanceSheet', $accounting) }}" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Bilanz</a>
         <span x-data="{ show: false }" class="relative">
-            <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
+            <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-xs hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none">?</button>
             <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg">
                 Zeigt Aktiven vs. Passiven mit Eröffnungs- und Schlusssaldo.
                 <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
@@ -141,9 +141,9 @@
         </span>
     </div>
     <div class="relative inline-flex items-center gap-1">
-        <a href="{{ route('admin.accountings.incomeStatement', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Erfolgsrechnung</a>
+        <a href="{{ route('admin.accountings.incomeStatement', $accounting) }}" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Erfolgsrechnung</a>
         <span x-data="{ show: false }" class="relative">
-            <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-xs hover:bg-gray-300 focus:outline-none">?</button>
+            <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-xs hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none">?</button>
             <div x-show="show" x-transition class="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg">
                 Zeigt Ertrag vs. Aufwand und den Gewinn/Verlust der Periode.
                 <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
@@ -157,7 +157,7 @@
 
 {{-- Kontenplan --}}
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-    <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 dark:border-gray-700">
+    <div class="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
         <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Kontenplan</h3>
     </div>
     <div class="overflow-x-auto">
@@ -173,28 +173,28 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @foreach($accounting->accounts as $account)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 {{ $account->is_header ? 'bg-gray-50' : '' }}">
-                        <td class="px-4 py-2 text-sm {{ $account->is_header ? 'font-bold' : 'pl-8' }}">{{ $account->number }}</td>
-                        <td class="px-4 py-2 text-sm {{ $account->is_header ? 'font-bold' : '' }}">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 {{ $account->is_header ? 'bg-gray-50 dark:bg-gray-700/50' : '' }}">
+                        <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 {{ $account->is_header ? 'font-bold' : 'pl-8' }}">{{ $account->number }}</td>
+                        <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 {{ $account->is_header ? 'font-bold' : '' }}">
                             @if(!$account->is_header)
                                 <a href="{{ route('admin.accountings.ledger', [$accounting, $account]) }}" class="text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $account->name }}</a>
                             @else
                                 {{ $account->name }}
                             @endif
                         </td>
-                        <td class="px-4 py-2">
+                        <td class="px-4 py-2 text-gray-900 dark:text-gray-100">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $typeColors[$account->type] ?? '' }}">{{ $typeLabels[$account->type] ?? $account->type }}</span>
                         </td>
-                        <td class="px-4 py-2 text-sm text-right font-mono {{ $account->is_header ? '' : ($account->balance < 0 ? 'text-red-600' : 'text-gray-900') }}">
+                        <td class="px-4 py-2 text-sm text-right font-mono {{ $account->is_header ? '' : ($account->balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100') }}">
                             @unless($account->is_header)
                                 {{ number_format($account->balance, 2, '.', "'") }}
                             @endunless
                         </td>
-                        <td class="px-4 py-2 text-right">
+                        <td class="px-4 py-2 text-right text-gray-900 dark:text-gray-100">
                             @if(!$account->is_header && !$account->has_bookings && !$accounting->is_closed)
                                 <form method="POST" action="{{ route('admin.accountings.accounts.destroy', $account) }}" class="inline" onsubmit="return confirm('Konto löschen?')">
                                     @csrf @method('DELETE')
-                                    <button class="text-xs text-red-500 hover:text-red-700">Löschen</button>
+                                    <button class="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">Löschen</button>
                                 </form>
                             @endif
                         </td>
@@ -208,20 +208,20 @@
 {{-- Konto hinzufügen --}}
 @if(!$accounting->is_closed)
 <div class="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-    <h3 class="text-sm font-medium text-gray-900 mb-4">Konto hinzufügen</h3>
+    <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">Konto hinzufügen</h3>
     <form method="POST" action="{{ route('admin.accountings.accounts.store', $accounting) }}">
         @csrf
         <div class="grid grid-cols-1 sm:grid-cols-6 gap-3 items-end">
             <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Nr. *</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nr. *</label>
                 <input type="text" name="number" required placeholder="1000" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             </div>
             <div class="sm:col-span-2">
-                <label class="block text-xs font-medium text-gray-500 mb-1">Bezeichnung *</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Bezeichnung *</label>
                 <input type="text" name="name" required placeholder="Kasse" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             </div>
             <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Typ *</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Typ *</label>
                 <select name="type" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     @foreach($typeLabels as $val => $label)
                         <option value="{{ $val }}">{{ $label }}</option>
@@ -229,7 +229,7 @@
                 </select>
             </div>
             <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Eröffnungssaldo</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Eröffnungssaldo</label>
                 <input type="number" name="opening_balance" value="0" step="0.01" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             </div>
             <div>
@@ -242,7 +242,7 @@
 
 @if($accounting->notes)
 <div class="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-    <h3 class="text-sm font-medium text-gray-900 mb-2">Notizen</h3>
+    <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Notizen</h3>
     <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $accounting->notes }}</p>
 </div>
 @endif

@@ -28,7 +28,7 @@
                 @endif
             </div>
             <div class="flex gap-2">
-                <a href="{{ route('admin.artworks.edit', $artwork) }}" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Bearbeiten</a>
+                <a href="{{ route('admin.artworks.edit', $artwork) }}" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Bearbeiten</a>
                 <form method="POST" action="{{ route('admin.artworks.destroy', $artwork) }}" onsubmit="return confirm('Artwork wirklich löschen?')">
                     @csrf
                     @method('DELETE')

@@ -171,7 +171,7 @@
         </div>
 
         <div class="mt-4 flex gap-3">
-            <a href="{{ route('admin.organizations.edit', $organization) }}" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Bearbeiten</a>
+            <a href="{{ route('admin.organizations.edit', $organization) }}" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Bearbeiten</a>
             <form method="POST" action="{{ route('admin.organizations.destroy', $organization) }}" onsubmit="return confirm('Organisation wirklich löschen?')">
                 @csrf @method('DELETE')
                 <button type="submit" class="px-4 py-2 bg-red-600 dark:bg-red-700 text-white text-sm rounded-lg hover:bg-red-700 dark:hover:bg-red-600">Löschen</button>

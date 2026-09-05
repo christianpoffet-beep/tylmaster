@@ -81,7 +81,7 @@
                 })">Vollbild-Vorschau</button>
         @endif
         <a href="{{ route('admin.documents.download', $document) }}" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Download</a>
-        <a href="{{ route('admin.documents.index') }}" class="px-5 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Zurück zur Liste</a>
+        <a href="{{ route('admin.documents.index') }}" class="px-5 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Zurück zur Liste</a>
         @if($document->documentable_type !== \App\Models\Contract::class)
         <form method="POST" action="{{ route('admin.documents.destroy', $document) }}" onsubmit="return confirm('Dokument wirklich löschen?')">
             @csrf @method('DELETE')

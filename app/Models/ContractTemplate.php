@@ -64,6 +64,6 @@ class ContractTemplate extends Model
     public function getTypeColorAttribute(): string
     {
         $type = ContractType::where('slug', $this->contract_type_slug)->first();
-        return $type ? $type->color : 'bg-gray-100 text-gray-600';
+        return $type ? $type->color : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300';
     }
 }

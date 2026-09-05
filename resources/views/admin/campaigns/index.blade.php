@@ -50,14 +50,14 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($campaigns as $campaign)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
                             <a href="{{ route('admin.campaigns.show', $campaign) }}" class="hover:text-blue-600 dark:hover:text-blue-400">{{ $campaign->name }}</a>
                             @if($campaign->subject)
                                 <p class="text-xs text-gray-400 dark:text-gray-500 truncate max-w-xs">{{ $campaign->subject }}</p>
                             @endif
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 text-gray-900 dark:text-gray-100">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $campaign->status_color }}">{{ $campaign->status_label }}</span>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $campaign->template?->name ?? '—' }}</td>
@@ -70,7 +70,7 @@
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ strtoupper($campaign->language) }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $campaign->created_at->format('d.m.Y') }}</td>
-                        <td class="px-4 py-3 text-right whitespace-nowrap">
+                        <td class="px-4 py-3 text-right whitespace-nowrap text-gray-900 dark:text-gray-100">
                             <a href="{{ route('admin.campaigns.edit', $campaign) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">Bearbeiten</a>
                         </td>
                     </tr>

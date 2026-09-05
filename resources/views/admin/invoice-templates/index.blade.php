@@ -6,7 +6,7 @@
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
     <form method="GET" action="{{ route('admin.invoice-templates.index') }}" class="flex gap-2">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Vorlage suchen..." class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500 w-48">
-        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Suchen</button>
+        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Suchen</button>
         @if(request('search'))
             <a href="{{ route('admin.invoice-templates.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-100">Zurücksetzen</a>
         @endif
@@ -29,22 +29,22 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($templates as $tpl)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">{{ $tpl->name }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                             {{ $tpl->sender_name }}
                             @if($tpl->organization)
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 text-teal-700 ml-1">Org</span>
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 ml-1">Org</span>
                             @elseif($tpl->contact)
                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 ml-1">Kontakt</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-500 font-mono">{{ $tpl->masked_iban }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">{{ $tpl->masked_iban }}</td>
                         <td class="px-4 py-3">
                             @if($tpl->effective_logo_path)
                                 <img src="{{ Storage::disk('public')->url($tpl->effective_logo_path) }}" alt="Logo" class="h-6 w-auto">
                             @else
-                                <span class="text-xs text-gray-400">—</span>
+                                <span class="text-xs text-gray-400 dark:text-gray-500">—</span>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $tpl->usage_count }}</td>
