@@ -52,16 +52,16 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- Upcoming Tasks -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
             <h2 class="font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                <svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                 Anstehende Aufgaben
             </h2>
             <div class="flex items-center gap-3">
                 @if($taskProjects->isNotEmpty())
-                    <form method="GET" action="{{ route('admin.dashboard') }}">
+                    <form method="GET" action="{{ route('admin.dashboard') }}" class="flex-1 min-w-0">
                         <select name="project" onchange="this.form.submit()"
-                                class="text-xs py-1 pl-2 pr-7 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
+                                class="w-full max-w-full text-xs py-1 pl-2 pr-7 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
                             <option value="">Alle Projekte</option>
                             @foreach($taskProjects as $taskProject)
                                 <option value="{{ $taskProject->id }}" @selected($projectFilter === $taskProject->id)>{{ $taskProject->name }}</option>
