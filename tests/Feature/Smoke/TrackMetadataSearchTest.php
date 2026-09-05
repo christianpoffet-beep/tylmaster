@@ -12,7 +12,8 @@ use Tests\TestCase;
 
 /**
  * The tracklist filter on a product used to match the title only. It now also
- * matches the linked band, label and publisher plus the credited people.
+ * matches the alternative titles, the linked band, label and publisher plus the
+ * credited people.
  */
 class TrackMetadataSearchTest extends TestCase
 {
@@ -20,7 +21,12 @@ class TrackMetadataSearchTest extends TestCase
 
     protected function makeTrack(): Track
     {
-        $track = Track::create(['title' => 'Nachtblau', 'version' => 'Radio Edit', 'isrc' => 'CHTYL2600001']);
+        $track = Track::create([
+            'title' => 'Nachtblau',
+            'version' => 'Radio Edit',
+            'isrc' => 'CHTYL2600001',
+            'alternative_titles' => ['Night Blue'],
+        ]);
 
         $band = Organization::create(['type' => 'band', 'names' => ['Tar Pond']]);
         $label = Organization::create(['type' => 'label', 'names' => ['The Yelling Light']]);
@@ -33,11 +39,11 @@ class TrackMetadataSearchTest extends TestCase
         return $track->fresh(['organizations', 'contacts']);
     }
 
-    public function test_haystack_covers_title_isrc_organizations_and_credits(): void
+    public function test_haystack_covers_titles_isrc_organizations_and_credits(): void
     {
         $haystack = $this->makeTrack()->search_haystack;
 
-        foreach (['nachtblau', 'radio edit', 'chtyl2600001', 'tar pond', 'the yelling light', 'zentrum musikverlag', 'anna muster'] as $needle) {
+        foreach (['nachtblau', 'radio edit', 'night blue', 'chtyl2600001', 'tar pond', 'the yelling light', 'zentrum musikverlag', 'anna muster'] as $needle) {
             $this->assertStringContainsString($needle, $haystack, "Missing from haystack: {$needle}");
         }
     }

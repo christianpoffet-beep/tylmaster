@@ -29,7 +29,7 @@ class FormMarkerCoverageTest extends TestCase
     public static function formProvider(): array
     {
         return [
-            'Track'         => ['track', ['band_ids', 'label_ids', 'publisher_ids', 'credits', 'release_ids', 'project_ids', 'contract_ids']],
+            'Track'         => ['track', ['alternative_titles', 'band_ids', 'label_ids', 'publisher_ids', 'credits', 'release_ids', 'project_ids', 'contract_ids']],
             'Projekt'       => ['project', ['contacts', 'organization_ids', 'artwork_ids', 'track_ids', 'contract_ids']],
             'Organisation'  => ['organization', ['contact_ids', 'project_ids', 'track_ids', 'release_ids', 'contract_ids']],
             'Kontakt'       => ['contact', ['project_ids', 'organization_ids']],
