@@ -29,20 +29,20 @@
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
                             {{ $send->name }}
-                            <span class="text-xs text-gray-400">({{ $send->recipient_type === 'contact' ? 'Kontakt' : 'Organisation' }})</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">({{ $send->recipient_type === 'contact' ? 'Kontakt' : 'Organisation' }})</span>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $send->email }}</td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 text-gray-900 dark:text-gray-100">
                             @if($send->status === 'sent')
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">Gesendet</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300">Gesendet</span>
                             @elseif($send->status === 'failed')
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300">Fehler</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300">Fehler</span>
                             @else
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">Ausstehend</span>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $send->sent_at?->format('d.m.Y H:i') ?? '—' }}</td>
-                        <td class="px-4 py-3 text-sm text-red-500">{{ $send->error ?? '' }}</td>
+                        <td class="px-4 py-3 text-sm text-red-500 dark:text-red-400">{{ $send->error ?? '' }}</td>
                     </tr>
                 @empty
                     <tr>

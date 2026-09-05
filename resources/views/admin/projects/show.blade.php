@@ -220,7 +220,7 @@
             @csrf
             <input type="text" name="title" placeholder="Neue Aufgabe hinzufügen..." required class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             <input type="date" name="due_date" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-            <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500 whitespace-nowrap">Hinzufügen</button>
+            <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500 whitespace-nowrap">Hinzufügen</button>
         </form>
         @error('title') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
     </x-admin.collapsible-card>

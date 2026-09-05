@@ -88,9 +88,9 @@
     <div x-show="tab === 'members'" x-cloak>
         {{-- Kontakte --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
-            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 dark:bg-gray-700/50">
                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Kontakte <span class="text-gray-400" x-text="'(' + existingContacts.length + ')'"></span>
+                    Kontakte <span class="text-gray-400 dark:text-gray-500" x-text="'(' + existingContacts.length + ')'"></span>
                 </h3>
             </div>
             <template x-if="existingContacts.length === 0">
@@ -116,7 +116,7 @@
                                         <div class="flex items-center gap-1.5">
                                             <a :href="'/admin/contacts/' + member.id + '/edit'" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline" x-text="member.name"></a>
                                             <template x-if="member.gender">
-                                                <span class="text-[10px] px-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-400" x-text="member.gender === 'm' ? 'M' : member.gender === 'f' ? 'W' : 'D'"></span>
+                                                <span class="text-[10px] px-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-300" x-text="member.gender === 'm' ? 'M' : member.gender === 'f' ? 'W' : 'D'"></span>
                                             </template>
                                         </div>
                                     </td>
@@ -125,8 +125,8 @@
                                             <div class="flex items-center gap-1">
                                                 <input type="email" x-model="member._emailDraft" :placeholder="member.email || 'E-Mail'"
                                                        class="w-48 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs py-1 px-2 focus:border-blue-500 focus:ring-blue-500">
-                                                <button @click="saveMemberEmail(member, 'contact')" type="button" class="text-xs text-green-600 hover:text-green-800">OK</button>
-                                                <button @click="member._editingEmail = false" type="button" class="text-xs text-gray-400 hover:text-gray-600">&times;</button>
+                                                <button @click="saveMemberEmail(member, 'contact')" type="button" class="text-xs text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300">OK</button>
+                                                <button @click="member._editingEmail = false" type="button" class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">&times;</button>
                                             </div>
                                         </template>
                                         <template x-if="!member._editingEmail">
@@ -134,9 +134,9 @@
                                                 <span class="text-xs" :class="member.email_override ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-500 dark:text-gray-400'"
                                                       x-text="member.email_override || member.email || '—'"></span>
                                                 <template x-if="member.email_override && member.email">
-                                                    <span class="text-[10px] text-gray-400 line-through" x-text="member.email"></span>
+                                                    <span class="text-[10px] text-gray-400 dark:text-gray-500 line-through" x-text="member.email"></span>
                                                 </template>
-                                                <svg class="w-3 h-3 text-gray-300 group-hover:text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                                <svg class="w-3 h-3 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                             </div>
                                         </template>
                                     </td>
@@ -144,7 +144,7 @@
                                     <td class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap" x-text="[member.zip, member.city].filter(Boolean).join(' ') || '—'"></td>
                                     <td class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400" x-text="member.country || '—'"></td>
                                     <td class="px-3 py-2 text-right">
-                                        <button @click="removeMember(member.id, 'contact')" type="button" class="text-xs text-red-500 hover:text-red-700">Entfernen</button>
+                                        <button @click="removeMember(member.id, 'contact')" type="button" class="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">Entfernen</button>
                                     </td>
                                 </tr>
                             </template>
@@ -156,9 +156,9 @@
 
         {{-- Organisationen --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 dark:bg-gray-700/50">
                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Organisationen <span class="text-gray-400" x-text="'(' + existingOrganizations.length + ')'"></span>
+                    Organisationen <span class="text-gray-400 dark:text-gray-500" x-text="'(' + existingOrganizations.length + ')'"></span>
                 </h3>
             </div>
             <template x-if="existingOrganizations.length === 0">
@@ -188,8 +188,8 @@
                                             <div class="flex items-center gap-1">
                                                 <input type="email" x-model="member._emailDraft" :placeholder="member.email || 'E-Mail'"
                                                        class="w-48 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs py-1 px-2 focus:border-blue-500 focus:ring-blue-500">
-                                                <button @click="saveMemberEmail(member, 'organization')" type="button" class="text-xs text-green-600 hover:text-green-800">OK</button>
-                                                <button @click="member._editingEmail = false" type="button" class="text-xs text-gray-400 hover:text-gray-600">&times;</button>
+                                                <button @click="saveMemberEmail(member, 'organization')" type="button" class="text-xs text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300">OK</button>
+                                                <button @click="member._editingEmail = false" type="button" class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">&times;</button>
                                             </div>
                                         </template>
                                         <template x-if="!member._editingEmail">
@@ -197,9 +197,9 @@
                                                 <span class="text-xs" :class="member.email_override ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-500 dark:text-gray-400'"
                                                       x-text="member.email_override || member.email || '—'"></span>
                                                 <template x-if="member.email_override && member.email">
-                                                    <span class="text-[10px] text-gray-400 line-through" x-text="member.email"></span>
+                                                    <span class="text-[10px] text-gray-400 dark:text-gray-500 line-through" x-text="member.email"></span>
                                                 </template>
-                                                <svg class="w-3 h-3 text-gray-300 group-hover:text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                                <svg class="w-3 h-3 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                             </div>
                                         </template>
                                     </td>
@@ -207,7 +207,7 @@
                                     <td class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap" x-text="[member.zip, member.city].filter(Boolean).join(' ') || '—'"></td>
                                     <td class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400" x-text="member.country || '—'"></td>
                                     <td class="px-3 py-2 text-right">
-                                        <button @click="removeMember(member.id, 'organization')" type="button" class="text-xs text-red-500 hover:text-red-700">Entfernen</button>
+                                        <button @click="removeMember(member.id, 'organization')" type="button" class="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">Entfernen</button>
                                     </td>
                                 </tr>
                             </template>

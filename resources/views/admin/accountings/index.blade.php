@@ -11,9 +11,9 @@
             <option value="open" {{ request('status') === 'open' ? 'selected' : '' }}>Offen</option>
             <option value="closed" {{ request('status') === 'closed' ? 'selected' : '' }}>Abgeschlossen</option>
         </select>
-        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Filtern</button>
+        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
         @if(request('search') || request('status'))
-            <a href="{{ route('admin.accountings.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-100">Zurücksetzen</a>
+            <a href="{{ route('admin.accountings.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-400">Zurücksetzen</a>
         @endif
     </form>
     <a href="{{ route('admin.accountings.create') }}" class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 whitespace-nowrap">+ Neue Buchhaltung</a>
@@ -34,13 +34,13 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($accountings as $acc)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3 text-sm font-medium">
                             <a href="{{ route('admin.accountings.show', $acc) }}" class="text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $acc->name }}</a>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                             {{ $acc->accountable_name }}
-                            <span class="text-xs text-gray-400">({{ $acc->accountable_type === 'App\\Models\\Contact' ? 'Kontakt' : 'Organisation' }})</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">({{ $acc->accountable_type === 'App\\Models\\Contact' ? 'Kontakt' : 'Organisation' }})</span>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $acc->period_start->format('d.m.Y') }} – {{ $acc->period_end->format('d.m.Y') }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $acc->currency }}</td>

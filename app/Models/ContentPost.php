@@ -83,7 +83,7 @@ class ContentPost extends Model
             'draft' => 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
             'planned' => 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300',
             'published' => 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300',
-            default => 'bg-gray-100 text-gray-600',
+            default => 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
         };
     }
 

@@ -18,7 +18,7 @@
                 <option value="{{ $value }}" {{ request('type') === $value ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>
-        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Filtern</button>
+        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
     </form>
     <div class="flex gap-2">
         <a href="{{ route('admin.invoices.create') }}" class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 whitespace-nowrap">+ Neue Rechnung</a>
@@ -53,9 +53,9 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($invoices as $invoice)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
-                            <a href="{{ route('admin.invoices.show', $invoice) }}" class="hover:text-blue-600">{{ $invoice->invoice_number }}</a>
+                            <a href="{{ route('admin.invoices.show', $invoice) }}" class="hover:text-blue-600 dark:hover:text-blue-400">{{ $invoice->invoice_number }}</a>
                             @if($invoice->title)
                                 <div class="text-xs font-normal text-gray-500 dark:text-gray-400">{{ $invoice->title }}</div>
                             @endif
@@ -65,14 +65,14 @@
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                             @if($invoice->contact)
-                                <a href="{{ route('admin.contacts.show', $invoice->contact) }}" class="hover:text-blue-600">{{ $invoice->contact->full_name }}</a>
+                                <a href="{{ route('admin.contacts.show', $invoice->contact) }}" class="hover:text-blue-600 dark:hover:text-blue-400">{{ $invoice->contact->full_name }}</a>
                             @elseif($invoice->organization)
-                                <a href="{{ route('admin.organizations.show', $invoice->organization) }}" class="hover:text-blue-600">{{ $invoice->organization->primary_name }}</a>
+                                <a href="{{ route('admin.organizations.show', $invoice->organization) }}" class="hover:text-blue-600 dark:hover:text-blue-400">{{ $invoice->organization->primary_name }}</a>
                             @else
                                 -
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-900 font-medium">
+                        <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 font-medium">
                             {{ number_format($invoice->amount, 2, '.', "'") }} {{ $invoice->currency ?? 'CHF' }}
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $invoice->invoice_date ? $invoice->invoice_date->format('d.m.Y') : '-' }}</td>
@@ -113,8 +113,8 @@
         @foreach($accountings as $acc)
             <a href="{{ route('admin.accountings.journal', $acc) }}" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-indigo-300 hover:shadow-sm transition-all">
                 <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $acc->name }}</div>
-                <div class="text-xs text-gray-500 mt-0.5">{{ $acc->accountable_name }}</div>
-                <div class="text-xs text-gray-400 mt-1">{{ $acc->period_start?->format('d.m.Y') }} – {{ $acc->period_end?->format('d.m.Y') }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $acc->accountable_name }}</div>
+                <div class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ $acc->period_start?->format('d.m.Y') }} – {{ $acc->period_end?->format('d.m.Y') }}</div>
                 <div class="flex items-center justify-between mt-2">
                     <span class="text-xs text-gray-500 dark:text-gray-400">{{ $acc->bookings_count }} {{ $acc->bookings_count === 1 ? 'Buchung' : 'Buchungen' }}</span>
                     <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ number_format($acc->bookings_sum_amount ?? 0, 2, '.', "'") }} {{ $acc->currency }}</span>

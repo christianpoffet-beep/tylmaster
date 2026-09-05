@@ -23,7 +23,7 @@
                 <option value="{{ $v }}" {{ request('source') === $v ? 'selected' : '' }}>{{ $l }}</option>
             @endforeach
         </select>
-        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Filtern</button>
+        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
         @if(request('search') || request('category') || request('source'))
             <a href="{{ route('admin.documents.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-100">Zurücksetzen</a>
         @endif
@@ -47,10 +47,10 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($documents as $doc)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-2">
-                                <span class="inline-flex items-center justify-center w-8 h-8 rounded bg-gray-100 text-[10px] font-bold text-gray-500 flex-shrink-0">{{ $doc->file_extension }}</span>
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-700 text-[10px] font-bold text-gray-500 dark:text-gray-300 flex-shrink-0">{{ $doc->file_extension }}</span>
                                 <div class="min-w-0">
                                     @php
                                         $isPreviewable = $doc->mime_type && (
@@ -72,7 +72,7 @@
                                         <a href="{{ route('admin.documents.download', $doc) }}" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 truncate block">{{ $doc->title }}</a>
                                     @endif
                                     @if($doc->notes)
-                                        <p class="text-xs text-gray-500 truncate max-w-xs">{{ $doc->notes }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">{{ $doc->notes }}</p>
                                     @endif
                                 </div>
                             </div>
@@ -111,11 +111,11 @@
                                     };
                                 @endphp
                                 @if($sourceRoute)
-                                    <a href="{{ $sourceRoute }}" class="block text-xs text-gray-500 hover:text-blue-600 truncate max-w-[120px]">{{ $sourceName }}</a>
+                                    <a href="{{ $sourceRoute }}" class="block text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 truncate max-w-[120px]">{{ $sourceName }}</a>
                                 @endif
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                             @if($doc->file_size)
                                 @if($doc->file_size >= 1048576)
                                     {{ number_format($doc->file_size / 1048576, 1) }} MB
@@ -124,7 +124,7 @@
                                 @endif
                             @else - @endif
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">{{ $doc->created_at->format('d.m.Y H:i') }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ $doc->created_at->format('d.m.Y H:i') }}</td>
                         <td class="px-4 py-3 text-right whitespace-nowrap">
                             @php
                                 $previewable = $doc->mime_type && (
@@ -136,7 +136,7 @@
                             @endphp
                             @if($previewable)
                                 <button type="button" title="Vorschau"
-                                    class="text-gray-500 hover:text-blue-600"
+                                    class="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
                                     @click="$dispatch('open-doc-viewer', {
                                         url: '{{ route('admin.documents.preview', $doc) }}',
                                         title: '{{ e($doc->title) }}',
@@ -152,7 +152,7 @@
                             @if(!in_array($doc->documentable_type, [\App\Models\Contract::class, \App\Models\Artwork::class, \App\Models\ArtworkLogo::class, \App\Models\Photo::class]))
                             <form method="POST" action="{{ route('admin.documents.destroy', $doc) }}" class="inline ml-2" onsubmit="return confirm('Dokument wirklich löschen?')">
                                 @csrf @method('DELETE')
-                                <button class="text-red-400 hover:text-red-600" title="Löschen">
+                                <button class="text-red-400 hover:text-red-600 dark:hover:text-red-300" title="Löschen">
                                     <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </form>

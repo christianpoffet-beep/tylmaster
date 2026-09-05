@@ -195,7 +195,7 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
                         @foreach($release->tracks->sortBy(['pivot.disc_number', 'pivot.track_number']) as $track)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                 <td class="py-2 pr-3 text-sm text-gray-400 dark:text-gray-500 font-mono text-right">
                                     {{ $track->pivot->track_number ?? $loop->iteration }}
                                 </td>
@@ -204,7 +204,7 @@
                                         @if($track->audio_file_path)
                                             <button type="button"
                                                     @click="$dispatch('play-track', { title: '{{ addslashes($track->display_title) }}', artist: '{{ addslashes($track->organizations->where("type", "band")->pluck("primary_name")->join(", ")) }}', url: '{{ Storage::disk('public')->url($track->audio_file_path) }}' })"
-                                                    class="w-6 h-6 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white transition flex-shrink-0">
+                                                    class="w-6 h-6 flex items-center justify-center rounded-full bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white transition flex-shrink-0">
                                                 <svg class="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                                             </button>
                                         @endif
@@ -278,7 +278,7 @@
                 {{-- Release-Credits --}}
                 @foreach($release->contacts as $contact)
                     <div class="flex items-center justify-between py-1">
-                        <a href="{{ route('admin.contacts.show', $contact) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800">{{ $contact->full_name }}</a>
+                        <a href="{{ route('admin.contacts.show', $contact) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $contact->full_name }}</a>
                         <div class="flex items-center gap-1.5">
                             <span class="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{{ $roleLabels[$contact->pivot->role] ?? $contact->pivot->role }}</span>
                             @if($contact->pivot->instrument)
@@ -298,7 +298,7 @@
                     @foreach($trackCredits as $tc)
                         <div class="flex items-center justify-between py-1">
                             <div class="flex items-center gap-2 min-w-0">
-                                <a href="{{ route('admin.contacts.show', $tc->contact) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800">{{ $tc->contact->full_name }}</a>
+                                <a href="{{ route('admin.contacts.show', $tc->contact) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $tc->contact->full_name }}</a>
                                 <span class="text-xs text-gray-400 dark:text-gray-500 truncate" title="{{ $tc->tracks->join(', ') }}">({{ $tc->tracks->join(', ') }})</span>
                             </div>
                             <div class="flex items-center gap-1.5 flex-shrink-0">
@@ -379,7 +379,7 @@
         <x-admin.collapsible-card title="Projekte" :count="$release->projects->count()" class="mt-6">
             <div class="flex flex-wrap gap-2">
                 @foreach($release->projects as $project)
-                    <a href="{{ route('admin.projects.show', $project) }}" class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">{{ $project->name }}</a>
+                    <a href="{{ route('admin.projects.show', $project) }}" class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">{{ $project->name }}</a>
                 @endforeach
             </div>
         </x-admin.collapsible-card>
@@ -390,7 +390,7 @@
         <x-admin.collapsible-card title="Verträge" :count="$release->contracts->count()" class="mt-6">
             <div class="flex flex-wrap gap-2">
                 @foreach($release->contracts as $contract)
-                    <a href="{{ route('admin.contracts.show', $contract) }}" class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200">{{ $contract->title }}</a>
+                    <a href="{{ route('admin.contracts.show', $contract) }}" class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">{{ $contract->title }}</a>
                 @endforeach
             </div>
         </x-admin.collapsible-card>

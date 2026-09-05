@@ -6,7 +6,7 @@
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
     <form method="GET" action="{{ route('admin.expenses.index') }}" class="flex flex-wrap gap-2">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Beschreibung suchen..." class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Filtern</button>
+        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
     </form>
     <a href="{{ route('admin.expenses.create') }}" class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 whitespace-nowrap">+ Neue Ausgabe</a>
 </div>
@@ -26,15 +26,15 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($expenses as $expense)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">{{ $expense->description }}</td>
-                        <td class="px-4 py-3 text-sm text-gray-900 font-medium">
+                        <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 font-medium">
                             {{ number_format($expense->amount, 2, '.', "'") }} {{ $expense->currency ?? 'CHF' }}
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $expense->category ?? '-' }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                             @if($expense->contact)
-                                <a href="{{ route('admin.contacts.show', $expense->contact) }}" class="hover:text-blue-600">{{ $expense->contact->full_name }}</a>
+                                <a href="{{ route('admin.contacts.show', $expense->contact) }}" class="hover:text-blue-600 dark:hover:text-blue-400">{{ $expense->contact->full_name }}</a>
                             @else
                                 -
                             @endif
@@ -45,7 +45,7 @@
                             <form method="POST" action="{{ route('admin.expenses.destroy', $expense) }}" onsubmit="return confirm('Ausgabe wirklich löschen?')" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-sm text-red-600 hover:text-red-800">Löschen</button>
+                                <button type="submit" class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">Löschen</button>
                             </form>
                         </td>
                     </tr>

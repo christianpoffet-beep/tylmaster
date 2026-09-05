@@ -52,7 +52,7 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($releases as $release)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
                             <div class="flex items-center gap-3">
                                 @if($release->cover_image_path)
@@ -72,11 +72,11 @@
                                     @endforeach
                                 </div>
                             @else
-                                <span class="text-sm text-gray-400">-</span>
+                                <span class="text-sm text-gray-400 dark:text-gray-500">-</span>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $release->label_name ?? '-' }}</td>
-                        <td class="px-4 py-3 text-sm text-gray-500 font-mono">{{ $release->upc ?? '-' }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">{{ $release->upc ?? '-' }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $release->release_date ? $release->release_date->format('d.m.Y') : '-' }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $release->tracks_count ?? $release->tracks->count() }}</td>
                         <td class="px-4 py-3 text-right">

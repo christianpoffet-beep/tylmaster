@@ -6,11 +6,11 @@
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
     <div>
         <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ $account->number }} {{ $account->name }}</h2>
-        <p class="text-sm text-gray-500 mt-1">{{ $accounting->name }} · {{ $accounting->accountable_name }}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ $accounting->name }} · {{ $accounting->accountable_name }}</p>
     </div>
     <div class="flex items-center gap-2">
-        <a href="{{ route('admin.accountings.show', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Kontenplan</a>
-        <a href="{{ route('admin.accountings.trialBalance', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Probebilanz</a>
+        <a href="{{ route('admin.accountings.show', $accounting) }}" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Kontenplan</a>
+        <a href="{{ route('admin.accountings.trialBalance', $accounting) }}" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Probebilanz</a>
     </div>
 </div>
 
@@ -49,14 +49,14 @@
                         }
                         $counterAccount = $isDebit ? $fullBooking?->creditAccount : $fullBooking?->debitAccount;
                     @endphp
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">{{ $booking->booking_date->format('d.m.Y') }}</td>
-                        <td class="px-4 py-2 text-sm text-gray-400">{{ $booking->reference ?? '—' }}</td>
+                        <td class="px-4 py-2 text-sm text-gray-400 dark:text-gray-500">{{ $booking->reference ?? '—' }}</td>
                         <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">{{ $booking->description }}</td>
                         <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">{{ $counterAccount ? $counterAccount->number . ' ' . $counterAccount->name : '' }}</td>
                         <td class="px-4 py-2 text-sm text-right font-mono text-gray-700 dark:text-gray-300">{{ $isDebit ? number_format($booking->amount, 2, '.', "'") : '' }}</td>
                         <td class="px-4 py-2 text-sm text-right font-mono text-gray-700 dark:text-gray-300">{{ !$isDebit ? number_format($booking->amount, 2, '.', "'") : '' }}</td>
-                        <td class="px-4 py-2 text-sm text-right font-mono font-medium {{ $runningBalance < 0 ? 'text-red-600' : 'text-gray-900' }}">{{ number_format($runningBalance, 2, '.', "'") }}</td>
+                        <td class="px-4 py-2 text-sm text-right font-mono font-medium {{ $runningBalance < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}">{{ number_format($runningBalance, 2, '.', "'") }}</td>
                     </tr>
                 @empty
                     <tr>
@@ -67,10 +67,10 @@
             @if($bookings->count())
             <tfoot class="bg-gray-50 dark:bg-gray-700/50">
                 <tr class="font-bold">
-                    <td colspan="4" class="px-4 py-3 text-sm text-gray-900 text-right">Schlusssaldo:</td>
+                    <td colspan="4" class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 text-right">Schlusssaldo:</td>
                     <td class="px-4 py-3 text-sm text-right font-mono text-gray-700 dark:text-gray-300">{{ number_format($account->debit_total, 2, '.', "'") }}</td>
                     <td class="px-4 py-3 text-sm text-right font-mono text-gray-700 dark:text-gray-300">{{ number_format($account->credit_total, 2, '.', "'") }}</td>
-                    <td class="px-4 py-3 text-sm text-right font-mono {{ $runningBalance < 0 ? 'text-red-600' : 'text-gray-900' }}">{{ number_format($runningBalance, 2, '.', "'") }}</td>
+                    <td class="px-4 py-3 text-sm text-right font-mono {{ $runningBalance < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}">{{ number_format($runningBalance, 2, '.', "'") }}</td>
                 </tr>
             </tfoot>
             @endif

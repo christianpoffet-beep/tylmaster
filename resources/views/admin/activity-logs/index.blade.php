@@ -5,7 +5,7 @@
 @section('content')
 <div class="mb-6">
     <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Aktivitätslog</h2>
-    <p class="text-sm text-gray-500 mt-1">Alle Änderungen im System</p>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Alle Änderungen im System</p>
 </div>
 
 {{-- Filters --}}
@@ -13,12 +13,12 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
         <div class="flex flex-wrap gap-3 items-end">
             <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Suche</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Suche</label>
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, Feld, Wert..."
                     class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             </div>
             <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Aktion</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Aktion</label>
                 <select name="action" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     <option value="">Alle</option>
                     <option value="created" {{ request('action') === 'created' ? 'selected' : '' }}>Erstellt</option>
@@ -27,7 +27,7 @@
                 </select>
             </div>
             <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Bereich</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Bereich</label>
                 <select name="model_type" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     <option value="">Alle</option>
                     @foreach($modelTypes as $type)
@@ -41,17 +41,17 @@
                 </select>
             </div>
             <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Von</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Von</label>
                 <input type="date" name="date_from" value="{{ request('date_from') }}"
                     class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             </div>
             <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Bis</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Bis</label>
                 <input type="date" name="date_to" value="{{ request('date_to') }}"
                     class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             </div>
             <div class="flex gap-2">
-                <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Filtern</button>
+                <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
                 <a href="{{ route('admin.activity-logs.export', request()->query()) }}" class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">Excel Export</a>
                 @if(request()->hasAny(['search', 'action', 'model_type', 'date_from', 'date_to']))
                     <a href="{{ route('admin.activity-logs.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-100">Zurücksetzen</a>
@@ -79,11 +79,11 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($logs as $log)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
-                        <td class="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                             {{ $log->created_at->format('d.m.Y H:i') }}
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                        <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                             {{ $log->user_name }}
                         </td>
                         <td class="px-4 py-3">
@@ -100,10 +100,10 @@
                         <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300" title="{{ $log->field }}">
                             {{ $log->field_label ?? '—' }}
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-500 max-w-xs truncate" title="{{ $log->old_value }}">
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate" title="{{ $log->old_value }}">
                             {{ $log->old_value !== null ? Str::limit($log->old_value, 50) : 'null' }}
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-500 max-w-xs truncate" title="{{ $log->new_value }}">
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate" title="{{ $log->new_value }}">
                             {{ $log->new_value !== null ? Str::limit($log->new_value, 50) : 'null' }}
                         </td>
                     </tr>

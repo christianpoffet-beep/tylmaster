@@ -28,7 +28,7 @@
             </div>
             <div class="flex gap-2">
                 <a href="{{ route('admin.photos.folders.create', ['parent_id' => $folder->id]) }}" class="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-200">+ Unterordner</a>
-                <a href="{{ route('admin.photos.folders.edit', $folder) }}" class="px-3 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Bearbeiten</a>
+                <a href="{{ route('admin.photos.folders.edit', $folder) }}" class="px-3 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Bearbeiten</a>
                 <form method="POST" action="{{ route('admin.photos.folders.destroy', $folder) }}" onsubmit="return confirm('Ordner und alle Fotos wirklich löschen?')">
                     @csrf
                     @method('DELETE')

@@ -18,7 +18,7 @@
             <option value="medium" {{ request('priority') === 'medium' ? 'selected' : '' }}>Mittel</option>
             <option value="low" {{ request('priority') === 'low' ? 'selected' : '' }}>Tief</option>
         </select>
-        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Filtern</button>
+        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
         @if(request('search') || request('status') || request('priority'))
             <a href="{{ route('admin.tasks.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-100">Zurücksetzen</a>
         @endif
@@ -47,7 +47,7 @@
                             <form method="POST" action="{{ route('admin.tasks.toggle', $task) }}">
                                 @csrf
                                 @method('PATCH')
-                                <button type="submit" class="w-5 h-5 rounded border-2 flex items-center justify-center {{ $task->isCompleted() ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 hover:border-blue-400' }}">
+                                <button type="submit" class="w-5 h-5 rounded border-2 flex items-center justify-center {{ $task->isCompleted() ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 dark:border-gray-600 hover:border-blue-400' }}">
                                     @if($task->isCompleted())
                                         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                                     @endif
@@ -55,7 +55,7 @@
                             </form>
                         </td>
                         <td class="px-4 py-3 text-sm">
-                            <a href="{{ route('admin.tasks.show', $task) }}" class="font-medium {{ $task->isClosed() ? 'line-through text-gray-400' : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400' }}">{{ $task->title }}</a>
+                            <a href="{{ route('admin.tasks.show', $task) }}" class="font-medium {{ $task->isClosed() ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400' }}">{{ $task->title }}</a>
                             @if($task->status !== 'open')
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $task->status_color }}">{{ $task->status_label }}</span>
                             @endif
@@ -69,7 +69,7 @@
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">Tief</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-sm {{ $task->isOverdue() ? 'text-red-600 font-medium' : 'text-gray-500' }}">
+                        <td class="px-4 py-3 text-sm {{ $task->isOverdue() ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-500 dark:text-gray-400' }}">
                             {{ $task->due_date?->format('d.m.Y') ?? '-' }}
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
@@ -101,14 +101,14 @@
                 <form method="POST" action="{{ route('admin.tasks.toggle', $task) }}" class="pt-0.5">
                     @csrf
                     @method('PATCH')
-                    <button type="submit" class="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 {{ $task->isCompleted() ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 hover:border-blue-400' }}">
+                    <button type="submit" class="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 {{ $task->isCompleted() ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 dark:border-gray-600 hover:border-blue-400' }}">
                         @if($task->isCompleted())
                             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                         @endif
                     </button>
                 </form>
                 <div class="flex-1 min-w-0">
-                    <a href="{{ route('admin.tasks.show', $task) }}" class="text-sm font-medium {{ $task->isClosed() ? 'line-through text-gray-400' : 'text-gray-900' }}">{{ $task->title }}</a>
+                    <a href="{{ route('admin.tasks.show', $task) }}" class="text-sm font-medium {{ $task->isClosed() ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100' }}">{{ $task->title }}</a>
                     <div class="flex flex-wrap items-center gap-2 mt-1.5 text-xs">
                         @if($task->status !== 'open')
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $task->status_color }}">{{ $task->status_label }}</span>
@@ -123,12 +123,12 @@
                             @endif
                         @endif
                         @if($task->due_date)
-                            <span class="{{ $task->isOverdue() ? 'text-red-600 font-medium' : 'text-gray-500' }}">
+                            <span class="{{ $task->isOverdue() ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-500 dark:text-gray-400' }}">
                                 {{ $task->due_date->format('d.m.Y') }}
                             </span>
                         @endif
                         @if($task->project)
-                            <a href="{{ route('admin.projects.show', $task->project) }}" class="text-blue-600">{{ $task->project->name }}</a>
+                            <a href="{{ route('admin.projects.show', $task->project) }}" class="text-blue-600 dark:text-blue-400">{{ $task->project->name }}</a>
                         @endif
                     </div>
                 </div>

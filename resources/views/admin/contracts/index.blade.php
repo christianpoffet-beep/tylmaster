@@ -25,7 +25,7 @@
                 <option value="{{ $ct->slug }}" {{ request('type') === $ct->slug ? 'selected' : '' }}>{{ $ct->name }}</option>
             @endforeach
         </select>
-        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Filtern</button>
+        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
         @if(request('search') || request('status') || request('type'))
             <a href="{{ route('admin.contracts.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-100">Zurücksetzen</a>
         @endif
@@ -48,11 +48,11 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($contracts as $contract)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3 text-sm font-medium">
                             <a href="{{ route('admin.contracts.show', $contract) }}" class="text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $contract->title }}</a>
                             @if($contract->contract_number)
-                                <p class="text-xs text-gray-400 font-normal">{{ $contract->contract_number }}</p>
+                                <p class="text-xs text-gray-400 dark:text-gray-500 font-normal">{{ $contract->contract_number }}</p>
                             @endif
                         </td>
                         <td class="px-4 py-3">
@@ -65,7 +65,7 @@
                             @forelse($contract->parties as $party)
                                 <span class="inline-flex items-center gap-1">
                                     <span>{{ $party->name }}</span>
-                                    <span class="text-xs text-gray-400">({{ number_format($party->share, 0) }}%)</span>
+                                    <span class="text-xs text-gray-400 dark:text-gray-500">({{ number_format($party->share, 0) }}%)</span>
                                 </span>@if(!$loop->last), @endif
                             @empty
                                 -

@@ -79,7 +79,7 @@
                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Öffentlicher Link</h3>
                 <div class="flex items-center gap-2">
                     <input type="text" value="{{ $photo->public_url }}" readonly class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm bg-gray-50 text-gray-600 dark:text-gray-300" id="public-url">
-                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('public-url').value).then(() => this.textContent = 'Kopiert!').catch(() => {})" class="px-3 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Kopieren</button>
+                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('public-url').value).then(() => this.textContent = 'Kopiert!').catch(() => {})" class="px-3 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Kopieren</button>
                 </div>
             </div>
 

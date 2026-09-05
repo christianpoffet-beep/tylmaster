@@ -12,10 +12,10 @@
     <div>
         <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ $chartTemplate->name }}</h2>
         @if($chartTemplate->description)
-            <p class="text-sm text-gray-500 mt-1">{{ $chartTemplate->description }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ $chartTemplate->description }}</p>
         @endif
     </div>
-    <a href="{{ route('admin.chart-templates.edit', $chartTemplate) }}" class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Bearbeiten</a>
+    <a href="{{ route('admin.chart-templates.edit', $chartTemplate) }}" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Bearbeiten</a>
 </div>
 
 {{-- Konten-Tabelle --}}
@@ -33,17 +33,17 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($chartTemplate->accounts as $account)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 {{ $account->is_header ? 'bg-gray-50' : '' }}">
-                        <td class="px-4 py-2 text-sm {{ $account->is_header ? 'font-bold text-gray-900' : 'text-gray-700 pl-8' }}">{{ $account->number }}</td>
-                        <td class="px-4 py-2 text-sm {{ $account->is_header ? 'font-bold text-gray-900' : 'text-gray-700' }}">{{ $account->name }}</td>
-                        <td class="px-4 py-2">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 {{ $account->is_header ? 'bg-gray-50 dark:bg-gray-700/50' : '' }}">
+                        <td class="px-4 py-2 text-sm {{ $account->is_header ? 'font-bold text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300 pl-8' }}">{{ $account->number }}</td>
+                        <td class="px-4 py-2 text-sm {{ $account->is_header ? 'font-bold text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300' }}">{{ $account->name }}</td>
+                        <td class="px-4 py-2 text-gray-900 dark:text-gray-100">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $typeColors[$account->type] ?? '' }}">{{ $typeLabels[$account->type] ?? $account->type }}</span>
                         </td>
-                        <td class="px-4 py-2 text-sm text-gray-400">{{ $account->is_header ? 'Ja' : '' }}</td>
-                        <td class="px-4 py-2 text-right">
+                        <td class="px-4 py-2 text-sm text-gray-400 dark:text-gray-500">{{ $account->is_header ? 'Ja' : '' }}</td>
+                        <td class="px-4 py-2 text-right text-gray-900 dark:text-gray-100">
                             <form method="POST" action="{{ route('admin.chart-templates.accounts.destroy', $account) }}" class="inline" onsubmit="return confirm('Konto entfernen?')">
                                 @csrf @method('DELETE')
-                                <button class="text-xs text-red-500 hover:text-red-700">Entfernen</button>
+                                <button class="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">Entfernen</button>
                             </form>
                         </td>
                     </tr>
@@ -59,20 +59,20 @@
 
 {{-- Konto hinzufügen --}}
 <div class="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-    <h3 class="text-sm font-medium text-gray-900 mb-4">Konto hinzufügen</h3>
+    <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">Konto hinzufügen</h3>
     <form method="POST" action="{{ route('admin.chart-templates.accounts.store', $chartTemplate) }}">
         @csrf
         <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
             <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Konto-Nr. *</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Konto-Nr. *</label>
                 <input type="text" name="number" value="{{ old('number') }}" required placeholder="z.B. 1000" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             </div>
             <div class="sm:col-span-2">
-                <label class="block text-xs font-medium text-gray-500 mb-1">Bezeichnung *</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Bezeichnung *</label>
                 <input type="text" name="name" value="{{ old('name') }}" required placeholder="z.B. Kasse" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             </div>
             <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Typ *</label>
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Typ *</label>
                 <select name="type" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     @foreach($accountTypes as $val => $label)
                         <option value="{{ $val }}" {{ old('type') === $val ? 'selected' : '' }}>{{ $label }}</option>
@@ -81,14 +81,14 @@
             </div>
             <div class="flex items-end gap-3">
                 <label class="inline-flex items-center gap-1.5 pb-2">
-                    <input type="checkbox" name="is_header" value="1" {{ old('is_header') ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <input type="checkbox" name="is_header" value="1" {{ old('is_header') ? 'checked' : '' }} class="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-600 focus:ring-blue-500">
                     <span class="text-xs text-gray-600 dark:text-gray-300">Gruppe</span>
                 </label>
                 <button type="submit" class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600">Hinzufügen</button>
             </div>
         </div>
         @if($errors->any())
-            <p class="text-red-500 text-xs mt-2">{{ $errors->first() }}</p>
+            <p class="text-red-500 dark:text-red-400 text-xs mt-2">{{ $errors->first() }}</p>
         @endif
     </form>
 </div>

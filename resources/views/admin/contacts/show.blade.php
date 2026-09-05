@@ -118,7 +118,7 @@
             <div x-data="{ open: {{ $hasProjects ? 'true' : 'false' }} }" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button type="button" @click="open = !open" class="flex items-center justify-between w-full">
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Weitere Angaben</h3>
-                    <svg :class="open && 'rotate-180'" class="w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg :class="open && 'rotate-180'" class="w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
@@ -140,7 +140,7 @@
                                 <tr>
                                     <td class="py-0.5 pr-4 text-gray-900 dark:text-gray-100 font-mono">{{ $ipi['number'] ?? '' }}</td>
                                     <td class="py-0.5 pr-4 text-gray-900 dark:text-gray-100">{{ $ipi['name'] ?? '' }}</td>
-                                    <td class="py-0.5">
+                                    <td class="py-0.5 text-gray-900 dark:text-gray-100">
                                         @if(!empty($ipi['primary']))
                                             <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">primär</span>
                                         @endif
@@ -236,7 +236,7 @@
         </div>
 
         <div class="mt-4 flex gap-3">
-            <a href="{{ route('admin.contacts.edit', $contact) }}" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Bearbeiten</a>
+            <a href="{{ route('admin.contacts.edit', $contact) }}" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Bearbeiten</a>
             <form method="POST" action="{{ route('admin.contacts.destroy', $contact) }}" onsubmit="return confirm('Kontakt wirklich löschen?')">
                 @csrf
                 @method('DELETE')

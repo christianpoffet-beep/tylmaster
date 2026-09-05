@@ -30,22 +30,22 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($templates as $template)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $template->sort_order }}</td>
                         <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">{{ $template->name }}</td>
-                        <td class="px-4 py-3">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $template->type === 'email' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300' }}">
+                        <td class="px-4 py-3 text-gray-900 dark:text-gray-100">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $template->type === 'email' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300' }}">
                                 {{ $template->type === 'email' ? 'E-Mail' : 'Brief' }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ strtoupper($template->language) }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">{{ $template->subject ?? '—' }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $template->campaigns_count }}x</td>
-                        <td class="px-4 py-3 text-right whitespace-nowrap">
+                        <td class="px-4 py-3 text-right whitespace-nowrap text-gray-900 dark:text-gray-100">
                             <a href="{{ route('admin.campaign-templates.edit', $template) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">Bearbeiten</a>
                             <form method="POST" action="{{ route('admin.campaign-templates.destroy', $template) }}" class="inline ml-2" onsubmit="return confirm('Vorlage wirklich löschen?')">
                                 @csrf @method('DELETE')
-                                <button class="text-sm text-red-500 hover:text-red-700">Löschen</button>
+                                <button class="text-sm text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">Löschen</button>
                             </form>
                         </td>
                     </tr>

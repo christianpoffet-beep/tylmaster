@@ -24,9 +24,9 @@
                 <option value="{{ $release->id }}" {{ request('release') == $release->id ? 'selected' : '' }}>{{ $release->title }}</option>
             @endforeach
         </select>
-        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Filtern</button>
+        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
         @if(request('search') || request('status') || request('genre') || request('release'))
-            <a href="{{ route('admin.tracks.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-100">Zurücksetzen</a>
+            <a href="{{ route('admin.tracks.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-300">Zurücksetzen</a>
         @endif
     </form>
     <a href="{{ route('admin.tracks.create') }}" class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 whitespace-nowrap">+ Neuer Track</a>
@@ -54,7 +54,7 @@
             <option value="released">Released</option>
             <option value="archived">Archived</option>
         </select>
-        <button type="submit" class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">Anwenden</button>
+        <button type="submit" class="px-3 py-1.5 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600">Anwenden</button>
     </form>
 </div>
 
@@ -64,7 +64,7 @@
             <thead class="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
                     <th class="px-2 py-3 w-8">
-                        <input type="checkbox" x-model="selectAll" @change="selected = selectAll ? [...document.querySelectorAll('.track-cb')].map(el => el.value) : []" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <input type="checkbox" x-model="selectAll" @change="selected = selectAll ? [...document.querySelectorAll('.track-cb')].map(el => el.value) : []" class="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-600 focus:ring-blue-500">
                     </th>
                     <th class="px-2 py-3 w-8"></th>
                     <x-admin.sortable-header column="title">Titel</x-admin.sortable-header>
@@ -80,23 +80,23 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($tracks as $track)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-2 py-3">
-                            <input type="checkbox" class="track-cb rounded border-gray-300 text-blue-600 focus:ring-blue-500" value="{{ $track->id }}" x-model="selected">
+                            <input type="checkbox" class="track-cb rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-600 focus:ring-blue-500" value="{{ $track->id }}" x-model="selected">
                         </td>
                         <td class="px-2 py-3">
                             @if($track->audio_file_path)
                                 <button type="button"
                                         @click="$dispatch('play-track', { title: '{{ addslashes($track->display_title) }}', artist: '{{ addslashes($track->organizations->where("type", "band")->pluck("primary_name")->join(", ")) }}', url: '{{ Storage::disk('public')->url($track->audio_file_path) }}' })"
-                                        class="w-7 h-7 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white transition">
+                                        class="w-7 h-7 flex items-center justify-center rounded-full bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white transition">
                                     <svg class="w-3.5 h-3.5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                                 </button>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
-                            <a href="{{ route('admin.tracks.show', $track) }}" class="hover:text-blue-600">{{ $track->title }}</a>
+                            <a href="{{ route('admin.tracks.show', $track) }}" class="hover:text-blue-600 dark:hover:text-blue-400">{{ $track->title }}</a>
                             @if($track->version)
-                                <p class="text-xs text-gray-400 font-normal">{{ $track->version }}</p>
+                                <p class="text-xs text-gray-400 dark:text-gray-500 font-normal">{{ $track->version }}</p>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
@@ -124,7 +124,7 @@
                         </td>
                         <td class="px-4 py-3 text-right whitespace-nowrap">
                             @if($track->audio_file_path)
-                                <a href="{{ route('admin.tracks.download', $track) }}" class="text-gray-500 hover:text-blue-600 mr-2" title="Download">
+                                <a href="{{ route('admin.tracks.download', $track) }}" class="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 mr-2" title="Download">
                                     <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                 </a>
                             @endif

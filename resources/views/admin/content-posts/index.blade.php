@@ -58,16 +58,16 @@
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($posts as $post)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 text-gray-900 dark:text-gray-100">
                             @if($post->images->first()?->url)
                                 <img src="{{ $post->images->first()->url }}" alt="" class="w-10 h-10 rounded object-cover">
                             @else
                                 <div class="w-10 h-10 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    <svg class="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 </div>
                             @endif
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 text-gray-900 dark:text-gray-100">
                             <a href="{{ route('admin.content-posts.show', $post) }}" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">
                                 {{ $post->title ?: Str::limit($post->caption, 50) }}
                             </a>
@@ -76,13 +76,13 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $post->platform_label }}</td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 text-gray-900 dark:text-gray-100">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $post->status_color }}">{{ $post->status_label }}</span>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                             {{ $post->scheduled_at?->format('d.m.Y H:i') ?? '—' }}
                         </td>
-                        <td class="px-4 py-3 text-right whitespace-nowrap">
+                        <td class="px-4 py-3 text-right whitespace-nowrap text-gray-900 dark:text-gray-100">
                             <a href="{{ route('admin.content-posts.edit', $post) }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">Bearbeiten</a>
                         </td>
                     </tr>

@@ -10,7 +10,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
                 <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ $submission->project_name ?? $submission->track_title ?? 'Ohne Titel' }}</h2>
-                <p class="text-sm text-gray-500 mt-1">von {{ $submission->artist_name ?? '-' }} &middot; Eingegangen am {{ $submission->created_at->format('d.m.Y H:i') }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">von {{ $submission->artist_name ?? '-' }} &middot; Eingegangen am {{ $submission->created_at->format('d.m.Y H:i') }}</p>
                 <div class="mt-2 flex items-center gap-2">
                     @switch($submission->status)
                         @case('new')
@@ -55,19 +55,19 @@
         @if($submission->contact_id || $submission->release_id || $submission->contract_id)
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-3">
                 @if($submission->contact)
-                    <a href="{{ route('admin.contacts.show', $submission->contact) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm rounded-lg hover:bg-blue-100">
+                    <a href="{{ route('admin.contacts.show', $submission->contact) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                         Kontakt: {{ $submission->contact->full_name }}
                     </a>
                 @endif
                 @if($submission->release)
-                    <a href="{{ route('admin.releases.show', $submission->release) }}" class="inline-flex items-center px-3 py-1.5 bg-purple-50 text-purple-700 text-sm rounded-lg hover:bg-purple-100">
+                    <a href="{{ route('admin.releases.show', $submission->release) }}" class="inline-flex items-center px-3 py-1.5 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/50">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
                         Release: {{ $submission->release->title }}
                     </a>
                 @endif
                 @if($submission->contract)
-                    <a href="{{ route('admin.contracts.show', $submission->contract) }}" class="inline-flex items-center px-3 py-1.5 bg-amber-50 text-amber-700 text-sm rounded-lg hover:bg-amber-100">
+                    <a href="{{ route('admin.contracts.show', $submission->contract) }}" class="inline-flex items-center px-3 py-1.5 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-sm rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/50">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         Vertrag: {{ $submission->contract->title }}
                     </a>
@@ -84,7 +84,7 @@
                 <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Künstlername</dt><dd class="text-sm text-gray-900 dark:text-gray-100">{{ $submission->artist_name ?? '-' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">E-Mail</dt><dd class="text-sm text-gray-900 dark:text-gray-100">@if($submission->email)<a href="mailto:{{ $submission->email }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $submission->email }}</a>@else - @endif</dd></div>
                 <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Telefon</dt><dd class="text-sm text-gray-900 dark:text-gray-100">{{ $submission->phone ?? '-' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Adresse</dt><dd class="text-sm text-gray-900 text-right">@if($submission->street){{ $submission->street }}<br>{{ $submission->zip }} {{ $submission->city }}<br>{{ $submission->country }}@else - @endif</dd></div>
+                <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Adresse</dt><dd class="text-sm text-gray-900 dark:text-gray-100 text-right">@if($submission->street){{ $submission->street }}<br>{{ $submission->zip }} {{ $submission->city }}<br>{{ $submission->country }}@else - @endif</dd></div>
             </dl>
         </x-admin.collapsible-card>
 
@@ -92,7 +92,7 @@
         <x-admin.collapsible-card title="Bankverbindung">
             <dl class="space-y-3">
                 <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Kontoinhaber</dt><dd class="text-sm text-gray-900 dark:text-gray-100">{{ $submission->account_holder ?? '-' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">IBAN</dt><dd class="text-sm text-gray-900 font-mono">{{ $submission->iban ?? '-' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">IBAN</dt><dd class="text-sm text-gray-900 dark:text-gray-100 font-mono">{{ $submission->iban ?? '-' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Bank</dt><dd class="text-sm text-gray-900 dark:text-gray-100">{{ $submission->bank_name ?? '-' }}</dd></div>
             </dl>
         </x-admin.collapsible-card>
@@ -104,14 +104,14 @@
                 <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Genre / Subgenre</dt><dd class="text-sm text-gray-900 dark:text-gray-100">{{ $submission->genre ?? '-' }} {{ $submission->subgenre ? '/ '.$submission->subgenre : '' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Explicit</dt><dd class="text-sm text-gray-900 dark:text-gray-100">{{ $submission->explicit ?? '-' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Release-Datum</dt><dd class="text-sm text-gray-900 dark:text-gray-100">{{ $submission->release_date?->format('d.m.Y') ?? '-' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">UPC</dt><dd class="text-sm text-gray-900 font-mono">{{ $submission->upc ?? '-' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">UPC</dt><dd class="text-sm text-gray-900 dark:text-gray-100 font-mono">{{ $submission->upc ?? '-' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Jahr Komposition</dt><dd class="text-sm text-gray-900 dark:text-gray-100">{{ $submission->year_composition ?? '-' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Jahr Aufnahme</dt><dd class="text-sm text-gray-900 dark:text-gray-100">{{ $submission->year_recording ?? '-' }}</dd></div>
             </dl>
             @if($submission->other_credits)
                 <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50">
-                    <dt class="text-sm text-gray-500 mb-1">Weitere Credits</dt>
-                    <dd class="text-sm text-gray-900 whitespace-pre-line">{{ $submission->other_credits }}</dd>
+                    <dt class="text-sm text-gray-500 dark:text-gray-400 mb-1">Weitere Credits</dt>
+                    <dd class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ $submission->other_credits }}</dd>
                 </div>
             @endif
         </x-admin.collapsible-card>
@@ -126,14 +126,14 @@
             </dl>
             @if($submission->bio_short)
                 <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50">
-                    <dt class="text-sm text-gray-500 mb-1">Kurz-Bio</dt>
-                    <dd class="text-sm text-gray-900 whitespace-pre-line">{{ $submission->bio_short }}</dd>
+                    <dt class="text-sm text-gray-500 dark:text-gray-400 mb-1">Kurz-Bio</dt>
+                    <dd class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ $submission->bio_short }}</dd>
                 </div>
             @endif
             @if($submission->bio_long)
                 <div class="mt-3">
-                    <dt class="text-sm text-gray-500 mb-1">Ausführliche Bio</dt>
-                    <dd class="text-sm text-gray-900 whitespace-pre-line">{{ $submission->bio_long }}</dd>
+                    <dt class="text-sm text-gray-500 dark:text-gray-400 mb-1">Ausführliche Bio</dt>
+                    <dd class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ $submission->bio_long }}</dd>
                 </div>
             @endif
         </x-admin.collapsible-card>
@@ -159,7 +159,7 @@
                             <tr>
                                 <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">{{ $i + 1 }}</td>
                                 <td class="px-3 py-2 text-sm font-medium text-gray-900 dark:text-gray-100">{{ $song['title'] ?? '-' }}</td>
-                                <td class="px-3 py-2 text-sm text-gray-500 font-mono">{{ $song['isrc'] ?? '-' }}</td>
+                                <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 font-mono">{{ $song['isrc'] ?? '-' }}</td>
                                 <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">{{ $song['featuring'] ?? '-' }}</td>
                                 <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">{{ $song['songwriter'] ?? '-' }}</td>
                                 <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">{{ $song['producer'] ?? '-' }}</td>
@@ -185,10 +185,10 @@
     {{-- Payment --}}
     <x-admin.collapsible-card title="Zahlung" class="mt-6">
         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-            <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Berechneter Preis</dt><dd class="text-sm text-gray-900 font-medium">{{ $submission->calculated_price ? 'CHF '.number_format($submission->calculated_price, 2, '.', "'") : '-' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Berechneter Preis</dt><dd class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $submission->calculated_price ? 'CHF '.number_format($submission->calculated_price, 2, '.', "'") : '-' }}</dd></div>
             <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Anzahl Songs</dt><dd class="text-sm text-gray-900 dark:text-gray-100">{{ $submission->song_count ?? '-' }}</dd></div>
-            <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Zahlungsstatus</dt><dd class="text-sm text-gray-900 dark:text-gray-100">@if($submission->payment_status === 'paid')<span class="text-green-600 font-medium">Bezahlt</span>@elseif($submission->payment_status === 'pending')<span class="text-yellow-600 font-medium">Ausstehend</span>@else{{ $submission->payment_status ?? '-' }}@endif</dd></div>
-            <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Zugangscode</dt><dd class="text-sm text-gray-900 font-mono">{{ $submission->access_code ?? '-' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Zahlungsstatus</dt><dd class="text-sm text-gray-900 dark:text-gray-100">@if($submission->payment_status === 'paid')<span class="text-green-600 dark:text-green-400 font-medium">Bezahlt</span>@elseif($submission->payment_status === 'pending')<span class="text-yellow-600 dark:text-yellow-400 font-medium">Ausstehend</span>@else{{ $submission->payment_status ?? '-' }}@endif</dd></div>
+            <div class="flex justify-between"><dt class="text-sm text-gray-500 dark:text-gray-400">Zugangscode</dt><dd class="text-sm text-gray-900 dark:text-gray-100 font-mono">{{ $submission->access_code ?? '-' }}</dd></div>
         </dl>
     </x-admin.collapsible-card>
 
@@ -197,13 +197,13 @@
         <x-admin.collapsible-card title="Dateien" class="mt-6">
             <div class="flex flex-wrap gap-4">
                 @if($submission->file_path)
-                    <a href="{{ Storage::disk('public')->url($submission->file_path) }}" download class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-200">
+                    <a href="{{ Storage::disk('public')->url($submission->file_path) }}" download class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         Audio-Datei
                     </a>
                 @endif
                 @if($submission->cover_image_path)
-                    <a href="{{ Storage::disk('public')->url($submission->cover_image_path) }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-200">
+                    <a href="{{ Storage::disk('public')->url($submission->cover_image_path) }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         Cover-Bild
                     </a>
@@ -215,7 +215,7 @@
     {{-- Message --}}
     @if($submission->message)
         <x-admin.collapsible-card title="Nachricht" class="mt-6">
-            <p class="text-sm text-gray-900 whitespace-pre-line">{{ $submission->message }}</p>
+            <p class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ $submission->message }}</p>
         </x-admin.collapsible-card>
     @endif
 
@@ -229,12 +229,12 @@
                     <option value="{{ $value }}" {{ $submission->status === $value ? 'selected' : '' }}>{{ $label }}</option>
                 @endforeach
             </select>
-            <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Aktualisieren</button>
+            <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Aktualisieren</button>
         </form>
     </x-admin.collapsible-card>
 
     <div class="mt-4">
-        <a href="{{ route('admin.submissions.index') }}" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-300">&larr; Zurück zur Übersicht</a>
+        <a href="{{ route('admin.submissions.index') }}" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100">&larr; Zurück zur Übersicht</a>
     </div>
 </div>
 @endsection

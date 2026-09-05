@@ -12,9 +12,9 @@
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
     <div>
         <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Probebilanz</h2>
-        <p class="text-sm text-gray-500 mt-1">{{ $accounting->name }} · {{ $accounting->accountable_name }} · {{ $accounting->period_start->format('d.m.Y') }} – {{ $accounting->period_end->format('d.m.Y') }}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ $accounting->name }} · {{ $accounting->accountable_name }} · {{ $accounting->period_start->format('d.m.Y') }} – {{ $accounting->period_end->format('d.m.Y') }}</p>
     </div>
-    <a href="{{ route('admin.accountings.show', $accounting) }}" class="px-4 py-2 bg-white text-gray-700 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">Zurück</a>
+    <a href="{{ route('admin.accountings.show', $accounting) }}" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Zurück</a>
 </div>
 
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -45,14 +45,14 @@
                                 $grandDebit += $debit;
                                 $grandCredit += $credit;
                             @endphp
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
-                                <td class="px-4 py-2 text-sm text-gray-700 pl-8">{{ $account->number }}</td>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                <td class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 pl-8">{{ $account->number }}</td>
                                 <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
-                                    <a href="{{ route('admin.accountings.ledger', [$accounting, $account]) }}" class="hover:text-blue-600">{{ $account->name }}</a>
+                                    <a href="{{ route('admin.accountings.ledger', [$accounting, $account]) }}" class="hover:text-blue-600 dark:hover:text-blue-400">{{ $account->name }}</a>
                                 </td>
                                 <td class="px-4 py-2 text-sm text-right font-mono text-gray-700 dark:text-gray-300">{{ $debit > 0 ? number_format($debit, 2, '.', "'") : '' }}</td>
                                 <td class="px-4 py-2 text-sm text-right font-mono text-gray-700 dark:text-gray-300">{{ $credit > 0 ? number_format($credit, 2, '.', "'") : '' }}</td>
-                                <td class="px-4 py-2 text-sm text-right font-mono {{ $balance < 0 ? 'text-red-600' : 'text-gray-900' }}">{{ number_format($balance, 2, '.', "'") }}</td>
+                                <td class="px-4 py-2 text-sm text-right font-mono {{ $balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}">{{ number_format($balance, 2, '.', "'") }}</td>
                             </tr>
                         @endforeach
                     @endif
@@ -63,10 +63,10 @@
                     <td colspan="2" class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">Total</td>
                     <td class="px-4 py-3 text-sm text-right font-mono text-gray-900 dark:text-gray-100">{{ number_format($grandDebit, 2, '.', "'") }}</td>
                     <td class="px-4 py-3 text-sm text-right font-mono text-gray-900 dark:text-gray-100">{{ number_format($grandCredit, 2, '.', "'") }}</td>
-                    <td class="px-4 py-3 text-sm text-right font-mono {{ abs($grandDebit - $grandCredit) > 0.01 ? 'text-red-600' : 'text-green-600' }}">
+                    <td class="px-4 py-3 text-sm text-right font-mono {{ abs($grandDebit - $grandCredit) > 0.01 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">
                         {{ number_format($grandDebit - $grandCredit, 2, '.', "'") }}
                         @if(abs($grandDebit - $grandCredit) < 0.01)
-                            <span class="text-green-500 ml-1">&#10003;</span>
+                            <span class="text-green-500 dark:text-green-400 ml-1">&#10003;</span>
                         @endif
                     </td>
                 </tr>

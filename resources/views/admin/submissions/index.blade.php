@@ -12,7 +12,7 @@
                 <option value="{{ $value }}" {{ request('status') === $value ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>
-        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Filtern</button>
+        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
         @if(request('search') || request('status'))
             <a href="{{ route('admin.submissions.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-100">Zurücksetzen</a>
         @endif
@@ -36,11 +36,11 @@
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($submissions as $submission)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
                             {{ $submission->artist_name ?? '-' }}
                             @if($submission->contact_id)
-                                <span class="ml-1 text-green-500" title="Kontakt verknüpft">&#10003;</span>
+                                <span class="ml-1 text-green-500 dark:text-green-400" title="Kontakt verknüpft">&#10003;</span>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ $submission->project_name ?? $submission->track_title ?? '-' }}</td>
@@ -52,7 +52,7 @@
                             @elseif($submission->payment_status === 'pending')
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300">Ausstehend</span>
                             @else
-                                <span class="text-xs text-gray-400">-</span>
+                                <span class="text-xs text-gray-400 dark:text-gray-500">-</span>
                             @endif
                         </td>
                         <td class="px-4 py-3">

@@ -11,7 +11,7 @@
                 @if($invoice->title)
                     <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">{{ $invoice->title }}</p>
                 @endif
-                <p class="text-sm text-gray-500 mt-1">{{ $invoice->type === 'incoming' ? 'Eingehende Rechnung' : 'Ausgehende Rechnung' }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ $invoice->type === 'incoming' ? 'Eingehende Rechnung' : 'Ausgehende Rechnung' }}</p>
                 <div class="mt-2 flex items-center gap-2">
                     @switch($invoice->status)
                         @case('open')
@@ -37,7 +37,7 @@
             </div>
             <div class="flex gap-2">
                 @if(($invoice->template || $invoice->hasSender()) && $invoice->type === 'outgoing')
-                    <a href="{{ route('admin.invoices.pdf', $invoice) }}" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">PDF</a>
+                    <a href="{{ route('admin.invoices.pdf', $invoice) }}" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">PDF</a>
                 @endif
                 @if($invoice->status !== 'paid')
                     <div class="flex items-center gap-2">
@@ -73,7 +73,7 @@
                     @elseif($invoice->senderContact)
                         <a href="{{ route('admin.contacts.show', $invoice->senderContact) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">{{ $invoice->senderContact->full_name }}</a>
                     @elseif($invoice->template)
-                        <span class="text-gray-400">via Vorlage: {{ $invoice->template->sender_name }}</span>
+                        <span class="text-gray-400 dark:text-gray-500">via Vorlage: {{ $invoice->template->sender_name }}</span>
                     @else
                         —
                     @endif
@@ -99,7 +99,7 @@
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Betrag</dt>
                 <dd class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ number_format($invoice->amount, 2, '.', "'") }} {{ $invoice->currency }}</dd>
                 @if($invoice->vat_rate && $invoice->vat_rate > 0)
-                    <dd class="text-xs text-gray-500 mt-0.5">inkl. {{ rtrim(rtrim(number_format($invoice->vat_rate, 2, '.', ''), '0'), '.') }}% MWST ({{ number_format($invoice->vat_amount, 2, '.', "'") }})</dd>
+                    <dd class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">inkl. {{ rtrim(rtrim(number_format($invoice->vat_rate, 2, '.', ''), '0'), '.') }}% MWST ({{ number_format($invoice->vat_amount, 2, '.', "'") }})</dd>
                 @endif
             </div>
             <div>
@@ -133,7 +133,7 @@
         {{-- Positionen --}}
         @if($invoice->items->count())
             <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-medium text-gray-500 mb-3">Positionen</h3>
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Positionen</h3>
                 <table class="min-w-full">
                     <thead>
                         <tr class="text-xs text-gray-500 dark:text-gray-400 uppercase">
@@ -147,7 +147,7 @@
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                         @foreach($invoice->items as $i => $item)
                             <tr>
-                                <td class="py-2 text-sm text-gray-400">{{ $i + 1 }}</td>
+                                <td class="py-2 text-sm text-gray-400 dark:text-gray-500">{{ $i + 1 }}</td>
                                 <td class="py-2 text-sm text-gray-900 dark:text-gray-100">{{ $item->description }}</td>
                                 <td class="py-2 text-sm text-gray-700 dark:text-gray-300 text-right font-mono">{{ rtrim(rtrim(number_format($item->quantity, 3, '.', ''), '0'), '.') }}</td>
                                 <td class="py-2 text-sm text-gray-700 dark:text-gray-300 text-right font-mono">{{ number_format($item->unit_price, 2, '.', "'") }}</td>
@@ -158,11 +158,11 @@
                     <tfoot>
                         @if($invoice->vat_rate && $invoice->vat_rate > 0)
                             <tr class="border-t border-gray-200 dark:border-gray-700">
-                                <td colspan="4" class="py-1.5 text-sm text-gray-500 text-right">Zwischensumme</td>
+                                <td colspan="4" class="py-1.5 text-sm text-gray-500 dark:text-gray-400 text-right">Zwischensumme</td>
                                 <td class="py-1.5 text-sm text-gray-700 dark:text-gray-300 text-right font-mono">{{ number_format($invoice->subtotal, 2, '.', "'") }}</td>
                             </tr>
                             <tr>
-                                <td colspan="4" class="py-1.5 text-sm text-gray-500 text-right">MWST {{ rtrim(rtrim(number_format($invoice->vat_rate, 2, '.', ''), '0'), '.') }}%</td>
+                                <td colspan="4" class="py-1.5 text-sm text-gray-500 dark:text-gray-400 text-right">MWST {{ rtrim(rtrim(number_format($invoice->vat_rate, 2, '.', ''), '0'), '.') }}%</td>
                                 <td class="py-1.5 text-sm text-gray-700 dark:text-gray-300 text-right font-mono">{{ number_format($invoice->vat_amount, 2, '.', "'") }}</td>
                             </tr>
                             <tr class="border-t border-gray-300 dark:border-gray-600">
@@ -182,14 +182,14 @@
 
         @if($invoice->notes)
             <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-medium text-gray-500 mb-1">Notizen</h3>
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Notizen</h3>
                 <p class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ $invoice->notes }}</p>
             </div>
         @endif
     </div>
 
     <div class="mt-4">
-        <a href="{{ route('admin.invoices.index') }}" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-300">&larr; Zurück zur Übersicht</a>
+        <a href="{{ route('admin.invoices.index') }}" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100">&larr; Zurück zur Übersicht</a>
     </div>
 </div>
 @endsection

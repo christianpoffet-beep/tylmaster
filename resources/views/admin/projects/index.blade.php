@@ -25,7 +25,7 @@
                 <option value="{{ $value }}" {{ request('status') === $value ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>
-        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-50 dark:hover:bg-gray-700/500">Filtern</button>
+        <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
         @if(request('search') || request('type') || request('status'))
             <a href="{{ route('admin.projects.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-100">Zurücksetzen</a>
         @endif
@@ -54,7 +54,7 @@
                         $totalTasks = $project->all_tasks->count();
                         $completedTasks = $project->all_tasks->whereIn('status', \App\Models\Task::CLOSED_STATUSES)->count();
                     @endphp
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 dark:bg-gray-700/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3">
                             <a href="{{ route('admin.projects.show', $project) }}" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $project->name }}</a>
                         </td>
@@ -66,7 +66,7 @@
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $project->contacts_count ?? 0 }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $completedTasks }}/{{ $totalTasks }}</td>
-                        <td class="px-4 py-3 text-sm {{ $project->deadline && $project->deadline->isPast() && $project->status !== 'completed' ? 'text-red-600 font-medium' : 'text-gray-500' }}">
+                        <td class="px-4 py-3 text-sm {{ $project->deadline && $project->deadline->isPast() && $project->status !== 'completed' ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-500 dark:text-gray-400' }}">
                             {{ $project->deadline ? $project->deadline->format('d.m.Y') : '-' }}
                         </td>
                         <td class="px-4 py-3 text-right">
@@ -104,7 +104,7 @@
                     <span class="text-gray-500 dark:text-gray-400">{{ $project->contacts_count }} Kontakte</span>
                 @endif
                 @if($project->deadline)
-                    <span class="{{ $project->deadline->isPast() && $project->status !== 'completed' ? 'text-red-600 font-medium' : 'text-gray-500' }}">
+                    <span class="{{ $project->deadline->isPast() && $project->status !== 'completed' ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-500 dark:text-gray-400' }}">
                         {{ $project->deadline->format('d.m.Y') }}
                     </span>
                 @endif
