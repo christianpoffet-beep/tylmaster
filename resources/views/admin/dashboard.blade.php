@@ -74,24 +74,29 @@
         </div>
         <div class="p-5">
             @forelse($openTasks as $task)
-                <div class="flex justify-between items-center py-2 {{ !$loop->last ? 'border-b border-gray-100 dark:border-gray-700' : '' }}">
-                    <div class="flex items-center gap-2">
-                        <form method="POST" action="{{ route('admin.tasks.toggle', $task) }}">
+                <div class="flex justify-between items-start gap-3 py-2 {{ !$loop->last ? 'border-b border-gray-100 dark:border-gray-700' : '' }}">
+                    <div class="flex items-start gap-2 min-w-0">
+                        <form method="POST" action="{{ route('admin.tasks.toggle', $task) }}" class="flex-shrink-0 mt-0.5">
                             @csrf
                             @method('PATCH')
                             <button type="submit" class="w-4 h-4 rounded border flex items-center justify-center border-gray-300 dark:border-gray-600 hover:border-blue-400">
                             </button>
                         </form>
-                        <a href="{{ route('admin.tasks.show', $task) }}" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $task->title }}</a>
-                        @if($task->priority === 'high')
-                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300">!</span>
-                        @endif
-                        @if($task->project)
-                            <a href="{{ route('admin.projects.show', $task->project) }}" class="text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">{{ $task->project->name }}</a>
-                        @endif
+                        {{-- Auf dem Handy steht das Projekt unter dem Titel, ab sm daneben --}}
+                        <div class="min-w-0 flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <a href="{{ route('admin.tasks.show', $task) }}" class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">{{ $task->title }}</a>
+                                @if($task->priority === 'high')
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 flex-shrink-0">!</span>
+                                @endif
+                            </div>
+                            @if($task->project)
+                                <a href="{{ route('admin.projects.show', $task->project) }}" class="text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">{{ $task->project->name }}</a>
+                            @endif
+                        </div>
                     </div>
                     @if($task->due_date)
-                        <span class="text-sm whitespace-nowrap {{ $task->isOverdue() ? 'text-red-500 font-medium' : 'text-gray-500 dark:text-gray-400' }}">{{ $task->due_date->format('d.m.Y') }}</span>
+                        <span class="text-sm whitespace-nowrap flex-shrink-0 {{ $task->isOverdue() ? 'text-red-500 font-medium' : 'text-gray-500 dark:text-gray-400' }}">{{ $task->due_date->format('d.m.Y') }}</span>
                     @endif
                 </div>
             @empty
