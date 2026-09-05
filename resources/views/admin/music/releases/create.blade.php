@@ -166,7 +166,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6" x-data="{ trackFilter: '' }">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Tracklist</h3>
             @if($allTracks->count())
-                <input type="text" x-model="trackFilter" placeholder="Titel, ISRC, Band, Label, Verlag oder Credit suchen..." class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500 mb-3">
+                <input type="text" x-model="trackFilter" placeholder="Titel, Alternativtitel, ISRC, Band, Label, Verlag oder Credit suchen..." class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500 mb-3">
                 <div class="max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
                     @foreach($allTracks as $track)
                         <label class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer"

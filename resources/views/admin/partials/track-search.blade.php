@@ -14,7 +14,7 @@
 
     <div class="flex gap-2 mb-2">
         <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="if(query.length >= 1 || results.length) open = true; else { search(); }"
-            placeholder="Titel oder ISRC suchen..." class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            placeholder="Titel, Alternativtitel oder ISRC suchen..." class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
         <select x-model="statusFilter" @change="search()" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             <option value="">Alle Status</option>
             <option value="draft">Draft</option>
@@ -33,6 +33,7 @@
                 :disabled="isSelected(result.id)">
                 <div>
                     <span class="text-sm text-gray-900 dark:text-gray-100" x-text="result.title"></span>
+                    <span x-show="result.alt" class="text-xs text-gray-400 ml-1" x-text="'auch: ' + result.alt"></span>
                     <span x-show="result.artist" class="text-xs text-gray-400 ml-1" x-text="result.artist"></span>
                     <span x-show="result.isrc" class="text-xs text-gray-400 ml-1 font-mono" x-text="result.isrc"></span>
                 </div>

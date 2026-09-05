@@ -8,6 +8,7 @@ use App\Models\Release;
 use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Contract;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -24,7 +25,9 @@ class TrackController extends Controller
                   ->orWhere('isrc', 'like', "%{$search}%")
                   ->orWhere('version', 'like', "%{$search}%")
                   ->orWhere('composers', 'like', "%{$search}%")
-                  ->orWhere('producers', 'like', "%{$search}%");
+                  ->orWhere('producers', 'like', "%{$search}%")
+                  // Alternative titles sit in a JSON column, so the LIKE runs over its raw text.
+                  ->orWhereRaw('LOWER(alternative_titles) LIKE ?', ['%' . mb_strtolower($search) . '%']);
             });
         }
 
@@ -40,16 +43,28 @@ class TrackController extends Controller
             $query->whereHas('releases', fn ($q) => $q->where('releases.id', $releaseId));
         }
 
+        // Recording years are stored as text ("2024 - 2026"), so which entries
+        // cover the wanted year is worked out in PHP before the query filters.
+        if ($recordingYear = $request->input('recording_year')) {
+            $query->whereIn('recording_years', $this->recordingYearValues()
+                ->filter(fn ($value) => in_array((int) $recordingYear, Track::expandRecordingYears($value), true))
+                ->all());
+        }
+
         $sortField = $request->input('sort', 'created_at');
         $sortDir = $request->input('dir', 'desc');
-        $allowedSorts = ['title', 'isrc', 'status', 'created_at', 'bpm', 'genre'];
+        $allowedSorts = ['title', 'isrc', 'status', 'created_at', 'bpm', 'genre', 'recording_years'];
         if (!in_array($sortField, $allowedSorts)) $sortField = 'created_at';
         if (!in_array($sortDir, ['asc', 'desc'])) $sortDir = 'desc';
 
         $tracks = $query->orderBy($sortField, $sortDir)->paginate(20)->withQueryString();
         $releases = Release::orderBy('title')->get();
         $genres = Genre::orderBy('name')->get();
-        return view('admin.music.tracks.index', compact('tracks', 'releases', 'genres'));
+        $recordingYears = $this->recordingYearValues()
+            ->flatMap(fn ($value) => Track::expandRecordingYears($value))
+            ->unique()->sortDesc()->values();
+
+        return view('admin.music.tracks.index', compact('tracks', 'releases', 'genres', 'recordingYears'));
     }
 
     public function create()
@@ -66,6 +81,8 @@ class TrackController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'version' => 'nullable|string|max:100',
+            'alternative_titles' => 'nullable|array',
+            'alternative_titles.*' => 'nullable|string|max:255',
             'isrc' => ['nullable', 'string', 'max:20', 'regex:' . Track::ISRC_REGEX],
             'genre' => 'nullable|string|max:100',
             'duration_seconds' => 'nullable|integer|min:0',
@@ -76,13 +93,19 @@ class TrackController extends Controller
             'description' => 'nullable|string|max:5000',
             'bpm' => 'nullable|integer|min:20|max:300',
             'musical_key' => 'nullable|string|in:' . implode(',', Track::MUSICAL_KEYS),
+            'recording_location' => 'nullable|string|max:255',
+            'recording_years' => ['nullable', 'string', 'max:50', 'regex:' . Track::RECORDING_YEARS_REGEX],
             'audio_file' => 'nullable|file|mimes:mp3,wav,flac,aac,m4a,ogg|max:307200',
+        ], [
+            'recording_years.regex' => 'Bitte ein Jahr (z.B. 2026) oder einen Zeitraum (z.B. 2024 - 2026) erfassen.',
         ]);
 
         // Clean ISRC: strip dashes
         if (!empty($validated['isrc'])) {
             $validated['isrc'] = strtoupper(preg_replace('/[^A-Z0-9]/i', '', $validated['isrc']));
         }
+
+        $validated = $this->normalizeTitlesAndRecording($validated, $request);
 
         if ($request->hasFile('audio_file')) {
             $file = $request->file('audio_file');
@@ -101,7 +124,10 @@ class TrackController extends Controller
 
         $this->syncRelations($track, $request);
 
-        return redirect()->route('admin.tracks.show', $track)->with('success', 'Track erstellt.');
+        return $this->withDuplicateTitleWarning(
+            redirect()->route('admin.tracks.show', $track)->with('success', 'Track erstellt.'),
+            $track
+        );
     }
 
     public function copyMetadata(Track $track)
@@ -110,12 +136,15 @@ class TrackController extends Controller
         return response()->json([
             'title' => $track->title,
             'version' => $track->version,
+            'alternative_titles' => $track->alternative_titles ?? [],
             'status' => $track->status,
             'genre' => $track->genre,
             'duration_seconds' => $track->duration_seconds,
             'language' => $track->language,
             'bpm' => $track->bpm,
             'musical_key' => $track->musical_key,
+            'recording_location' => $track->recording_location,
+            'recording_years' => $track->recording_years,
             'description' => $track->description,
             'bands' => $track->organizations->where('type', 'band')->map(fn($o) => [
                 'id' => $o->id, 'name' => $o->primary_name,
@@ -180,6 +209,8 @@ class TrackController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'version' => 'nullable|string|max:100',
+            'alternative_titles' => 'nullable|array',
+            'alternative_titles.*' => 'nullable|string|max:255',
             'isrc' => ['nullable', 'string', 'max:20', 'regex:' . Track::ISRC_REGEX],
             'genre' => 'nullable|string|max:100',
             'duration_seconds' => 'nullable|integer|min:0',
@@ -190,12 +221,18 @@ class TrackController extends Controller
             'description' => 'nullable|string|max:5000',
             'bpm' => 'nullable|integer|min:20|max:300',
             'musical_key' => 'nullable|string|in:' . implode(',', Track::MUSICAL_KEYS),
+            'recording_location' => 'nullable|string|max:255',
+            'recording_years' => ['nullable', 'string', 'max:50', 'regex:' . Track::RECORDING_YEARS_REGEX],
             'audio_file' => 'nullable|file|mimes:mp3,wav,flac,aac,m4a,ogg|max:307200',
+        ], [
+            'recording_years.regex' => 'Bitte ein Jahr (z.B. 2026) oder einen Zeitraum (z.B. 2024 - 2026) erfassen.',
         ]);
 
         if (!empty($validated['isrc'])) {
             $validated['isrc'] = strtoupper(preg_replace('/[^A-Z0-9]/i', '', $validated['isrc']));
         }
+
+        $validated = $this->normalizeTitlesAndRecording($validated, $request);
 
         if ($request->hasFile('audio_file')) {
             $file = $request->file('audio_file');
@@ -214,7 +251,10 @@ class TrackController extends Controller
 
         $this->syncRelations($track, $request);
 
-        return redirect()->route('admin.tracks.show', $track)->with('success', 'Track aktualisiert.');
+        return $this->withDuplicateTitleWarning(
+            redirect()->route('admin.tracks.show', $track)->with('success', 'Track aktualisiert.'),
+            $track
+        );
     }
 
     public function download(Track $track)
@@ -344,6 +384,77 @@ class TrackController extends Controller
         }
     }
 
+    /**
+     * The alternative titles come from an Alpine repeater, so the same guard as
+     * the relation sections applies: without the marker the section never
+     * rendered and the stored titles must stay untouched. With the marker an
+     * empty list really does mean "all removed".
+     */
+    private function normalizeTitlesAndRecording(array $validated, Request $request): array
+    {
+        if ($request->filled('alternative_titles_submitted')) {
+            $validated['alternative_titles'] = $this->cleanAlternativeTitles($request->input('alternative_titles', []));
+        } else {
+            unset($validated['alternative_titles']);
+        }
+
+        if (!empty($validated['recording_years'])) {
+            $validated['recording_years'] = preg_replace('/\s+/', ' ', trim($validated['recording_years']));
+        }
+
+        return $validated;
+    }
+
+    /** Every recording-years entry in use, for the filter dropdown and the filter itself. */
+    private function recordingYearValues(): \Illuminate\Support\Collection
+    {
+        return Track::query()->whereNotNull('recording_years')->distinct()->pluck('recording_years');
+    }
+
+    /**
+     * A doublette in the catalogue usually shows up as an alternative title that
+     * another track already carries as its own title. Worth pointing out - but
+     * only as a hint, the save itself goes through.
+     */
+    private function withDuplicateTitleWarning(RedirectResponse $redirect, Track $track): RedirectResponse
+    {
+        $needles = collect($track->alternative_titles ?? [])
+            ->map(fn ($title) => mb_strtolower(trim($title)))
+            ->filter()
+            ->all();
+
+        if (!$needles) {
+            return $redirect;
+        }
+
+        $clashes = Track::where('id', '!=', $track->id)
+            ->where(function ($q) use ($needles) {
+                foreach ($needles as $needle) {
+                    $q->orWhereRaw('LOWER(title) = ?', [$needle]);
+                }
+            })
+            ->pluck('title');
+
+        if ($clashes->isEmpty()) {
+            return $redirect;
+        }
+
+        return $redirect->with('warning', $clashes->count() === 1
+            ? 'Achtung: Der Track "' . $clashes->first() . '" trägt diesen Titel bereits. Allenfalls eine Doublette?'
+            : 'Achtung: Die Tracks "' . $clashes->join('", "') . '" tragen diese Titel bereits. Allenfalls Doubletten?');
+    }
+
+    /** Blank rows and duplicates are dropped so the stored JSON stays a clean list. */
+    private function cleanAlternativeTitles(array $titles): array
+    {
+        $titles = array_filter(
+            array_map(fn ($title) => trim((string) $title), $titles),
+            fn ($title) => $title !== ''
+        );
+
+        return array_values(array_unique($titles));
+    }
+
     private function extractAudioMetadata(string $filePath): array
     {
         $meta = [];
@@ -381,7 +492,9 @@ class TrackController extends Controller
         if ($q = $request->input('q')) {
             $query->where(function ($qb) use ($q) {
                 $qb->where('title', 'like', "%{$q}%")
-                   ->orWhere('isrc', 'like', "%{$q}%");
+                   ->orWhere('isrc', 'like', "%{$q}%")
+                   // Alternative titles sit in a JSON column, so the LIKE runs over its raw text.
+                   ->orWhereRaw('LOWER(alternative_titles) LIKE ?', ['%' . mb_strtolower($q) . '%']);
             });
         }
 
@@ -392,6 +505,7 @@ class TrackController extends Controller
         $results = $query->orderBy('title')->limit(50)->get()->map(fn ($t) => [
             'id' => $t->id,
             'title' => $t->display_title,
+            'alt' => $t->alternative_titles_list,
             'artist' => $t->organizations->where('type', 'band')->pluck('primary_name')->join(', '),
             'isrc' => $t->isrc_formatted,
             'status' => $t->status,

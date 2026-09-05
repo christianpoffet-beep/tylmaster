@@ -6,6 +6,7 @@ use App\Models\Contact;
 use App\Models\Contract;
 use App\Models\ContractParty;
 use App\Models\Organization;
+use App\Models\Track;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -101,5 +102,40 @@ class ContractPdfTest extends TestCase
             $response->assertOk();
             $this->assertStringStartsWith('%PDF-', $response->getContent(), "PDF failed for language: {$language}");
         }
+    }
+
+    /**
+     * Werkverzeichnis: the alternative titles of a track belong under its own
+     * title, in the smaller line - so the PDF is checked on the rendered view,
+     * where the order is still readable.
+     */
+    public function test_the_pdf_lists_the_alternative_titles_below_the_track_title(): void
+    {
+        $contract = $this->makeContract();
+        $contract->tracks()->attach(Track::create([
+            'title' => 'Nachtblau',
+            'status' => 'released',
+            'alternative_titles' => ['Night Blue', 'Arbeitstitel Grün'],
+        ])->id);
+
+        $html = view('admin.contracts.pdf', [
+            'contract' => $contract->load(['parties.organization', 'parties.contact', 'projects', 'tracks.contacts', 'releases']),
+            'typeLabels' => [],
+            't' => Contract::pdfStrings($contract->language),
+            'headerParty' => $contract->header_party,
+            'logoAbsolutePath' => null,
+        ])->render();
+
+        $this->assertStringContainsString('auch: Night Blue, Arbeitstitel Grün', $html);
+        $this->assertStringContainsString('track-credit-alt', $html);
+        $this->assertLessThan(
+            strpos($html, 'auch: Night Blue'),
+            strpos($html, 'Nachtblau'),
+            'The alternative titles have to sit below the original title.'
+        );
+
+        $this->actingAs(User::factory()->create())
+            ->post("/admin/contracts/{$contract->id}/pdf")
+            ->assertOk();
     }
 }

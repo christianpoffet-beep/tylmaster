@@ -298,6 +298,12 @@
             </div>
         @endif
 
+        @if(session('warning'))
+            <div class="mx-4 sm:mx-6 mt-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 px-4 py-3 rounded-lg">
+                {{ session('warning') }}
+            </div>
+        @endif
+
         @if(session('error'))
             <div class="mx-4 sm:mx-6 mt-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
                 {{ session('error') }}

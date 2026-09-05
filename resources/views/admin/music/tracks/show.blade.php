@@ -12,6 +12,9 @@
                 @if($track->version)
                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ $track->version }}</p>
                 @endif
+                @if($track->alternative_titles_list)
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Auch bekannt als: {{ $track->alternative_titles_list }}</p>
+                @endif
                 <div class="mt-2">
                     @switch($track->status)
                         @case('draft')
@@ -48,6 +51,7 @@
                             <p class="font-semibold text-gray-700 dark:text-gray-300 mt-3 mb-1">Grunddaten</p>
                             <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.title" class="rounded border-gray-300 text-blue-600"> Titel <span class="text-gray-400" x-show="data" x-text="data?.title ? '(' + data.title + ')' : ''"></span></label>
                             <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.version" class="rounded border-gray-300 text-blue-600"> Version <span class="text-gray-400" x-show="data?.version" x-text="'(' + (data?.version || '') + ')'"></span></label>
+                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.alternative_titles" class="rounded border-gray-300 text-blue-600"> Alternativtitel <span class="text-gray-400" x-text="data?.alternative_titles?.length ? '(' + data.alternative_titles.join(', ') + ')' : '(keine)'"></span></label>
                             <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.status" class="rounded border-gray-300 text-blue-600"> Status <span class="text-gray-400" x-text="'(' + (data?.status || '-') + ')'"></span></label>
                             <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.genre" class="rounded border-gray-300 text-blue-600"> Genre <span class="text-gray-400" x-text="'(' + (data?.genre || '-') + ')'"></span></label>
                             <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.duration" class="rounded border-gray-300 text-blue-600"> Dauer</label>
@@ -159,6 +163,8 @@
                             <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.bpm" class="rounded border-gray-300 text-blue-600"> BPM <span class="text-gray-400" x-text="'(' + (data?.bpm || '-') + ')'"></span></label>
                             <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.musical_key" class="rounded border-gray-300 text-blue-600"> Tonart <span class="text-gray-400" x-text="'(' + (data?.musical_key || '-') + ')'"></span></label>
                             <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.language" class="rounded border-gray-300 text-blue-600"> Sprache <span class="text-gray-400" x-text="'(' + (data?.language || '-') + ')'"></span></label>
+                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.recording_location" class="rounded border-gray-300 text-blue-600"> Aufnahmeort <span class="text-gray-400" x-text="'(' + (data?.recording_location || '-') + ')'"></span></label>
+                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.recording_years" class="rounded border-gray-300 text-blue-600"> Aufnahmejahr(e) <span class="text-gray-400" x-text="'(' + (data?.recording_years || '-') + ')'"></span></label>
                         </div>
 
                         {{-- Loading --}}
@@ -205,6 +211,14 @@
                     @endphp
                     {{ $languages[$track->language] ?? $track->language ?? '-' }}
                 </dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Aufnahmeort</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $track->recording_location ?? '-' }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Aufnahmejahr(e)</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $track->recording_years ?? '-' }}</dd>
             </div>
         </dl>
     </div>
@@ -423,8 +437,9 @@ function copyModal() {
         data: null,
         copied: false,
         fields: {
-            title: true, version: true, status: true, genre: true, duration: false,
+            title: true, version: true, alternative_titles: false, status: true, genre: true, duration: false,
             description: true, bpm: false, musical_key: false, language: true,
+            recording_location: true, recording_years: true,
         },
         selectedBands: [],
         selectedLabels: [],
@@ -471,6 +486,9 @@ function copyModal() {
             if (this.fields.language) result.language = this.data.language;
             if (this.fields.bpm) result.bpm = this.data.bpm;
             if (this.fields.musical_key) result.musical_key = this.data.musical_key;
+            if (this.fields.alternative_titles) result.alternative_titles = this.data.alternative_titles;
+            if (this.fields.recording_location) result.recording_location = this.data.recording_location;
+            if (this.fields.recording_years) result.recording_years = this.data.recording_years;
             if (this.fields.description) result.description = this.data.description;
 
             result.bands = (this.data.bands || []).filter(b => this.selectedBands.includes(b.id));

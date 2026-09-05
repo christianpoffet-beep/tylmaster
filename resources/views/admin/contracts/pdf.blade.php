@@ -249,6 +249,12 @@
             font-weight: normal;
             color: #9ca3af;
         }
+        .track-credit-alt {
+            font-size: 8pt;
+            font-weight: normal;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
         .credit-line {
             font-size: 8.5pt;
             color: #374151;
@@ -521,6 +527,9 @@
                     <div class="track-credit-title">
                         {{ $track->display_title }}@if($track->isrc) <span class="track-credit-isrc">{{ $track->isrc_formatted }}</span>@endif
                     </div>
+                    @if($track->alternative_titles_list)
+                        <div class="track-credit-alt">{{ $t['relations_track_alt'] }} {{ $track->alternative_titles_list }}</div>
+                    @endif
                     @if($track->contacts->count())
                         @foreach($track->contacts as $credit)
                             @php

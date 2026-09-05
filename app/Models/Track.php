@@ -10,10 +10,16 @@ class Track extends Model
     use LogsActivity;
 
     protected $fillable = [
-        'title', 'version', 'isrc', 'genre', 'duration_seconds', 'status',
+        'title', 'version', 'alternative_titles', 'isrc', 'genre', 'duration_seconds', 'status',
         'composers', 'producers', 'language', 'description',
-        'bpm', 'musical_key',
+        'bpm', 'musical_key', 'recording_location', 'recording_years',
         'audio_file_path', 'bitrate', 'sample_rate', 'audio_format', 'channels',
+    ];
+
+    protected $casts = [
+        // json:unicode keeps Umlaute as themselves, so a LIKE over the raw
+        // column still finds them.
+        'alternative_titles' => 'json:unicode',
     ];
 
     public const MUSICAL_KEYS = [
@@ -26,6 +32,9 @@ class Track extends Model
     ];
 
     public const ISRC_REGEX = '/^[A-Z]{2}-?[A-Z0-9]{3}-?\d{2}-?\d{5}$/i';
+
+    /** A single year (2026) or a span (2024 - 2026), several of them comma separated. */
+    public const RECORDING_YEARS_REGEX = '/^\d{4}(\s*[-\x{2013}\x{2014}]\s*\d{4})?(\s*,\s*\d{4}(\s*[-\x{2013}\x{2014}]\s*\d{4})?)*$/u';
 
     public const CREDIT_ROLES = [
         'Songwriting & Komposition' => [
@@ -155,19 +164,56 @@ class Track extends Model
     }
 
     /**
-     * Everything the tracklist filter matches against: title and ISRC plus the
-     * linked organizations (band, label, publisher) and the credited people.
-     * Lowercased once here so the filter can compare directly.
+     * Everything the tracklist filter matches against: title, alternative
+     * titles and ISRC plus the linked organizations (band, label, publisher)
+     * and the credited people. Lowercased once here so the filter can compare
+     * directly.
      */
     public function getSearchHaystackAttribute(): string
     {
         $parts = array_merge(
             [$this->display_title, $this->title, $this->isrc, $this->isrc_formatted],
+            $this->alternative_titles ?? [],
             $this->organizations->map(fn ($o) => $o->primary_name)->all(),
             $this->contacts->map(fn ($c) => $c->full_name)->all(),
         );
 
         return mb_strtolower(implode(' ', array_filter($parts)));
+    }
+
+    /**
+     * The years an entry covers: "2024 - 2026" becomes [2024, 2025, 2026]. That
+     * way a filter for a single year also finds the spans that contain it.
+     */
+    public static function expandRecordingYears(?string $value): array
+    {
+        $years = [];
+
+        foreach (explode(',', (string) $value) as $part) {
+            if (!preg_match_all('/\d{4}/', $part, $matches)) {
+                continue;
+            }
+
+            $from = (int) $matches[0][0];
+            $to = (int) ($matches[0][1] ?? $from);
+            if ($to < $from) {
+                [$from, $to] = [$to, $from];
+            }
+
+            for ($year = $from; $year <= $to; $year++) {
+                $years[] = $year;
+            }
+        }
+
+        sort($years);
+
+        return array_values(array_unique($years));
+    }
+
+    /** The alternative titles as one line, for lists and detail pages. */
+    public function getAlternativeTitlesListAttribute(): string
+    {
+        return implode(', ', $this->alternative_titles ?? []);
     }
 
     /** Band names for display next to the track title. */

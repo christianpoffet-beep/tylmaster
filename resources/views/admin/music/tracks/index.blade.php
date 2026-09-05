@@ -5,7 +5,7 @@
 @section('content')
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
     <form method="GET" action="{{ route('admin.tracks.index') }}" class="flex flex-wrap gap-2">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Titel oder ISRC suchen..." class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Titel, Alternativtitel oder ISRC suchen..." class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
         <select name="status" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
             <option value="">Alle Status</option>
             @foreach(['draft' => 'Draft', 'released' => 'Released', 'archived' => 'Archived'] as $v => $l)
@@ -24,8 +24,16 @@
                 <option value="{{ $release->id }}" {{ request('release') == $release->id ? 'selected' : '' }}>{{ $release->title }}</option>
             @endforeach
         </select>
+        @if($recordingYears->count())
+            <select name="recording_year" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="">Alle Aufnahmejahre</option>
+                @foreach($recordingYears as $year)
+                    <option value="{{ $year }}" {{ request('recording_year') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                @endforeach
+            </select>
+        @endif
         <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
-        @if(request('search') || request('status') || request('genre') || request('release'))
+        @if(request('search') || request('status') || request('genre') || request('release') || request('recording_year'))
             <a href="{{ route('admin.tracks.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-300">Zurücksetzen</a>
         @endif
     </form>
@@ -74,6 +82,7 @@
                     <x-admin.sortable-header column="isrc">ISRC</x-admin.sortable-header>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Dauer</th>
                     <x-admin.sortable-header column="bpm">BPM</x-admin.sortable-header>
+                    <x-admin.sortable-header column="recording_years">Aufnahmejahr</x-admin.sortable-header>
                     <x-admin.sortable-header column="status">Status</x-admin.sortable-header>
                     <th class="px-4 py-3"></th>
                 </tr>
@@ -98,6 +107,9 @@
                             @if($track->version)
                                 <p class="text-xs text-gray-400 dark:text-gray-500 font-normal">{{ $track->version }}</p>
                             @endif
+                            @if($track->alternative_titles_list)
+                                <p class="text-xs text-gray-400 dark:text-gray-500 font-normal">auch: {{ $track->alternative_titles_list }}</p>
+                            @endif
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                             {{ $track->organizations->where('type', 'band')->map->primary_name->join(', ') ?: '-' }}
@@ -109,6 +121,7 @@
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">{{ $track->isrc_formatted ?? $track->isrc ?? '-' }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $track->formatted_duration ?? '-' }}</td>
                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $track->bpm ?? '-' }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ $track->recording_years ?? '-' }}</td>
                         <td class="px-4 py-3">
                             @switch($track->status)
                                 @case('draft')
@@ -133,7 +146,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="11" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Keine Tracks gefunden.</td>
+                        <td colspan="12" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Keine Tracks gefunden.</td>
                     </tr>
                 @endforelse
             </tbody>

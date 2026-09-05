@@ -34,6 +34,21 @@
                 </div>
             </div>
 
+            {{-- Alternativtitel: werden von jeder Titelsuche mitgefunden --}}
+            <div x-data="{ altTitles: @js(old('alternative_titles', [])) }" @paste-alt-titles.window="altTitles = [...$event.detail]">
+                {{-- Marker: set by Alpine. Without it the section never rendered and the controller must leave the stored titles alone. --}}
+                <input type="hidden" name="alternative_titles_submitted" value="" x-bind:value="'1'">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alternativtitel <span class="text-gray-400 font-normal">(werden bei der Titelsuche mitgefunden)</span></label>
+                <template x-for="(altTitle, index) in altTitles" :key="index">
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" :name="'alternative_titles[' + index + ']'" x-model="altTitles[index]" placeholder="z.B. Arbeitstitel oder Originaltitel" class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <button type="button" @click="altTitles.splice(index, 1)" class="px-2 text-red-400 hover:text-red-600">&times;</button>
+                    </div>
+                </template>
+                <button type="button" @click="altTitles.push('')" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">+ Alternativtitel</button>
+                @error('alternative_titles.*') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="isrc" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ISRC</label>
@@ -289,6 +304,19 @@
                         </div>
                         <div></div>
                     </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="recording_location" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Aufnahmeort</label>
+                            <input type="text" name="recording_location" id="recording_location" value="{{ old('recording_location') }}" placeholder="z.B. Studio Alpha, Zürich" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            @error('recording_location') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label for="recording_years" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Aufnahmejahr(e)</label>
+                            <input type="text" name="recording_years" id="recording_years" value="{{ old('recording_years') }}" placeholder="z.B. 2026 oder 2024 - 2026" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            @error('recording_years') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -333,9 +361,15 @@ function pasteMetadata() {
             if (data.language) this.setField('language', data.language);
             if (data.bpm) this.setField('bpm', data.bpm);
             if (data.musical_key) this.setField('musical_key', data.musical_key);
+            if (data.recording_location) this.setField('recording_location', data.recording_location);
+            if (data.recording_years) this.setField('recording_years', data.recording_years);
 
             // Notizen
             if (data.description) this.setField('description', data.description);
+            // Alternativtitel via Alpine event
+            if (data.alternative_titles?.length) {
+                window.dispatchEvent(new CustomEvent('paste-alt-titles', { detail: data.alternative_titles }));
+            }
 
             // Band/Label/Publisher via Alpine events
             if (data.bands?.length) {
