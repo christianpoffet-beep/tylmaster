@@ -111,9 +111,15 @@
                             </select>
                         </div>
 
-                        <div class="mt-3">
-                            <label class="block text-xs text-gray-500 mb-1">Genereller Anteil (%)</label>
-                            <input type="number" :name="'parties['+index+'][share]'" x-model="party.share" @input="balanceShare(index)" step="0.01" min="0" max="100" required class="w-32 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Genereller Anteil (%)</label>
+                                <input type="number" :name="'parties['+index+'][share]'" x-model="party.share" @input="balanceShare(index)" step="0.01" min="0" max="100" required class="w-32 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Rolle im Vertrag</label>
+                                <input type="text" :name="'parties['+index+'][role_label]'" x-model="party.role_label" placeholder="z.B. Label" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
                         </div>
                     </div>
                 </template>
@@ -126,7 +132,10 @@
 
             {{-- Standard-Vertragsgegenstand --}}
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <label for="default_subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Standard-Vertragsgegenstand</label>
+                <div class="flex items-baseline justify-between mb-1">
+                    <label for="default_subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Standard-Vertragsgegenstand</label>
+                    <input type="text" name="default_subject_heading" value="{{ old('default_subject_heading') }}" placeholder="Eigener Titel (Standard: Vertragsgegenstand)" class="w-72 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                </div>
                 <textarea name="default_subject" id="default_subject" rows="3" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Wird beim Erstellen eines neuen Vertrags ins Feld «Vertragsgegenstand» übernommen.">{{ old('default_subject') }}</textarea>
             </div>
 
@@ -139,16 +148,26 @@
 
             {{-- Standard-Verknüpfungstext --}}
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <label for="default_relations_note" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Standard-Verknüpfungstext</label>
+                <div class="flex items-baseline justify-between mb-1">
+                    <label for="default_relations_note" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Standard-Verknüpfungstext</label>
+                    <input type="text" name="default_relations_heading" value="{{ old('default_relations_heading') }}" placeholder="Eigener Titel, z.B. Anhang: Aufnahmen" class="w-72 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                </div>
                 <textarea name="default_relations_note" id="default_relations_note" rows="2" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Einleitungstext zu den Verknüpfungen, z.B. «Folgende Songs sind Bestandteil dieses Vertrages.»">{{ old('default_relations_note') }}</textarea>
                 <p class="text-xs text-gray-400 mt-1">Wird beim Erstellen eines neuen Vertrags ins Feld «Verknüpfungen» übernommen.</p>
             </div>
 
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <label for="default_terms" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Standard-Bedingungen / Vertragstext</label>
-                <textarea name="default_terms" id="default_terms" rows="12" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500 font-mono" placeholder="Vertragstext, der beim Erstellen eines neuen Vertrags vorausgefüllt wird...">{{ old('default_terms') }}</textarea>
-                <p class="text-xs text-gray-400 mt-1">Dieser Text wird beim Erstellen eines neuen Vertrags in das Feld «Bedingungen» übernommen.</p>
-            </div>
+            @include('admin.partials.contract-sections', [
+                'heading' => 'Standard-Bedingungen / Abschnitte',
+                'prefix' => 'default_sections',
+                'termsField' => 'default_terms',
+                'subjectField' => 'default_subject',
+                'closingField' => 'default_closing_note',
+                'showAutoNumber' => false,
+                'sections' => old('default_sections', []),
+                'autoNumber' => true,
+                'termsValue' => old('default_terms', ''),
+                'closingValue' => old('default_closing_note', ''),
+            ])
         </div>
 
         <div class="mt-4 flex gap-3">
@@ -203,7 +222,7 @@ function templateForm() {
             }
         },
         addParty() {
-            this.parties.push({ type: 'organization', organization_id: '', contact_id: '', share: 0 });
+            this.parties.push({ type: 'organization', organization_id: '', contact_id: '', share: 0, role_label: '' });
         },
         removeParty(index) {
             this.parties.splice(index, 1);

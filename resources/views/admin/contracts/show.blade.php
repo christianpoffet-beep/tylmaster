@@ -56,9 +56,23 @@
             </div>
             @endif
 
+            @php $preambleBlocks = $contract->preambleBlocks(\App\Models\Contract::pdfStrings($contract->language)); @endphp
+            @if($preambleBlocks)
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Präambel <span class="text-xs font-normal text-gray-400">(automatisch generiert)</span></h3>
+                <div class="text-sm text-gray-600 dark:text-gray-300 space-y-2">
+                    @foreach($preambleBlocks as $block)
+                        @if(!$loop->first)<p class="text-gray-400">und</p>@endif
+                        <p class="whitespace-pre-line">{{ implode("
+", $block['lines']) }}</p>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
             @if($contract->subject)
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Vertragsgegenstand</h3>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{{ $contract->subject_heading ?: 'Vertragsgegenstand' }}</h3>
                 <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $contract->subject }}</p>
             </div>
             @endif
@@ -124,7 +138,7 @@
                 $roleLabels = collect(\App\Models\Setting::creditRoles())->flatMap(fn($roles) => $roles)->toArray();
             @endphp
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Verknüpfungen</h3>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{{ $contract->relations_heading ?: 'Verknüpfungen' }}</h3>
                 <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line mb-3">{{ $contract->relations_note ?: 'Folgende Songs sind Bestandteil dieses Vertrages.' }}</p>
 
                 @foreach($contract->tracks as $track)
@@ -157,10 +171,28 @@
             </div>
             @endif
 
-            @if($contract->terms)
+            @php
+                $t = \App\Models\Contract::pdfStrings($contract->language);
+                $shownSections = $contract->resolvedSections($t);
+                $sectionNo = $contract->subject ? 1 : 0;
+            @endphp
+            @if(count($shownSections))
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+                @foreach($shownSections as $section)
+                    @php if (($contract->auto_number_sections ?? true) && $section['numbered']) { $sectionNo++; } @endphp
+                    <div>
+                        @if($section['title'])
+                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">@if(($contract->auto_number_sections ?? true) && $section['numbered'])<span class="text-gray-400">{{ $sectionNo }}.</span> @endif{{ $section['title'] }}</h3>
+                        @endif
+                        <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $section['body'] }}</p>
+                    </div>
+                @endforeach
+            </div>
+            @endif
+
+            @if($contract->closing_note)
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Bedingungen</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $contract->terms }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $contract->closing_note }}</p>
             </div>
             @endif
         </div>

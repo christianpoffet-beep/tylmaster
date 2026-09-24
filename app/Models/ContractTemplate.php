@@ -12,12 +12,14 @@ class ContractTemplate extends Model
 
     protected $fillable = [
         'name', 'slug', 'contract_type_slug', 'language', 'default_terms', 'default_status',
-        'default_subject', 'default_relations_note',
+        'default_subject', 'default_subject_heading', 'default_relations_note', 'default_relations_heading',
+        'default_sections', 'default_closing_note',
         'default_parties', 'sort_order', 'rights', 'rights_label_a', 'rights_label_b', 'rights_labels',
     ];
 
     protected $casts = [
         'default_parties' => 'array',
+        'default_sections' => 'array',
         'rights' => 'array',
         'rights_labels' => 'array',
     ];

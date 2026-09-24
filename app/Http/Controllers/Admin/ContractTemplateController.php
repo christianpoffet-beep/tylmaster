@@ -58,12 +58,21 @@ class ContractTemplateController extends Controller
             'default_status' => 'nullable|in:draft,active,expired,terminated',
             'default_terms' => 'nullable|string',
             'default_subject' => 'nullable|string',
+            'default_subject_heading' => 'nullable|string|max:120',
             'default_relations_note' => 'nullable|string',
+            'default_relations_heading' => 'nullable|string|max:120',
+            'default_closing_note' => 'nullable|string',
+            'default_sections' => 'nullable|array',
+            'default_sections.*.title' => 'nullable|string|max:255',
+            'default_sections.*.body' => 'nullable|string',
+            'default_sections.*.page_break' => 'nullable|boolean',
+            'default_sections.*.numbered' => 'nullable|boolean',
             'parties' => 'nullable|array',
             'parties.*.type' => 'required|in:organization,contact',
             'parties.*.organization_id' => 'nullable',
             'parties.*.contact_id' => 'nullable',
             'parties.*.share' => 'required|numeric|min:0|max:100',
+            'parties.*.role_label' => 'nullable|string|max:120',
             'rights' => 'nullable|array',
             'rights.*.label' => 'required|string|max:255',
             'rights.*.mode' => 'required|in:split,custom',
@@ -78,6 +87,8 @@ class ContractTemplateController extends Controller
 
         $parties = $request->input('parties', []);
         $parties = array_values(array_filter($parties, fn ($p) => !empty($p['organization_id']) || !empty($p['contact_id'])));
+
+        $sections = $this->normalizeSections($request);
 
         $rights = $request->input('rights', []);
         $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
@@ -95,7 +106,11 @@ class ContractTemplateController extends Controller
             'default_status' => $request->input('default_status'),
             'default_terms' => $request->input('default_terms'),
             'default_subject' => $request->input('default_subject'),
+            'default_subject_heading' => $request->input('default_subject_heading'),
             'default_relations_note' => $request->input('default_relations_note'),
+            'default_relations_heading' => $request->input('default_relations_heading'),
+            'default_closing_note' => $request->input('default_closing_note'),
+            'default_sections' => $sections,
             'default_parties' => !empty($parties) ? $parties : null,
             'rights' => !empty($rights) ? $rights : null,
             'rights_label_a' => $rightsLabels[0] ?? $request->input('rights_label_a'),
@@ -132,12 +147,21 @@ class ContractTemplateController extends Controller
             'default_status' => 'nullable|in:draft,active,expired,terminated',
             'default_terms' => 'nullable|string',
             'default_subject' => 'nullable|string',
+            'default_subject_heading' => 'nullable|string|max:120',
             'default_relations_note' => 'nullable|string',
+            'default_relations_heading' => 'nullable|string|max:120',
+            'default_closing_note' => 'nullable|string',
+            'default_sections' => 'nullable|array',
+            'default_sections.*.title' => 'nullable|string|max:255',
+            'default_sections.*.body' => 'nullable|string',
+            'default_sections.*.page_break' => 'nullable|boolean',
+            'default_sections.*.numbered' => 'nullable|boolean',
             'parties' => 'nullable|array',
             'parties.*.type' => 'required|in:organization,contact',
             'parties.*.organization_id' => 'nullable',
             'parties.*.contact_id' => 'nullable',
             'parties.*.share' => 'required|numeric|min:0|max:100',
+            'parties.*.role_label' => 'nullable|string|max:120',
             'rights' => 'nullable|array',
             'rights.*.label' => 'required|string|max:255',
             'rights.*.mode' => 'required|in:split,custom',
@@ -152,6 +176,8 @@ class ContractTemplateController extends Controller
 
         $parties = $request->input('parties', []);
         $parties = array_values(array_filter($parties, fn ($p) => !empty($p['organization_id']) || !empty($p['contact_id'])));
+
+        $sections = $this->normalizeSections($request);
 
         $rights = $request->input('rights', []);
         $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
@@ -169,7 +195,11 @@ class ContractTemplateController extends Controller
             'default_status' => $request->input('default_status'),
             'default_terms' => $request->input('default_terms'),
             'default_subject' => $request->input('default_subject'),
+            'default_subject_heading' => $request->input('default_subject_heading'),
             'default_relations_note' => $request->input('default_relations_note'),
+            'default_relations_heading' => $request->input('default_relations_heading'),
+            'default_closing_note' => $request->input('default_closing_note'),
+            'default_sections' => $sections,
             'default_parties' => !empty($parties) ? $parties : null,
             'rights' => !empty($rights) ? $rights : null,
             'rights_label_a' => $rightsLabels[0] ?? $request->input('rights_label_a'),
@@ -187,6 +217,27 @@ class ContractTemplateController extends Controller
         return redirect()->route('admin.contract-templates.index')->with('success', 'Vertragsvorlage gelöscht.');
     }
 
+    /**
+     * Drop empty section rows from the editor payload.
+     */
+    private function normalizeSections(Request $request): ?array
+    {
+        $sections = $request->input('default_sections', []);
+        $sections = is_array($sections) ? array_values($sections) : [];
+
+        $sections = array_values(array_filter(
+            array_map(fn ($s) => [
+                'title' => trim((string) ($s['title'] ?? '')),
+                'body' => rtrim((string) ($s['body'] ?? '')),
+                'page_break' => (bool) ($s['page_break'] ?? false),
+                'numbered' => (bool) ($s['numbered'] ?? true),
+            ], $sections),
+            fn ($s) => $s['title'] !== '' || $s['body'] !== ''
+        ));
+
+        return $sections !== [] ? $sections : null;
+    }
+
     public function data(ContractTemplate $contractTemplate)
     {
         return response()->json([
@@ -195,7 +246,11 @@ class ContractTemplateController extends Controller
             'language' => $contractTemplate->language ?? 'de',
             'default_terms' => $contractTemplate->default_terms,
             'default_subject' => $contractTemplate->default_subject,
+            'default_subject_heading' => $contractTemplate->default_subject_heading,
             'default_relations_note' => $contractTemplate->default_relations_note,
+            'default_relations_heading' => $contractTemplate->default_relations_heading,
+            'default_closing_note' => $contractTemplate->default_closing_note,
+            'default_sections' => $contractTemplate->default_sections,
             'default_parties' => $contractTemplate->default_parties,
             'rights' => $contractTemplate->rights,
             'rights_label_a' => $contractTemplate->rights_label_a,

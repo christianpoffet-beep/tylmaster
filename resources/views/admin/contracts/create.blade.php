@@ -4,11 +4,22 @@
 
 @php
     $defaultParties = old('parties', [
-        ['type' => 'organization', 'organization_id' => '', 'contact_id' => '', 'share' => 50],
-        ['type' => 'organization', 'organization_id' => '', 'contact_id' => '', 'share' => 50],
+        ['type' => 'organization', 'organization_id' => '', 'contact_id' => '', 'share' => 50, 'role_label' => ''],
+        ['type' => 'organization', 'organization_id' => '', 'contact_id' => '', 'share' => 50, 'role_label' => ''],
     ]);
 @endphp
 
+@php
+    $blankContract = new \App\Models\Contract;
+    $orgMeta = $organizations->mapWithKeys(fn ($o) => [(string) $o->id => [
+        'name' => $o->primary_name,
+        'address' => implode(', ', array_filter([$o->street, trim(($o->zip ?? '') . ' ' . ($o->city ?? ''))])),
+    ]]);
+    $contactMeta = $contacts->mapWithKeys(fn ($c) => [(string) $c->id => [
+        'name' => $c->full_name,
+        'address' => implode(', ', array_filter([$c->street, trim(($c->zip ?? '') . ' ' . ($c->city ?? ''))])),
+    ]]);
+@endphp
 @section('content')
 <div class="max-w-3xl" x-data="contractForm()">
     <div class="mb-6">
@@ -212,12 +223,28 @@
                             </select>
                         </div>
 
-                        <div class="mt-3">
-                            <label class="block text-xs text-gray-500 mb-1">Genereller Anteil (%)</label>
-                            <input type="number" :name="'parties['+index+'][share]'" x-model="party.share" @input="balanceShare(index)" step="0.01" min="0" max="100" required class="w-32 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+
+                        <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Genereller Anteil (%)</label>
+                                <input type="number" :name="'parties['+index+'][share]'" x-model="party.share" @input="balanceShare(index)" step="0.01" min="0" max="100" required class="w-32 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Rolle im Vertrag</label>
+                                <input type="text" :name="'parties['+index+'][role_label]'" x-model="party.role_label" list="contract-role-labels" placeholder="z.B. Label" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                <p class="text-[11px] text-gray-400 mt-0.5">Erscheint als «nachfolgend «…»». Gleiche Rolle = gemeinsame Partei.</p>
+                            </div>
                         </div>
                     </div>
-                </template>
+
+                <datalist id="contract-role-labels">
+                    <option value="Label"></option>
+                    <option value="Künstlerin oder Künstler"></option>
+                    <option value="Verlag"></option>
+                    <option value="Urheberin oder Urheber"></option>
+                    <option value="Management"></option>
+                    <option value="Auftraggeber"></option>
+                </datalist>
 
                 <div class="flex items-center justify-between text-sm mt-2 px-1">
                     <span class="text-gray-500 dark:text-gray-400">Total:</span>
@@ -226,9 +253,14 @@
                 <p x-show="Math.abs(totalShare - 100) >= 0.01" class="text-red-500 text-xs mt-1">Die Summe der Anteile muss genau 100% ergeben.</p>
             </div>
 
+            @include('admin.partials.contract-preamble', ['contract' => $blankContract])
+
             {{-- Vertragsgegenstand --}}
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vertragsgegenstand</label>
+                <div class="flex items-baseline justify-between mb-1">
+                    <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Vertragsgegenstand</label>
+                    <input type="text" name="subject_heading" value="{{ old('subject_heading', $blankContract->subject_heading ?? '') }}" placeholder="Eigener Titel (Standard: Vertragsgegenstand)" class="w-72 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                </div>
                 <textarea name="subject" id="subject" rows="3" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Beschreibung des Vertragsgegenstands...">{{ old('subject') }}</textarea>
             </div>
 
@@ -240,7 +272,10 @@
             ])
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <label for="relations_note" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Verknüpfungen</label>
+                <div class="flex items-baseline justify-between mb-1">
+                    <label for="relations_note" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Verknüpfungen</label>
+                    <input type="text" name="relations_heading" value="{{ old('relations_heading', $blankContract->relations_heading ?? '') }}" placeholder="Eigener Titel, z.B. Anhang: Aufnahmen" class="w-72 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                </div>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Einleitungstext zu den verknüpften Projekten, Tracks und Produkten (im PDF). Bei Tracks werden die Credits automatisch eingeblendet.</p>
                 <textarea name="relations_note" id="relations_note" rows="2" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('relations_note', 'Folgende Songs sind Bestandteil dieses Vertrages.') }}</textarea>
             </div>
@@ -257,10 +292,12 @@
                 @include('admin.partials.release-search', ['selected' => collect()])
             </div>
 
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <label for="terms" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bedingungen</label>
-                <textarea name="terms" id="terms" rows="10" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('terms') }}</textarea>
-            </div>
+            @include('admin.partials.contract-sections', [
+                'sections' => old('sections', $blankContract->sections ?? []),
+                'autoNumber' => (bool) old('auto_number_sections', $blankContract->auto_number_sections ?? true),
+                'termsValue' => old('terms', $blankContract->terms ?? ''),
+                'closingValue' => old('closing_note', $blankContract->closing_note ?? ''),
+            ])
 
             @include('admin.partials.contract-logo', ['contract' => null])
 
@@ -346,6 +383,68 @@ function territorySelector() {
 
 function contractForm() {
     return {
+        orgMeta: @json($orgMeta),
+        contactMeta: @json($contactMeta),
+        preambleMode: @json(old('preamble_mode', $blankContract->preamble_mode ?? 'auto')),
+        /**
+         * Mirrors Contract::preambleBlocks() so the admin sees what the PDF
+         * will print before saving.
+         */
+        get preamblePreview() {
+            const groups = [];
+            this.parties.forEach(p => {
+                const role = (p.role_label || '').trim();
+                const key = role ? role.toLowerCase() : null;
+                const last = groups[groups.length - 1];
+                if (key && last && last.key === key) {
+                    last.parties.push(p);
+                } else {
+                    groups.push({ key, role, parties: [p] });
+                }
+            });
+
+            const entityOf = (p) => p.type === 'organization'
+                ? this.orgMeta[p.organization_id]
+                : this.contactMeta[p.contact_id];
+
+            const blocks = [];
+            groups.forEach(g => {
+                const lines = [];
+                const joint = g.parties.length > 1;
+                const orgIds = [...new Set(g.parties.filter(p => p.type === 'organization' && p.organization_id).map(p => String(p.organization_id)))];
+                const sharedOrg = (joint && orgIds.length === 1 && g.parties.every(p => String(p.organization_id) === orgIds[0]))
+                    ? this.orgMeta[orgIds[0]]
+                    : null;
+
+                if (sharedOrg) {
+                    lines.push(sharedOrg.name);
+                    lines.push('bestehend aus');
+                    g.parties.forEach(p => {
+                        const c = this.contactMeta[p.contact_id];
+                        if (!c) return;
+                        lines.push(c.address ? c.name + ', ' + c.address : c.name);
+                    });
+                } else {
+                    g.parties.forEach(p => {
+                        const e = entityOf(p);
+                        if (!e) return;
+                        lines.push(e.name);
+                        if (p.type === 'organization' && p.contact_id && this.contactMeta[p.contact_id]) {
+                            lines.push('vertreten durch ' + this.contactMeta[p.contact_id].name);
+                        }
+                        if (e.address) lines.push(e.address);
+                    });
+                }
+
+                if (lines.length === 0) return;
+                if (g.role) {
+                    lines.push('(nachfolgend ' + (joint ? 'gemeinsam ' : '') + '\u00ab' + g.role + '\u00bb)');
+                }
+                blocks.push(lines.join('\n'));
+            });
+
+            return blocks.join('\n\nund\n\n');
+        },
         orgContactsMap: @json($orgContactsMap),
         orgNames: @json($organizations->pluck('primary_name', 'id')),
         contactNames: @json($contacts->mapWithKeys(fn($c) => [$c->id => $c->full_name])),
@@ -404,12 +503,23 @@ function contractForm() {
                 if (data.default_relations_note) {
                     document.getElementById('relations_note').value = data.default_relations_note;
                 }
+                ['subject_heading', 'relations_heading', 'closing_note'].forEach(field => {
+                    const value = data['default_' + field];
+                    const el = document.querySelector(`[name="${field}"]`);
+                    if (value && el) el.value = value;
+                });
+                if (data.default_sections && data.default_sections.length > 0) {
+                    window.dispatchEvent(new CustomEvent('contract-sections-set', {
+                        detail: { editorId: 'terms', sections: data.default_sections }
+                    }));
+                }
                 if (data.default_parties && data.default_parties.length > 0) {
                     this.parties = data.default_parties.map(p => ({
                         type: p.type || 'organization',
                         organization_id: p.organization_id ? String(p.organization_id) : '',
                         contact_id: p.contact_id ? String(p.contact_id) : '',
                         share: parseFloat(p.share) || 0,
+                        role_label: p.role_label || '',
                     }));
                 }
                 // Apply rights from template
@@ -442,7 +552,7 @@ function contractForm() {
             }
         },
         addParty() {
-            this.parties.push({ type: 'organization', organization_id: '', contact_id: '', share: 0 });
+            this.parties.push({ type: 'organization', organization_id: '', contact_id: '', share: 0, role_label: '' });
         },
         removeParty(index) {
             if (this.parties.length > 2) {
