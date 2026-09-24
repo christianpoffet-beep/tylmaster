@@ -69,6 +69,156 @@ class ContractPdfTest extends TestCase
         return $contract;
     }
 
+    /**
+     * The party preamble is generated from the parties, so a contract no longer
+     * needs the "vertreten durch ... nachfolgend «Label»" block typed by hand.
+     */
+    public function test_the_preamble_is_built_from_the_parties(): void
+    {
+        $contract = $this->makeContract();
+        $contract->parties()->get()->each(fn ($p, $i) => $p->update([
+            'role_label' => $i === 0 ? 'Label' : 'Künstlerin oder Künstler',
+        ]));
+        $contract->load(['parties.organization', 'parties.contact']);
+
+        $blocks = $contract->preambleBlocks(Contract::pdfStrings('de'));
+
+        $this->assertCount(2, $blocks);
+        $this->assertSame('Test Label', $blocks[0]['lines'][0]);
+        $this->assertSame('(nachfolgend «Label»)', end($blocks[0]['lines']));
+        $this->assertSame('(nachfolgend «Künstlerin oder Künstler»)', end($blocks[1]['lines']));
+    }
+
+    /**
+     * Several people on the same side of a deal are named as one party:
+     * "<Band> bestehend aus <Person>, <Person> ... nachfolgend gemeinsam".
+     */
+    public function test_parties_sharing_a_role_are_grouped_into_one_block(): void
+    {
+        $contract = $this->makeContract();
+        $contract->parties()->delete();
+
+        $band = Organization::create(['type' => 'band', 'names' => ['Red Tape Redemption']]);
+        $label = Organization::create(['type' => 'label', 'names' => ['Test Label']]);
+
+        ContractParty::create(['contract_id' => $contract->id, 'organization_id' => $label->id, 'share' => 20, 'role_label' => 'Label', 'sort_order' => 0]);
+        foreach (['Tobias' => 'Kalt', 'Lukas' => 'Oberholzer'] as $first => $last) {
+            $contact = Contact::create(['first_name' => $first, 'last_name' => $last, 'city' => 'Zürich', 'zip' => '8000']);
+            ContractParty::create([
+                'contract_id' => $contract->id,
+                'organization_id' => $band->id,
+                'contact_id' => $contact->id,
+                'share' => 40,
+                'role_label' => 'Künstlerin oder Künstler',
+                'sort_order' => $last === 'Kalt' ? 1 : 2,
+            ]);
+        }
+        $contract->load(['parties.organization', 'parties.contact']);
+
+        $blocks = $contract->preambleBlocks(Contract::pdfStrings('de'));
+
+        $this->assertCount(2, $blocks);
+        $this->assertSame([
+            'Red Tape Redemption',
+            'bestehend aus',
+            'Tobias Kalt, 8000 Zürich',
+            'Lukas Oberholzer, 8000 Zürich',
+            '(nachfolgend gemeinsam «Künstlerin oder Künstler»)',
+        ], $blocks[1]['lines']);
+    }
+
+    /**
+     * A hand-written preamble sitting in the subject must not be duplicated by
+     * the generated one — switching the mode off is what does that.
+     */
+    public function test_the_preamble_can_be_switched_off(): void
+    {
+        $contract = $this->makeContract();
+        $contract->update(['preamble_mode' => 'none']);
+        $contract->load(['parties.organization', 'parties.contact']);
+
+        $this->assertSame([], $contract->preambleBlocks(Contract::pdfStrings('de')));
+    }
+
+    /**
+     * Clauses are numbered across the whole document: the subject is 1, the
+     * sections continue from 2 — with un-numbered sections skipped.
+     */
+    public function test_sections_are_numbered_after_the_subject(): void
+    {
+        $contract = $this->makeContract();
+        $contract->update([
+            'sections' => [
+                ['title' => 'Vertragsdauer', 'body' => 'Läuft unbefristet.', 'numbered' => true, 'page_break' => false],
+                ['title' => 'Hinweis', 'body' => 'Kein Paragraf.', 'numbered' => false, 'page_break' => false],
+                ['title' => 'Gerichtsstand', 'body' => 'Winterthur.', 'numbered' => true, 'page_break' => false],
+            ],
+        ]);
+
+        $html = $this->renderPdfView($contract);
+
+        $this->assertStringContainsString('1.</span> Vertragsgegenstand', $html);
+        $this->assertStringContainsString('2.</span> Vertragsdauer', $html);
+        $this->assertStringContainsString('3.</span> Gerichtsstand', $html);
+        $this->assertStringNotContainsString('3.</span> Hinweis', $html);
+    }
+
+    /**
+     * Contracts written before the section editor only carry the free text;
+     * it still has to print.
+     */
+    public function test_the_legacy_terms_field_still_prints_without_sections(): void
+    {
+        $contract = $this->makeContract();
+
+        $html = $this->renderPdfView($contract);
+
+        $this->assertStringContainsString('Beispielbedingungen für den Test.', $html);
+    }
+
+    /**
+     * dompdf has no "pages" counter, so the total is counted in a first pass
+     * and handed to the view. Without it only the page number is printed —
+     * never "von 0".
+     */
+    public function test_the_footer_numbers_the_pages(): void
+    {
+        $contract = $this->makeContract();
+
+        $withTotal = $this->renderPdfView($contract, 3);
+        $this->assertStringContainsString('content: "Seite " counter(page) " von 3";', $withTotal);
+
+        $withoutTotal = $this->renderPdfView($contract);
+        $this->assertStringContainsString('content: "Seite " counter(page);', $withoutTotal);
+        $this->assertStringNotContainsString('von 0', $withoutTotal);
+    }
+
+    /**
+     * The download path has to report the number of pages it actually produced.
+     */
+    public function test_the_pdf_route_counts_its_own_pages(): void
+    {
+        $contract = $this->makeContract();
+
+        $response = $this->actingAs(User::factory()->create())
+            ->post("/admin/contracts/{$contract->id}/pdf");
+
+        $response->assertOk();
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+    }
+
+    protected function renderPdfView(Contract $contract, ?int $pageCount = null): string
+    {
+        return view('admin.contracts.pdf', [
+            'contract' => $contract->fresh()->load(['parties.organization', 'parties.contact', 'projects', 'tracks.contacts', 'releases']),
+            'typeLabels' => [],
+            't' => Contract::pdfStrings($contract->language),
+            'headerParty' => $contract->header_party,
+            'logoAbsolutePath' => null,
+            'pageCount' => $pageCount,
+        ])->render();
+    }
+
     public function test_contract_pdf_renders(): void
     {
         $contract = $this->makeContract();

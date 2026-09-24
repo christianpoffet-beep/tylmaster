@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesContractLogo;
 use App\Http\Controllers\Concerns\SyncsFormRelations;
 use App\Http\Controllers\Controller;
 use App\Models\Artwork;
-use App\Models\ArtworkLogo;
 use App\Models\Contract;
 use App\Models\Contact;
 use App\Models\ContractParty;
@@ -19,9 +19,11 @@ use App\Models\Release;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ContractController extends Controller
 {
+    use HandlesContractLogo;
     use SyncsFormRelations;
 
     public function index(Request $request)
@@ -88,8 +90,9 @@ class ContractController extends Controller
             'status' => 'required|in:draft,active,expired,terminated',
             'language' => 'nullable|in:de,en,es',
             'start_date' => 'nullable|date',
+            'template_id' => 'nullable|exists:contract_templates,id',
             'document' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,txt,jpg,jpeg,png|max:51200',
-            'logo_source' => 'nullable|in:keep,none,artwork,upload',
+            'logo_source' => 'nullable|in:keep,none,artwork,upload,template',
             'artwork_logo_id' => 'nullable|exists:artwork_logos,id',
             'logo_file' => 'nullable|file|image|max:51200',
             'logo_in_header' => 'nullable|boolean',
@@ -97,7 +100,19 @@ class ContractController extends Controller
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'terms' => 'nullable|string',
             'subject' => 'nullable|string',
+            'subject_heading' => 'nullable|string|max:120',
             'relations_note' => 'nullable|string',
+            'relations_heading' => 'nullable|string|max:120',
+            'closing_note' => 'nullable|string',
+            'preamble_mode' => 'nullable|in:auto,custom,none',
+            'preamble_text' => 'nullable|string',
+            'show_parties_table' => 'nullable|boolean',
+            'auto_number_sections' => 'nullable|boolean',
+            'sections' => 'nullable|array',
+            'sections.*.title' => 'nullable|string|max:255',
+            'sections.*.body' => 'nullable|string',
+            'sections.*.page_break' => 'nullable|boolean',
+            'sections.*.numbered' => 'nullable|boolean',
             'has_zession' => 'nullable|boolean',
             'zession_amount' => 'nullable|numeric|min:0',
             'zession_currency' => 'nullable|in:CHF,EUR,USD',
@@ -109,6 +124,7 @@ class ContractController extends Controller
             'parties.*.organization_id' => 'nullable|exists:organizations,id',
             'parties.*.contact_id' => 'nullable|exists:contacts,id',
             'parties.*.share' => 'required|numeric|min:0|max:100',
+            'parties.*.role_label' => 'nullable|string|max:120',
             'rights' => 'nullable|array',
             'rights.*.label' => 'required|string|max:255',
             'rights.*.mode' => 'required|in:split,custom',
@@ -132,6 +148,8 @@ class ContractController extends Controller
             return back()->withInput()->withErrors(['parties' => 'Die Summe der Anteile muss 100% ergeben (aktuell: ' . number_format($totalShare, 2) . '%).']);
         }
 
+        $this->applySections($request, $validated);
+
         // Process rights
         $rights = $request->input('rights', []);
         $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
@@ -146,7 +164,13 @@ class ContractController extends Controller
         $validated['rights_label_a'] = $rightsLabels[0] ?? $request->input('rights_label_a');
         $validated['rights_label_b'] = $rightsLabels[1] ?? $request->input('rights_label_b');
 
-        $this->handleLogo($request, $validated);
+        // The form fills itself from the template in the browser; the logo file
+        // and the attached documents can only be carried over here.
+        $template = $request->filled('template_id')
+            ? ContractTemplate::find($request->input('template_id'))
+            : null;
+
+        $this->applyLogoSelection($request, $validated, $template);
 
         $validated['contract_number'] = Contract::generateNumber();
         $validated['has_zession'] = $request->boolean('has_zession');
@@ -161,7 +185,8 @@ class ContractController extends Controller
         $parties = $validated['parties'];
         unset(
             $validated['parties'], $validated['project_ids'], $validated['track_ids'], $validated['release_ids'],
-            $validated['logo_source'], $validated['artwork_logo_id'], $validated['logo_file']
+            $validated['logo_source'], $validated['artwork_logo_id'], $validated['logo_file'],
+            $validated['template_id']
         );
 
         $contract = Contract::create($validated);
@@ -171,6 +196,7 @@ class ContractController extends Controller
                 'organization_id' => $party['type'] === 'organization' ? ($party['organization_id'] ?? null) : null,
                 'contact_id' => $party['contact_id'] ?? null,
                 'share' => $party['share'],
+                'role_label' => $party['role_label'] ?? null,
                 'sort_order' => $i,
             ]);
         }
@@ -190,6 +216,10 @@ class ContractController extends Controller
                 'mime_type' => $file->getMimeType(),
                 'notes' => $request->input('document_notes'),
             ]);
+        }
+
+        if ($template) {
+            $this->copyTemplateDocuments($template, $contract);
         }
 
         return redirect()->route('admin.contracts.show', $contract)->with('success', 'Vertrag erstellt.');
@@ -224,6 +254,7 @@ class ContractController extends Controller
             'organization_id' => $p->organization_id ? (string) $p->organization_id : '',
             'contact_id' => $p->contact_id ? (string) $p->contact_id : '',
             'share' => (float) $p->share,
+            'role_label' => $p->role_label ?? '',
         ])->values()->toArray();
 
         $contractTypes = ContractType::orderBy('sort_order')->get();
@@ -244,7 +275,19 @@ class ContractController extends Controller
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'terms' => 'nullable|string',
             'subject' => 'nullable|string',
+            'subject_heading' => 'nullable|string|max:120',
             'relations_note' => 'nullable|string',
+            'relations_heading' => 'nullable|string|max:120',
+            'closing_note' => 'nullable|string',
+            'preamble_mode' => 'nullable|in:auto,custom,none',
+            'preamble_text' => 'nullable|string',
+            'show_parties_table' => 'nullable|boolean',
+            'auto_number_sections' => 'nullable|boolean',
+            'sections' => 'nullable|array',
+            'sections.*.title' => 'nullable|string|max:255',
+            'sections.*.body' => 'nullable|string',
+            'sections.*.page_break' => 'nullable|boolean',
+            'sections.*.numbered' => 'nullable|boolean',
             'has_zession' => 'nullable|boolean',
             'zession_amount' => 'nullable|numeric|min:0',
             'zession_currency' => 'nullable|in:CHF,EUR,USD',
@@ -262,6 +305,7 @@ class ContractController extends Controller
             'parties.*.organization_id' => 'nullable|exists:organizations,id',
             'parties.*.contact_id' => 'nullable|exists:contacts,id',
             'parties.*.share' => 'required|numeric|min:0|max:100',
+            'parties.*.role_label' => 'nullable|string|max:120',
             'rights' => 'nullable|array',
             'rights.*.label' => 'required|string|max:255',
             'rights.*.mode' => 'required|in:split,custom',
@@ -285,6 +329,8 @@ class ContractController extends Controller
             return back()->withInput()->withErrors(['parties' => 'Die Summe der Anteile muss 100% ergeben (aktuell: ' . number_format($totalShare, 2) . '%).']);
         }
 
+        $this->applySections($request, $validated);
+
         // Process rights
         $rights = $request->input('rights', []);
         $rights = array_values(array_filter($rights, fn ($r) => !empty($r['label'])));
@@ -299,7 +345,7 @@ class ContractController extends Controller
         $validated['rights_label_a'] = $rightsLabels[0] ?? $request->input('rights_label_a');
         $validated['rights_label_b'] = $rightsLabels[1] ?? $request->input('rights_label_b');
 
-        $this->handleLogo($request, $validated, $contract);
+        $this->applyLogoSelection($request, $validated);
 
         $validated['has_zession'] = $request->boolean('has_zession');
         if (!$validated['has_zession']) {
@@ -324,6 +370,7 @@ class ContractController extends Controller
                 'organization_id' => $party['type'] === 'organization' ? ($party['organization_id'] ?? null) : null,
                 'contact_id' => $party['contact_id'] ?? null,
                 'share' => $party['share'],
+                'role_label' => $party['role_label'] ?? null,
                 'sort_order' => $i,
             ]);
         }
@@ -380,7 +427,14 @@ class ContractController extends Controller
             $logoAbsolutePath = Storage::disk('public')->path($contract->logo_path);
         }
 
-        $pdf = Pdf::loadView('admin.contracts.pdf', compact('contract', 'typeLabels', 't', 'headerParty', 'logoAbsolutePath'));
+        $data = compact('contract', 'typeLabels', 't', 'headerParty', 'logoAbsolutePath');
+
+        // dompdf knows no "pages" counter — the total only exists once the
+        // document has been laid out. The footer sits outside the text flow,
+        // so printing the number it reports cannot shift the pagination.
+        $data['pageCount'] = $this->countPages($data);
+
+        $pdf = Pdf::loadView('admin.contracts.pdf', $data);
         $pdf->setPaper('A4', 'portrait');
 
         $filename = ($contract->contract_number ?? 'Vertrag') . '_' . now()->format('Ymd_His') . '.pdf';
@@ -465,49 +519,74 @@ class ContractController extends Controller
     }
 
     /**
-     * Resolve the contract logo from the request and write logo_* keys into $validated.
+     * Hand the template's attachments to a fresh contract.
      *
-     * logo_source: keep | none | artwork | upload
-     *  - keep    → leave the existing logo_path untouched (default)
-     *  - none    → remove the logo
-     *  - artwork → reference an existing ArtworkLogo's file
-     *  - upload  → store the freshly uploaded file
+     * The files are duplicated rather than referenced, so editing or deleting
+     * one contract's copy never touches the template or its siblings.
      */
-    private function handleLogo(Request $request, array &$validated, ?Contract $contract = null): void
+    private function copyTemplateDocuments(ContractTemplate $template, Contract $contract): void
     {
-        $validated['logo_in_header'] = $request->boolean('logo_in_header');
-        $validated['logo_as_watermark'] = $request->boolean('logo_as_watermark');
+        foreach ($template->documents as $document) {
+            $copy = 'contracts/' . Str::random(40) . '.' . pathinfo($document->file_path, PATHINFO_EXTENSION);
 
-        $source = $request->input('logo_source', 'keep');
+            if (!Storage::disk('public')->exists($document->file_path)
+                || !Storage::disk('public')->copy($document->file_path, $copy)) {
+                continue;
+            }
 
-        switch ($source) {
-            case 'none':
-                $validated['logo_path'] = null;
-                break;
+            $contract->documents()->create([
+                'title' => $document->title,
+                'category' => 'contract',
+                'file_path' => $copy,
+                'file_size' => $document->file_size,
+                'mime_type' => $document->mime_type,
+                'notes' => $document->notes,
+            ]);
+        }
+    }
 
-            case 'upload':
-                if ($request->hasFile('logo_file')) {
-                    $validated['logo_path'] = $request->file('logo_file')->store('contracts/logos', 'public');
-                } else {
-                    unset($validated['logo_path']); // nothing uploaded → keep current
-                }
-                break;
+    /**
+     * Lay the PDF out once to learn how many pages it has.
+     */
+    private function countPages(array $data): int
+    {
+        $probe = Pdf::loadView('admin.contracts.pdf', $data + ['pageCount' => null]);
+        $probe->setPaper('A4', 'portrait');
 
-            case 'artwork':
-                $logo = $request->filled('artwork_logo_id')
-                    ? ArtworkLogo::find($request->input('artwork_logo_id'))
-                    : null;
-                if ($logo) {
-                    $validated['logo_path'] = $logo->file_path;
-                } else {
-                    unset($validated['logo_path']);
-                }
-                break;
+        $dompdf = $probe->getDomPDF();
+        $dompdf->render();
 
-            case 'keep':
-            default:
-                unset($validated['logo_path']); // do not modify
-                break;
+        return $dompdf->getCanvas()->get_page_count();
+    }
+
+    /**
+     * Normalize the section editor payload and the PDF layout toggles.
+     *
+     * Empty rows are dropped so an accidentally added section does not print an
+     * empty numbered clause.
+     */
+    private function applySections(Request $request, array &$validated): void
+    {
+        $sections = $request->input('sections', []);
+        $sections = is_array($sections) ? array_values($sections) : [];
+
+        $sections = array_values(array_filter(
+            array_map(fn ($s) => [
+                'title' => trim((string) ($s['title'] ?? '')),
+                'body' => rtrim((string) ($s['body'] ?? '')),
+                'page_break' => (bool) ($s['page_break'] ?? false),
+                'numbered' => (bool) ($s['numbered'] ?? true),
+            ], $sections),
+            fn ($s) => $s['title'] !== '' || $s['body'] !== ''
+        ));
+
+        $validated['sections'] = $sections !== [] ? $sections : null;
+        $validated['preamble_mode'] = $request->input('preamble_mode', 'auto');
+        $validated['show_parties_table'] = $request->boolean('show_parties_table');
+        $validated['auto_number_sections'] = $request->boolean('auto_number_sections');
+
+        if ($validated['preamble_mode'] !== 'custom') {
+            $validated['preamble_text'] = null;
         }
     }
 }

@@ -10,7 +10,7 @@ class ContractParty extends Model
     use LogsActivity;
 
     protected $fillable = [
-        'contract_id', 'organization_id', 'contact_id', 'share', 'sort_order',
+        'contract_id', 'organization_id', 'contact_id', 'share', 'role_label', 'sort_order',
     ];
 
     protected $casts = [

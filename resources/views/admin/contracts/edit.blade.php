@@ -3,6 +3,16 @@
 @section('title', 'Vertrag bearbeiten')
 
 
+@php
+    $orgMeta = $organizations->mapWithKeys(fn ($o) => [(string) $o->id => [
+        'name' => $o->primary_name,
+        'address' => implode(', ', array_filter([$o->street, trim(($o->zip ?? '') . ' ' . ($o->city ?? ''))])),
+    ]]);
+    $contactMeta = $contacts->mapWithKeys(fn ($c) => [(string) $c->id => [
+        'name' => $c->full_name,
+        'address' => implode(', ', array_filter([$c->street, trim(($c->zip ?? '') . ' ' . ($c->city ?? ''))])),
+    ]]);
+@endphp
 @section('content')
 <div class="max-w-3xl" x-data="contractForm()">
     <div class="mb-6">
@@ -60,79 +70,17 @@
                 </div>
             </div>
 
-            {{-- Zession (Vorschusszahlung) --}}
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-6" x-data="{ hasZession: {{ old('has_zession', $contract->has_zession) ? 'true' : 'false' }} }">
-                <div class="flex items-center gap-3 mb-3">
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="hidden" name="has_zession" value="0">
-                        <input type="checkbox" name="has_zession" value="1" x-model="hasZession" class="sr-only peer">
-                        <div class="w-9 h-5 bg-gray-200 dark:bg-gray-600 peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Zession (Vorschusszahlung)</span>
-                </div>
-                <div x-show="hasZession" x-transition class="space-y-3 ml-12">
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Vorschuss, der mit künftigen Einnahmen verrechnet wird.</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="zession_amount" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Betrag</label>
-                            <input type="number" name="zession_amount" id="zession_amount" value="{{ old('zession_amount', $contract->zession_amount) }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="0.00">
-                        </div>
-                        <div>
-                            <label for="zession_currency" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Währung</label>
-                            <select name="zession_currency" id="zession_currency" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                                @foreach(['CHF' => 'CHF', 'EUR' => 'EUR', 'USD' => 'USD'] as $code => $label)
-                                    <option value="{{ $code }}" {{ old('zession_currency', $contract->zession_currency) === $code ? 'selected' : '' }}>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="zession_notes" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Notizen zur Zession</label>
-                        <textarea name="zession_notes" id="zession_notes" rows="2" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="z.B. Rückzahlungsbedingungen...">{{ old('zession_notes', $contract->zession_notes) }}</textarea>
-                    </div>
-                </div>
-            </div>
+            @include('admin.partials.contract-zession', [
+                'has' => (bool) old('has_zession', $contract->has_zession),
+                'amount' => old('zession_amount', $contract->zession_amount),
+                'currency' => old('zession_currency', $contract->zession_currency ?? 'CHF'),
+                'notes' => old('zession_notes', $contract->zession_notes),
+            ])
 
-            {{-- Territory --}}
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-6" x-data="territorySelector()">
-                <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Geltungsbereich / Territory</p>
-
-                <div class="flex items-center gap-3 mb-3">
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" x-model="worldwide" @change="onWorldwideToggle()" class="sr-only peer">
-                        <div class="w-9 h-5 bg-gray-200 dark:bg-gray-600 peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                    <span class="text-sm text-gray-700 dark:text-gray-300">Weltweit</span>
-                </div>
-                <input type="hidden" name="territory_worldwide" :value="worldwide ? '1' : '0'">
-
-                <div x-show="!worldwide" x-transition>
-                    <div class="flex flex-wrap gap-2 mb-3">
-                        @foreach($territoryPresets as $key => $preset)
-                            @if($key !== 'world')
-                            <button type="button"
-                                @click="togglePreset('{{ $key }}')"
-                                :class="isPresetActive('{{ $key }}') ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-600' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'"
-                                class="px-3 py-1.5 text-xs font-medium rounded-lg border hover:shadow-sm transition-colors">
-                                {{ $preset['label'] }}
-                            </button>
-                            @endif
-                        @endforeach
-                    </div>
-
-                    <div class="max-h-48 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-1">
-                            <template x-for="country in allCountries" :key="country.code">
-                                <label class="inline-flex items-center gap-1.5 text-xs cursor-pointer py-0.5">
-                                    <input type="checkbox" :value="country.code" name="territory[]" :checked="selected.includes(country.code)" @change="toggleCountry(country.code)" class="rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
-                                    <span class="text-gray-700 dark:text-gray-300 truncate" x-text="country.name"></span>
-                                </label>
-                            </template>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-400 mt-1"><span x-text="selected.length"></span> Länder ausgewählt</p>
-                </div>
-            </div>
+            @include('admin.partials.contract-territory', [
+                'territory' => old('territory', $contract->territory ?? []),
+                'territoryPresets' => $territoryPresets,
+            ])
 
             {{-- Vertragsparteien --}}
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
@@ -193,12 +141,29 @@
                             </select>
                         </div>
 
-                        <div class="mt-3">
-                            <label class="block text-xs text-gray-500 mb-1">Genereller Anteil (%)</label>
-                            <input type="number" :name="'parties['+index+'][share]'" x-model="party.share" @input="balanceShare(index)" step="0.01" min="0" max="100" required class="w-32 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+
+                        <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Genereller Anteil (%)</label>
+                                <input type="number" :name="'parties['+index+'][share]'" x-model="party.share" @input="balanceShare(index)" step="0.01" min="0" max="100" required class="w-32 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Rolle im Vertrag</label>
+                                <input type="text" :name="'parties['+index+'][role_label]'" x-model="party.role_label" list="contract-role-labels" placeholder="z.B. Label" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                <p class="text-[11px] text-gray-400 mt-0.5">Erscheint als «nachfolgend «…»». Gleiche Rolle = gemeinsame Partei.</p>
+                            </div>
                         </div>
                     </div>
                 </template>
+
+                <datalist id="contract-role-labels">
+                    <option value="Label"></option>
+                    <option value="Künstlerin oder Künstler"></option>
+                    <option value="Verlag"></option>
+                    <option value="Urheberin oder Urheber"></option>
+                    <option value="Management"></option>
+                    <option value="Auftraggeber"></option>
+                </datalist>
 
                 <div class="flex items-center justify-between text-sm mt-2 px-1">
                     <span class="text-gray-500 dark:text-gray-400">Total:</span>
@@ -207,9 +172,18 @@
                 <p x-show="Math.abs(totalShare - 100) >= 0.01" class="text-red-500 text-xs mt-1">Die Summe der Anteile muss genau 100% ergeben.</p>
             </div>
 
+            @include('admin.partials.contract-preamble', [
+                'mode' => old('preamble_mode', $contract->preamble_mode ?? 'auto'),
+                'showPartiesTable' => (bool) old('show_parties_table', $contract->show_parties_table ?? true),
+                'text' => old('preamble_text', $contract->preamble_text ?? ''),
+            ])
+
             {{-- Vertragsgegenstand --}}
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vertragsgegenstand</label>
+                <div class="flex items-baseline justify-between mb-1">
+                    <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Vertragsgegenstand</label>
+                    <input type="text" name="subject_heading" value="{{ old('subject_heading', $contract->subject_heading ?? '') }}" placeholder="Eigener Titel (Standard: Vertragsgegenstand)" class="w-72 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                </div>
                 <textarea name="subject" id="subject" rows="3" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Beschreibung des Vertragsgegenstands...">{{ old('subject', $contract->subject) }}</textarea>
             </div>
 
@@ -221,7 +195,10 @@
             ])
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <label for="relations_note" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Verknüpfungen</label>
+                <div class="flex items-baseline justify-between mb-1">
+                    <label for="relations_note" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Verknüpfungen</label>
+                    <input type="text" name="relations_heading" value="{{ old('relations_heading', $contract->relations_heading ?? '') }}" placeholder="Eigener Titel, z.B. Anhang: Aufnahmen" class="w-72 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                </div>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Einleitungstext zu den verknüpften Projekten, Tracks und Produkten (im PDF). Bei Tracks werden die Credits automatisch eingeblendet.</p>
                 <textarea name="relations_note" id="relations_note" rows="2" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('relations_note', $contract->relations_note ?? 'Folgende Songs sind Bestandteil dieses Vertrages.') }}</textarea>
             </div>
@@ -238,12 +215,14 @@
                 @include('admin.partials.release-search', ['selected' => $contract->releases])
             </div>
 
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <label for="terms" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bedingungen</label>
-                <textarea name="terms" id="terms" rows="4" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('terms', $contract->terms) }}</textarea>
-            </div>
+            @include('admin.partials.contract-sections', [
+                'sections' => old('sections', $contract->sections ?? []),
+                'autoNumber' => (bool) old('auto_number_sections', $contract->auto_number_sections ?? true),
+                'termsValue' => old('terms', $contract->terms ?? ''),
+                'closingValue' => old('closing_note', $contract->closing_note ?? ''),
+            ])
 
-            @include('admin.partials.contract-logo', ['contract' => $contract])
+            @include('admin.partials.contract-logo', ['model' => $contract])
 
             <div>
                 <label for="document" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Neues Dokument hochladen</label>
@@ -310,65 +289,13 @@
 </div>
 
 <script>
-function territorySelector() {
-    const presets = @json($territoryPresets);
-    const existingTerritory = @json(old('territory', $contract->territory ?? []));
-    return {
-        worldwide: existingTerritory.includes('ALL') || {{ old('territory_worldwide', (is_array($contract->territory) && in_array('ALL', $contract->territory)) ? '1' : '0') ? 'true' : 'false' }},
-        selected: existingTerritory.filter(c => c !== 'ALL'),
-        presets: presets,
-        allCountries: [
-            {code:'AF',name:'Afghanistan'},{code:'EG',name:'Ägypten'},{code:'AL',name:'Albanien'},{code:'DZ',name:'Algerien'},
-            {code:'AD',name:'Andorra'},{code:'AR',name:'Argentinien'},{code:'AM',name:'Armenien'},{code:'AZ',name:'Aserbaidschan'},
-            {code:'AU',name:'Australien'},{code:'BE',name:'Belgien'},{code:'BA',name:'Bosnien und Herzegowina'},{code:'BR',name:'Brasilien'},
-            {code:'BG',name:'Bulgarien'},{code:'CL',name:'Chile'},{code:'CN',name:'China'},{code:'CR',name:'Costa Rica'},
-            {code:'DK',name:'Dänemark'},{code:'DE',name:'Deutschland'},{code:'EC',name:'Ecuador'},{code:'EE',name:'Estland'},
-            {code:'FI',name:'Finnland'},{code:'FR',name:'Frankreich'},{code:'GE',name:'Georgien'},{code:'GH',name:'Ghana'},
-            {code:'GR',name:'Griechenland'},{code:'GB',name:'Grossbritannien'},{code:'GT',name:'Guatemala'},
-            {code:'HN',name:'Honduras'},{code:'IN',name:'Indien'},{code:'ID',name:'Indonesien'},{code:'IQ',name:'Irak'},
-            {code:'IR',name:'Iran'},{code:'IE',name:'Irland'},{code:'IS',name:'Island'},{code:'IL',name:'Israel'},
-            {code:'IT',name:'Italien'},{code:'JP',name:'Japan'},{code:'JO',name:'Jordanien'},{code:'CA',name:'Kanada'},
-            {code:'KZ',name:'Kasachstan'},{code:'KE',name:'Kenia'},{code:'CO',name:'Kolumbien'},{code:'XK',name:'Kosovo'},
-            {code:'HR',name:'Kroatien'},{code:'CU',name:'Kuba'},{code:'LV',name:'Lettland'},{code:'LB',name:'Libanon'},
-            {code:'LI',name:'Liechtenstein'},{code:'LT',name:'Litauen'},{code:'LU',name:'Luxemburg'},{code:'MY',name:'Malaysia'},
-            {code:'MT',name:'Malta'},{code:'MA',name:'Marokko'},{code:'MX',name:'Mexiko'},{code:'MD',name:'Moldau'},
-            {code:'MC',name:'Monaco'},{code:'ME',name:'Montenegro'},{code:'MZ',name:'Mosambik'},{code:'NZ',name:'Neuseeland'},
-            {code:'NL',name:'Niederlande'},{code:'NG',name:'Nigeria'},{code:'MK',name:'Nordmazedonien'},{code:'NO',name:'Norwegen'},
-            {code:'AT',name:'Österreich'},{code:'PK',name:'Pakistan'},{code:'PA',name:'Panama'},{code:'PY',name:'Paraguay'},
-            {code:'PE',name:'Peru'},{code:'PH',name:'Philippinen'},{code:'PL',name:'Polen'},{code:'PT',name:'Portugal'},
-            {code:'RO',name:'Rumänien'},{code:'RU',name:'Russland'},{code:'SA',name:'Saudi-Arabien'},{code:'SE',name:'Schweden'},
-            {code:'CH',name:'Schweiz'},{code:'RS',name:'Serbien'},{code:'SG',name:'Singapur'},{code:'SK',name:'Slowakei'},
-            {code:'SI',name:'Slowenien'},{code:'ES',name:'Spanien'},{code:'ZA',name:'Südafrika'},{code:'KR',name:'Südkorea'},
-            {code:'TW',name:'Taiwan'},{code:'TH',name:'Thailand'},{code:'CZ',name:'Tschechien'},{code:'TN',name:'Tunesien'},
-            {code:'TR',name:'Türkei'},{code:'UA',name:'Ukraine'},{code:'HU',name:'Ungarn'},{code:'UY',name:'Uruguay'},
-            {code:'US',name:'USA'},{code:'AE',name:'VAE'},{code:'VE',name:'Venezuela'},{code:'VN',name:'Vietnam'},
-            {code:'BY',name:'Weissrussland'},{code:'CY',name:'Zypern'}
-        ],
-        onWorldwideToggle() {
-            if (this.worldwide) this.selected = [];
-        },
-        toggleCountry(code) {
-            const idx = this.selected.indexOf(code);
-            if (idx >= 0) { this.selected.splice(idx, 1); } else { this.selected.push(code); }
-        },
-        togglePreset(key) {
-            const countries = this.presets[key]?.countries || [];
-            const allPresent = countries.every(c => this.selected.includes(c));
-            if (allPresent) {
-                this.selected = this.selected.filter(c => !countries.includes(c));
-            } else {
-                countries.forEach(c => { if (!this.selected.includes(c)) this.selected.push(c); });
-            }
-        },
-        isPresetActive(key) {
-            const countries = this.presets[key]?.countries || [];
-            return countries.length > 0 && countries.every(c => this.selected.includes(c));
-        }
-    };
-}
-
 function contractForm() {
     return {
+        orgMeta: @json($orgMeta),
+        contactMeta: @json($contactMeta),
+        get preamblePreview() {
+            return contractPreamblePreview(this.parties, this.orgMeta, this.contactMeta);
+        },
         orgContactsMap: @json($orgContactsMap),
         orgNames: @json($organizations->pluck('primary_name', 'id')),
         contactNames: @json($contacts->mapWithKeys(fn($c) => [$c->id => $c->full_name])),
@@ -423,7 +350,7 @@ function contractForm() {
             }
         },
         addParty() {
-            this.parties.push({ type: 'organization', organization_id: '', contact_id: '', share: 0 });
+            this.parties.push({ type: 'organization', organization_id: '', contact_id: '', share: 0, role_label: '' });
         },
         removeParty(index) {
             if (this.parties.length > 2) {

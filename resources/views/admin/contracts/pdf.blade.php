@@ -6,20 +6,20 @@
     <title>{{ $contract->title }}</title>
     <style>
         @page {
-            margin: 2.5cm 2cm 3cm 2cm;
+            margin: 2.2cm 2cm 2.6cm 2cm;
         }
         body {
             font-family: 'DejaVu Sans', sans-serif;
             font-size: 10pt;
             color: #1a1a1a;
-            line-height: 1.6;
+            line-height: 1.55;
         }
 
         /* Header */
         .header {
             border-bottom: 2px solid #1e3a5f;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
+            padding-bottom: 12px;
+            margin-bottom: 18px;
         }
         .header h1 {
             font-size: 18pt;
@@ -63,35 +63,46 @@
             z-index: 0;
         }
         .watermark img {
-            margin-top: 35%;
-            width: 55%;
-            opacity: 0.06;
+            margin-top: 45%;
+            width: 38%;
+            opacity: 0.045;
         }
 
         /* Meta info */
         .meta-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
+            background-color: #f9fafb;
+            page-break-inside: avoid;
         }
         .meta-table td {
             padding: 5px 10px;
             font-size: 9pt;
-            vertical-align: top;
+            vertical-align: middle;
+            border-bottom: 1px solid #eef0f3;
+        }
+        .meta-table tr.last td {
+            border-bottom: none;
         }
         .meta-table .label {
             color: #6b7280;
-            width: 120px;
+            width: 15%;
             font-weight: normal;
         }
         .meta-table .value {
             color: #1a1a1a;
             font-weight: 600;
+            width: 35%;
         }
 
         /* Sections */
         .section {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
+        }
+        /* Short, self-contained blocks must never be torn across a page. */
+        .section-compact {
+            page-break-inside: avoid;
         }
         .section-title {
             font-size: 11pt;
@@ -99,7 +110,37 @@
             color: #1e3a5f;
             border-bottom: 1px solid #d1d5db;
             padding-bottom: 4px;
-            margin-bottom: 10px;
+            margin-bottom: 9px;
+        }
+        /* Heading + first paragraph travel as one unit. */
+        .keep-together {
+            page-break-inside: avoid;
+        }
+
+        /* Party preamble */
+        .preamble {
+            font-size: 9.5pt;
+            color: #374151;
+            margin-bottom: 2px;
+        }
+        .preamble-block {
+            page-break-inside: avoid;
+            margin-bottom: 9px;
+        }
+        .preamble-block div {
+            line-height: 1.45;
+        }
+        .preamble-name {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        .preamble-role {
+            color: #6b7280;
+            margin-top: 2px;
+        }
+        .preamble-and {
+            margin: 0 0 9px 0;
+            color: #6b7280;
         }
 
         /* Parties table */
@@ -120,9 +161,17 @@
             border-bottom: 1px solid #d1d5db;
         }
         .parties-table td {
-            padding: 8px 10px;
+            padding: 7px 10px;
             font-size: 9pt;
             border-bottom: 1px solid #e5e7eb;
+        }
+        .parties-table tr.total-row td {
+            border-bottom: none;
+            border-top: 1px solid #d1d5db;
+            font-size: 8pt;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .parties-table .share {
             text-align: right;
@@ -142,6 +191,7 @@
             border-radius: 4px;
             padding: 10px 14px;
             margin-bottom: 10px;
+            page-break-inside: avoid;
         }
         .zession-box .amount {
             font-size: 12pt;
@@ -208,9 +258,27 @@
         /* Terms */
         .terms-content {
             font-size: 9pt;
-            line-height: 1.7;
-            white-space: pre-line;
+            line-height: 1.65;
             color: #374151;
+        }
+        /* One block per paragraph keeps headings glued to their first lines. */
+        .text-para {
+            white-space: pre-line;
+            margin-bottom: 8px;
+        }
+
+        /* Numbered clauses */
+        .clause {
+            margin-bottom: 13px;
+        }
+        .clause-title {
+            font-size: 9.5pt;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 3px;
+        }
+        .clause-number {
+            color: #6b7280;
         }
 
         /* Relations */
@@ -237,6 +305,7 @@
         }
         .track-credit-block {
             margin-bottom: 10px;
+            page-break-inside: avoid;
         }
         .track-credit-title {
             font-size: 9pt;
@@ -269,13 +338,13 @@
 
         /* Signature area */
         .signatures {
-            margin-top: 40px;
+            margin-top: 26px;
         }
         .signature-table {
             width: 100%;
             border-collapse: collapse;
             page-break-inside: avoid;
-            margin-bottom: 28px;
+            margin-bottom: 18px;
         }
         .signature-table td {
             width: 45%;
@@ -290,7 +359,7 @@
             padding-top: 4px;
             font-size: 8pt;
             color: #6b7280;
-            margin-top: 60px;
+            margin-top: 46px;
         }
         .signature-name {
             font-size: 9pt;
@@ -301,14 +370,30 @@
         /* Footer */
         .footer {
             position: fixed;
-            bottom: -2cm;
+            bottom: -1.7cm;
             left: 0;
             right: 0;
-            text-align: center;
             font-size: 7pt;
             color: #9ca3af;
             border-top: 1px solid #e5e7eb;
             padding-top: 5px;
+        }
+        .footer table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .footer td {
+            font-size: 7pt;
+            color: #9ca3af;
+            padding: 0;
+        }
+        /*
+         * dompdf resolves the current page only inside a fixed-position element,
+         * and only through generated content - hence the pseudo element instead
+         * of a Blade expression. The total comes from the controller.
+         */
+        .page-number:after {
+            content: "{{ $t['page'] }} " counter(page)@if($pageCount ?? null) " {{ $t['page_of'] }} {{ $pageCount }}"@endif;
         }
 
         /* Status badge */
@@ -335,7 +420,12 @@
     @endif
 
     <div class="footer">
-        {{ $contract->contract_number ?? '' }} &middot; {{ $t['generated_on'] }} {{ now()->format('d.m.Y H:i') }} &middot; The Yelling Light
+        <table>
+            <tr>
+                <td style="text-align: left;">{{ $contract->contract_number ?? '' }} &middot; {{ $t['generated_on'] }} {{ now()->format('d.m.Y H:i') }} &middot; The Yelling Light</td>
+                <td style="text-align: right; white-space: nowrap;"><span class="page-number"></span></td>
+            </tr>
+        </table>
     </div>
 
     <div class="header">
@@ -378,7 +468,7 @@
                 <span class="status-badge status-{{ $contract->status }}">{{ $t['status_' . $contract->status] ?? $contract->status }}</span>
             </td>
         </tr>
-        <tr>
+        <tr class="last">
             <td class="label">{{ $t['meta_start'] }}</td>
             <td class="value">{{ $contract->start_date?->format('d.m.Y') ?? '—' }}</td>
             <td class="label">{{ $t['meta_end'] }}</td>
@@ -386,10 +476,17 @@
         </tr>
     </table>
 
-    {{-- Parties --}}
-    @if($contract->parties->count())
+    {{-- Vertragsparteien: overview table plus the prose preamble --}}
+    @php
+        $preambleBlocks = $contract->preambleBlocks($t);
+        $showPartiesTable = $contract->show_parties_table ?? true;
+        $customPreamble = ($contract->preamble_mode ?? 'auto') === 'custom' ? trim((string) $contract->preamble_text) : '';
+    @endphp
+    @if($contract->parties->count() && ($showPartiesTable || $preambleBlocks || $customPreamble !== ''))
     <div class="section">
         <div class="section-title">{{ $t['parties_title'] }}</div>
+
+        @if($showPartiesTable)
         <table class="parties-table">
             <thead>
                 <tr>
@@ -407,7 +504,14 @@
                         @elseif($party->contact)
                             {{ $party->contact->full_name }}
                         @endif
-                        @if(count($party->address_lines))
+                        {{-- The address only repeats when the entity changes. --}}
+                        @php
+                            $prev = $loop->index > 0 ? $contract->parties[$loop->index - 1] : null;
+                            $sameEntity = $prev
+                                && $prev->organization_id === $party->organization_id
+                                && ($party->organization_id !== null || $prev->contact_id === $party->contact_id);
+                        @endphp
+                        @if(count($party->address_lines) && !$sameEntity)
                             <div class="party-address">{{ implode(', ', $party->address_lines) }}</div>
                         @endif
                     </td>
@@ -417,26 +521,63 @@
                         @else
                             —
                         @endif
+                        @if($party->role_label)
+                            <div class="party-address">{{ $party->role_label }}</div>
+                        @endif
                     </td>
                     <td class="share">{{ number_format($party->share, 2) }}%</td>
                 </tr>
                 @endforeach
+                <tr class="total-row">
+                    <td colspan="2">{{ $t['parties_total'] }}</td>
+                    <td class="share">{{ number_format($contract->parties->sum('share'), 2) }}%</td>
+                </tr>
             </tbody>
         </table>
+        @endif
+
+        @if($customPreamble !== '')
+            <div style="margin-top: 6px;">@include('admin.contracts.partials.text-block', ['text' => $customPreamble])</div>
+        @elseif($preambleBlocks)
+            <div class="preamble" style="margin-top: {{ $showPartiesTable ? '12px' : '0' }};">
+                @foreach($preambleBlocks as $block)
+                    @if(!$loop->first)
+                        <div class="preamble-and">{{ $t['preamble_and'] }}</div>
+                    @endif
+                    <div class="preamble-block">
+                        @foreach($block['lines'] as $i => $line)
+                            @php $isRole = $i === count($block['lines']) - 1 && str_starts_with($line, '('); @endphp
+                            <div class="{{ $block['strong'][$i] ? 'preamble-name' : ($isRole ? 'preamble-role' : '') }}">{{ $line }}</div>
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
+        @endif
     </div>
     @endif
 
+    {{-- Clause numbering runs across the subject and the section editor. --}}
+    @php
+        $autoNumber = $contract->auto_number_sections ?? true;
+        $clauseNo = 0;
+    @endphp
+
     {{-- Vertragsgegenstand --}}
     @if($contract->subject)
+    @php if ($autoNumber) { $clauseNo++; } @endphp
     <div class="section">
-        <div class="section-title">{{ $t['subject_title'] }}</div>
-        <div class="terms-content">{{ $contract->subject }}</div>
+        @include('admin.contracts.partials.clause', [
+            'title' => $contract->subject_heading ?: $t['subject_title'],
+            'number' => $autoNumber ? $clauseNo : null,
+            'titleClass' => 'section-title',
+            'body' => $contract->subject,
+        ])
     </div>
     @endif
 
     {{-- Zession --}}
     @if($contract->has_zession)
-    <div class="section">
+    <div class="section section-compact">
         <div class="section-title">{{ $t['zession_title'] }}</div>
         <div class="zession-box">
             <div class="amount">{{ $contract->zession_currency }} {{ number_format($contract->zession_amount, 2, '.', "'") }}</div>
@@ -450,7 +591,7 @@
 
     {{-- Territory --}}
     @if($contract->territory && count($contract->territory) > 0)
-    <div class="section">
+    <div class="section section-compact">
         <div class="section-title">{{ $t['territory_title'] }}</div>
         <div class="territory-list">
             @if(in_array('ALL', $contract->territory))
@@ -472,7 +613,7 @@
             ? implode(', ', array_slice($rLabels, 0, -1)) . ' ' . $t['list_conjunction'] . ' ' . end($rLabels)
             : ($rLabels[0] ?? '');
     @endphp
-    <div class="section">
+    <div class="section section-compact">
         <div class="section-title">{{ $t['rights_title'] }}</div>
         <p class="rights-label">{{ strtr($t['rights_intro'], [':parties' => $rPartiesStr]) }}</p>
         <table class="rights-table">
@@ -507,23 +648,29 @@
         $roleLabels = collect(\App\Models\Setting::creditRoles())->flatMap(fn($roles) => $roles)->toArray();
     @endphp
     <div class="section">
-        <div class="section-title">{{ $t['relations_title'] }}</div>
-
-        <div class="relations-note">{{ $contract->relations_note ?: $t['relations_intro_default'] }}</div>
+        <div class="keep-together">
+            <div class="section-title">{{ $contract->relations_heading ?: $t['relations_title'] }}</div>
+            <div class="relations-note">{{ $contract->relations_note ?: $t['relations_intro_default'] }}</div>
+        </div>
 
         @if($contract->projects->count())
-            <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin-bottom: 3px;">{{ $t['relations_projects'] }}</p>
-            <ul class="relation-list">
-                @foreach($contract->projects as $project)
-                    <li>{{ $project->name }}</li>
-                @endforeach
-            </ul>
+            <div class="section-compact">
+                <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin-bottom: 3px;">{{ $t['relations_projects'] }}</p>
+                <ul class="relation-list">
+                    @foreach($contract->projects as $project)
+                        <li>{{ $project->name }}</li>
+                    @endforeach
+                </ul>
+            </div>
         @endif
 
         @if($contract->tracks->count())
-            <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin: 8px 0 4px;">{{ $t['relations_tracks'] }}</p>
+            {{-- The heading travels with the first track so it never ends a page alone. --}}
             @foreach($contract->tracks as $track)
                 <div class="track-credit-block">
+                    @if($loop->first)
+                        <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin: 8px 0 4px;">{{ $t['relations_tracks'] }}</p>
+                    @endif
                     <div class="track-credit-title">
                         {{ $track->display_title }}@if($track->isrc) <span class="track-credit-isrc">{{ $track->isrc_formatted }}</span>@endif
                     </div>
@@ -552,21 +699,40 @@
         @endif
 
         @if($contract->releases->count())
-            <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin: 8px 0 3px;">{{ $t['relations_releases'] }}</p>
-            <ul class="relation-list">
-                @foreach($contract->releases as $release)
-                    <li>{{ $release->title }}{{ $release->upc ? ' (UPC: ' . $release->upc . ')' : '' }}</li>
-                @endforeach
-            </ul>
+            <div class="section-compact">
+                <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin: 8px 0 3px;">{{ $t['relations_releases'] }}</p>
+                <ul class="relation-list">
+                    @foreach($contract->releases as $release)
+                        <li>{{ $release->title }}{{ $release->upc ? ' (UPC: ' . $release->upc . ')' : '' }}</li>
+                    @endforeach
+                </ul>
+            </div>
         @endif
     </div>
     @endif
 
-    {{-- Terms --}}
-    @if($contract->terms)
+    {{-- Bedingungen: numbered clauses, or the legacy single terms block --}}
+    @php $sections = $contract->resolvedSections($t); @endphp
+    @if(count($sections))
     <div class="section">
-        <div class="section-title">{{ $t['terms_title'] }}</div>
-        <div class="terms-content">{{ $contract->terms }}</div>
+        @foreach($sections as $section)
+            @php if ($autoNumber && $section['numbered']) { $clauseNo++; } @endphp
+            <div class="clause" @if($section['page_break'] && !$loop->first) style="page-break-before: always;" @endif>
+                @include('admin.contracts.partials.clause', [
+                    'title' => $section['title'],
+                    'number' => ($autoNumber && $section['numbered']) ? $clauseNo : null,
+                    'titleClass' => 'clause-title',
+                    'body' => $section['body'],
+                ])
+            </div>
+        @endforeach
+    </div>
+    @endif
+
+    {{-- Schlussbestimmungen --}}
+    @if($contract->closing_note)
+    <div class="section section-compact">
+        @include('admin.contracts.partials.text-block', ['text' => $contract->closing_note])
     </div>
     @endif
 
@@ -581,6 +747,7 @@
                     <td>
                         <div class="signature-line">
                             <div class="signature-name">@if($sp->organization){{ $sp->organization->primary_name }}@elseif($sp->contact){{ $sp->contact->full_name }}@endif</div>
+                            @if($sp->organization && $sp->contact)<div style="font-size: 8pt; color: #6b7280;">{{ $sp->contact->full_name }}</div>@endif
                             {{ $t['signature_line'] }}
                         </div>
                     </td>

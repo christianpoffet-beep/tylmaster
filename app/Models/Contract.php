@@ -11,7 +11,9 @@ class Contract extends Model
 
     protected $fillable = [
         'contract_number', 'title', 'type', 'status', 'language', 'start_date', 'end_date', 'terms',
-        'subject', 'relations_note',
+        'subject', 'subject_heading', 'relations_note', 'relations_heading',
+        'preamble_mode', 'preamble_text', 'show_parties_table',
+        'sections', 'auto_number_sections', 'closing_note',
         'has_zession', 'zession_amount', 'zession_currency', 'zession_notes',
         'territory', 'rights', 'rights_label_a', 'rights_label_b', 'rights_labels',
         'logo_path', 'logo_in_header', 'logo_as_watermark',
@@ -25,6 +27,9 @@ class Contract extends Model
         'territory' => 'array',
         'rights' => 'array',
         'rights_labels' => 'array',
+        'sections' => 'array',
+        'show_parties_table' => 'boolean',
+        'auto_number_sections' => 'boolean',
         'logo_in_header' => 'boolean',
         'logo_as_watermark' => 'boolean',
     ];
@@ -74,6 +79,175 @@ class Contract extends Model
         }
 
         return $out;
+    }
+
+    /**
+     * Group the parties into the blocks the preamble speaks about.
+     *
+     * Consecutive parties carrying the same role label ("Label", "Künstler")
+     * belong to one side of the contract and are named together. A party
+     * without a role label stands on its own.
+     *
+     * @return array<int, array{role: ?string, parties: array<int, ContractParty>}>
+     */
+    public function partyRoleGroups(): array
+    {
+        $groups = [];
+
+        foreach ($this->parties as $i => $party) {
+            $role = $this->partyRoleLabel($party, $i);
+            $key = $role !== null ? mb_strtolower($role) : null;
+            $last = count($groups) > 0 ? $groups[count($groups) - 1] : null;
+
+            if ($key !== null && $last !== null && $last['key'] === $key) {
+                $groups[count($groups) - 1]['parties'][] = $party;
+                continue;
+            }
+
+            $groups[] = ['key' => $key, 'role' => $role, 'parties' => [$party]];
+        }
+
+        return array_map(fn ($g) => ['role' => $g['role'], 'parties' => $g['parties']], $groups);
+    }
+
+    /**
+     * The contractual role of a party ("Label", "Künstlerin oder Künstler").
+     * Falls back to the rights split label stored for the same slot.
+     */
+    protected function partyRoleLabel(ContractParty $party, int $index): ?string
+    {
+        $role = trim((string) ($party->role_label ?? ''));
+        if ($role !== '') {
+            return $role;
+        }
+
+        $labels = is_array($this->rights_labels) ? array_values($this->rights_labels) : [];
+        $fallback = trim((string) ($labels[$index] ?? ''));
+
+        return $fallback !== '' ? $fallback : null;
+    }
+
+    /**
+     * The party preamble, rendered as blocks of plain lines so the PDF and the
+     * admin preview stay in sync. Returns an empty array when the preamble is
+     * switched off or written by hand.
+     *
+     * @return array<int, array{lines: array<int, string>, strong: array<int, bool>}>
+     */
+    public function preambleBlocks(array $t): array
+    {
+        if (($this->preamble_mode ?? 'auto') !== 'auto') {
+            return [];
+        }
+
+        $blocks = [];
+
+        foreach ($this->partyRoleGroups() as $group) {
+            $lines = [];
+            $strong = [];
+            $parties = $group['parties'];
+            $joint = count($parties) > 1;
+
+            $push = function (string $line, bool $bold = false) use (&$lines, &$strong) {
+                $lines[] = $line;
+                $strong[] = $bold;
+            };
+
+            // A group of several contacts under one organization reads as
+            // "<Org> / bestehend aus / <Person>, <Adresse>".
+            $orgIds = array_unique(array_filter(array_map(fn ($p) => $p->organization_id, $parties)));
+            $sharedOrg = (count($orgIds) === 1 && count($parties) > 1)
+                ? $parties[0]->organization
+                : null;
+
+            if ($sharedOrg) {
+                $push($sharedOrg->primary_name, true);
+                $push($t['preamble_consisting_of']);
+                foreach ($parties as $party) {
+                    $name = $party->contact?->full_name;
+                    if (!$name) {
+                        continue;
+                    }
+                    $address = implode(', ', $party->contact ? $this->entityAddressLines($party->contact) : []);
+                    $push($address !== '' ? $name . ', ' . $address : $name);
+                }
+            } else {
+                foreach ($parties as $party) {
+                    $entity = $party->organization ?? $party->contact;
+                    if (!$entity) {
+                        continue;
+                    }
+                    $push($party->organization?->primary_name ?? $party->contact->full_name, true);
+
+                    if ($party->organization && $party->contact) {
+                        $push($t['preamble_represented_by'] . ' ' . $party->contact->full_name);
+                    }
+                    foreach ($this->entityAddressLines($entity) as $line) {
+                        $push($line);
+                    }
+                }
+            }
+
+            if ($lines === []) {
+                continue;
+            }
+
+            if ($group['role']) {
+                $key = $joint ? 'preamble_hereinafter_joint' : 'preamble_hereinafter';
+                $push('(' . strtr($t[$key], [':role' => $group['role']]) . ')');
+            }
+
+            $blocks[] = ['lines' => $lines, 'strong' => $strong];
+        }
+
+        return $blocks;
+    }
+
+    /**
+     * Street and "ZIP City" of a contact or organization, empty parts skipped.
+     */
+    protected function entityAddressLines($entity): array
+    {
+        $lines = [];
+        if ($entity->street) {
+            $lines[] = $entity->street;
+        }
+        if ($entity->zip || $entity->city) {
+            $lines[] = trim(($entity->zip ?? '') . ' ' . ($entity->city ?? ''));
+        }
+
+        return $lines;
+    }
+
+    /**
+     * The contract clauses in printing order. Falls back to the legacy single
+     * terms textarea so contracts written before the section editor still print.
+     *
+     * @return array<int, array{title: string, body: string, page_break: bool}>
+     */
+    public function resolvedSections(array $t): array
+    {
+        $sections = is_array($this->sections) ? $this->sections : [];
+        $sections = array_values(array_filter(
+            $sections,
+            fn ($s) => trim((string) ($s['title'] ?? '')) !== '' || trim((string) ($s['body'] ?? '')) !== ''
+        ));
+
+        if ($sections === [] && trim((string) $this->terms) !== '') {
+            return [[
+                'title' => $t['terms_title'],
+                'body' => $this->terms,
+                'page_break' => false,
+                'numbered' => false,
+            ]];
+        }
+
+        return array_map(fn ($s) => [
+            'title' => trim((string) ($s['title'] ?? '')),
+            'body' => (string) ($s['body'] ?? ''),
+            'page_break' => !empty($s['page_break']),
+            'numbered' => !isset($s['numbered']) || !empty($s['numbered']),
+        ], $sections);
     }
 
     /**
@@ -132,6 +306,16 @@ class Contract extends Model
             'party_default_b' => 'Partei 2',
             'generated_on' => 'Generiert am',
             'phone_short' => 'Tel.',
+            'page' => 'Seite',
+            'page_of' => 'von',
+            'preamble_title' => 'Vertragsparteien',
+            'preamble_represented_by' => 'vertreten durch',
+            'preamble_consisting_of' => 'bestehend aus',
+            'preamble_hereinafter' => 'nachfolgend «:role»',
+            'preamble_hereinafter_joint' => 'nachfolgend gemeinsam «:role»',
+            'preamble_and' => 'und',
+            'closing_title' => 'Schlussbestimmungen',
+            'parties_total' => 'Total',
         ],
         'en' => [
             'subtitle' => 'Contract',
@@ -171,6 +355,16 @@ class Contract extends Model
             'party_default_b' => 'Party 2',
             'generated_on' => 'Generated on',
             'phone_short' => 'Phone',
+            'page' => 'Page',
+            'page_of' => 'of',
+            'preamble_title' => 'Contracting parties',
+            'preamble_represented_by' => 'represented by',
+            'preamble_consisting_of' => 'consisting of',
+            'preamble_hereinafter' => 'hereinafter “:role”',
+            'preamble_hereinafter_joint' => 'hereinafter jointly “:role”',
+            'preamble_and' => 'and',
+            'closing_title' => 'Final provisions',
+            'parties_total' => 'Total',
         ],
         'es' => [
             'subtitle' => 'Contrato',
@@ -210,6 +404,16 @@ class Contract extends Model
             'party_default_b' => 'Parte 2',
             'generated_on' => 'Generado el',
             'phone_short' => 'Tel.',
+            'page' => 'Página',
+            'page_of' => 'de',
+            'preamble_title' => 'Partes contratantes',
+            'preamble_represented_by' => 'representada por',
+            'preamble_consisting_of' => 'integrada por',
+            'preamble_hereinafter' => 'en adelante «:role»',
+            'preamble_hereinafter_joint' => 'en adelante conjuntamente «:role»',
+            'preamble_and' => 'y',
+            'closing_title' => 'Disposiciones finales',
+            'parties_total' => 'Total',
         ],
     ];
 
