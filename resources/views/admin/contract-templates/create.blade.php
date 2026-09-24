@@ -9,9 +9,19 @@
     ]);
 @endphp
 
+@php
+    $orgMeta = $organizations->mapWithKeys(fn ($o) => [(string) $o->id => [
+        'name' => $o->primary_name,
+        'address' => implode(', ', array_filter([$o->street, trim(($o->zip ?? '') . ' ' . ($o->city ?? ''))])),
+    ]]);
+    $contactMeta = $contacts->mapWithKeys(fn ($c) => [(string) $c->id => [
+        'name' => $c->full_name,
+        'address' => implode(', ', array_filter([$c->street, trim(($c->zip ?? '') . ' ' . ($c->city ?? ''))])),
+    ]]);
+@endphp
 @section('content')
 <div class="max-w-3xl" x-data="templateForm()">
-    <form method="POST" action="{{ route('admin.contract-templates.store') }}">
+    <form method="POST" action="{{ route('admin.contract-templates.store') }}" enctype="multipart/form-data">
         @csrf
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
             <div>
@@ -51,6 +61,20 @@
                     <input type="number" name="sort_order" id="sort_order" value="{{ old('sort_order', 0) }}" min="0" class="w-24 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
             </div>
+
+            @include('admin.partials.contract-zession', [
+                'prefix' => 'default_',
+                'has' => (bool) old('default_has_zession', false),
+                'amount' => old('default_zession_amount', null),
+                'currency' => old('default_zession_currency', 'CHF'),
+                'notes' => old('default_zession_notes', ''),
+            ])
+
+            @include('admin.partials.contract-territory', [
+                'field' => 'default_territory',
+                'territory' => old('default_territory', []),
+                'territoryPresets' => $territoryPresets,
+            ])
 
             {{-- Standard-Parteien --}}
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
@@ -130,6 +154,13 @@
                 </div>
             </div>
 
+            @include('admin.partials.contract-preamble', [
+                'prefix' => 'default_',
+                'mode' => old('default_preamble_mode', 'auto'),
+                'showPartiesTable' => (bool) old('default_show_parties_table', true),
+                'text' => old('default_preamble_text', ''),
+            ])
+
             {{-- Standard-Vertragsgegenstand --}}
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <div class="flex items-baseline justify-between mb-1">
@@ -162,12 +193,32 @@
                 'termsField' => 'default_terms',
                 'subjectField' => 'default_subject',
                 'closingField' => 'default_closing_note',
-                'showAutoNumber' => false,
+                'autoNumberField' => 'default_auto_number_sections',
                 'sections' => old('default_sections', []),
-                'autoNumber' => true,
+                'autoNumber' => (bool) old('default_auto_number_sections', true),
                 'termsValue' => old('default_terms', ''),
                 'closingValue' => old('default_closing_note', ''),
             ])
+
+            {{-- Standard-Verknüpfungen --}}
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-6">
+                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Standard-Verknüpfungen</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 -mt-4">Projekte, Tracks und Produkte, mit denen ein neuer Vertrag aus dieser Vorlage startet.</p>
+
+                @include('admin.partials.project-search', ['selected' => collect(), 'projectInputName' => 'default_project_ids[]'])
+                @include('admin.partials.track-search', ['selected' => collect(), 'trackInputName' => 'default_track_ids[]'])
+                @include('admin.partials.release-search', ['selected' => collect(), 'releaseInputName' => 'default_release_ids[]'])
+            </div>
+
+            @include('admin.partials.contract-logo', ['model' => null])
+
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <label for="document" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Standard-Vertragsdokument</label>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Wird jedem Vertrag aus dieser Vorlage als eigene Kopie beigelegt.</p>
+                <input type="file" name="document" id="document" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
+                <input type="text" name="document_notes" value="{{ old('document_notes') }}" placeholder="Notiz zum Dokument (optional)" class="w-full mt-2 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                @error('document') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
         </div>
 
         <div class="mt-4 flex gap-3">
@@ -180,6 +231,11 @@
 <script>
 function templateForm() {
     return {
+        orgMeta: @json($orgMeta),
+        contactMeta: @json($contactMeta),
+        get preamblePreview() {
+            return contractPreamblePreview(this.parties, this.orgMeta, this.contactMeta);
+        },
         orgContactsMap: @json($orgContactsMap),
         orgNames: @json($organizations->pluck('primary_name', 'id')),
         contactNames: @json($contacts->mapWithKeys(fn($c) => [$c->id => $c->full_name])),

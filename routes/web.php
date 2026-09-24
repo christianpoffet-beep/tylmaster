@@ -163,6 +163,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Settings: Vertragsvorlagen
     Route::resource('contract-templates', ContractTemplateController::class)->except('show');
     Route::get('contract-templates/{contractTemplate}/data', [ContractTemplateController::class, 'data'])->name('contract-templates.data');
+    Route::patch('contract-templates/{contractTemplate}/documents/{document}/archive', [ContractTemplateController::class, 'archiveDocument'])->name('contract-templates.documents.archive');
 
     // Settings: Kampagnenvorlagen
     Route::resource('campaign-templates', CampaignTemplateController::class)->except('show');

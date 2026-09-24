@@ -8,6 +8,7 @@ use App\Models\ContractParty;
 use App\Models\ContractTemplate;
 use App\Models\ContractType;
 use App\Models\Organization;
+use App\Models\Track;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -113,18 +114,49 @@ class ContractFormRendersTest extends TestCase
     {
         $user = User::factory()->create();
 
+        $track = Track::create(['title' => 'Nachtblau', 'status' => 'released']);
         $template = ContractTemplate::create([
             'name' => 'Labeldeal Standard',
             'contract_type_slug' => 'label',
             'language' => 'de',
             'default_sections' => [['title' => 'Vergütung', 'body' => '80/20.', 'numbered' => true, 'page_break' => false]],
+            'default_has_zession' => true,
+            'default_zession_amount' => 15,
+            'default_territory' => ['CH'],
+            'default_track_ids' => [$track->id],
+            'logo_path' => 'contracts/logos/tyl.png',
+            'logo_in_header' => true,
+        ]);
+        $template->documents()->create([
+            'title' => 'anhang.pdf',
+            'category' => 'contract',
+            'file_path' => 'contract-templates/anhang.pdf',
+            'file_size' => 9,
+            'mime_type' => 'application/pdf',
         ]);
 
         foreach (['/admin/contract-templates/create', "/admin/contract-templates/{$template->id}/edit"] as $url) {
             $response = $this->actingAs($user)->get($url);
             $response->assertOk();
             $this->assertBalancedAlpineTemplates($response->getContent(), $url);
+
+            // Everything a contract knows has to be offered here too.
+            $response->assertSee('Zession (Vorschusszahlung)')
+                ->assertSee('Geltungsbereich / Territory')
+                ->assertSee('Präambel der Vertragsparteien')
+                ->assertSee('Standard-Verknüpfungen')
+                ->assertSee('Standard-Vertragsdokument')
+                ->assertSee('name="default_project_ids[]"', false)
+                ->assertSee('name="default_track_ids[]"', false)
+                ->assertSee('name="default_release_ids[]"', false)
+                ->assertSee('name="logo_source"', false)
+                ->assertSee('enctype="multipart/form-data"', false);
         }
+
+        // The upload needs a place to list what is already attached.
+        $this->actingAs($user)
+            ->get("/admin/contract-templates/{$template->id}/edit")
+            ->assertSee('anhang.pdf');
 
         $this->actingAs($user)
             ->get("/admin/contract-templates/{$template->id}/data")

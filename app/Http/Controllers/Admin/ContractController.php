@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesContractLogo;
 use App\Http\Controllers\Concerns\SyncsFormRelations;
 use App\Http\Controllers\Controller;
 use App\Models\Artwork;
-use App\Models\ArtworkLogo;
 use App\Models\Contract;
 use App\Models\Contact;
 use App\Models\ContractParty;
@@ -19,9 +19,11 @@ use App\Models\Release;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ContractController extends Controller
 {
+    use HandlesContractLogo;
     use SyncsFormRelations;
 
     public function index(Request $request)
@@ -88,8 +90,9 @@ class ContractController extends Controller
             'status' => 'required|in:draft,active,expired,terminated',
             'language' => 'nullable|in:de,en,es',
             'start_date' => 'nullable|date',
+            'template_id' => 'nullable|exists:contract_templates,id',
             'document' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,txt,jpg,jpeg,png|max:51200',
-            'logo_source' => 'nullable|in:keep,none,artwork,upload',
+            'logo_source' => 'nullable|in:keep,none,artwork,upload,template',
             'artwork_logo_id' => 'nullable|exists:artwork_logos,id',
             'logo_file' => 'nullable|file|image|max:51200',
             'logo_in_header' => 'nullable|boolean',
@@ -161,7 +164,13 @@ class ContractController extends Controller
         $validated['rights_label_a'] = $rightsLabels[0] ?? $request->input('rights_label_a');
         $validated['rights_label_b'] = $rightsLabels[1] ?? $request->input('rights_label_b');
 
-        $this->handleLogo($request, $validated);
+        // The form fills itself from the template in the browser; the logo file
+        // and the attached documents can only be carried over here.
+        $template = $request->filled('template_id')
+            ? ContractTemplate::find($request->input('template_id'))
+            : null;
+
+        $this->applyLogoSelection($request, $validated, $template);
 
         $validated['contract_number'] = Contract::generateNumber();
         $validated['has_zession'] = $request->boolean('has_zession');
@@ -176,7 +185,8 @@ class ContractController extends Controller
         $parties = $validated['parties'];
         unset(
             $validated['parties'], $validated['project_ids'], $validated['track_ids'], $validated['release_ids'],
-            $validated['logo_source'], $validated['artwork_logo_id'], $validated['logo_file']
+            $validated['logo_source'], $validated['artwork_logo_id'], $validated['logo_file'],
+            $validated['template_id']
         );
 
         $contract = Contract::create($validated);
@@ -206,6 +216,10 @@ class ContractController extends Controller
                 'mime_type' => $file->getMimeType(),
                 'notes' => $request->input('document_notes'),
             ]);
+        }
+
+        if ($template) {
+            $this->copyTemplateDocuments($template, $contract);
         }
 
         return redirect()->route('admin.contracts.show', $contract)->with('success', 'Vertrag erstellt.');
@@ -331,7 +345,7 @@ class ContractController extends Controller
         $validated['rights_label_a'] = $rightsLabels[0] ?? $request->input('rights_label_a');
         $validated['rights_label_b'] = $rightsLabels[1] ?? $request->input('rights_label_b');
 
-        $this->handleLogo($request, $validated, $contract);
+        $this->applyLogoSelection($request, $validated);
 
         $validated['has_zession'] = $request->boolean('has_zession');
         if (!$validated['has_zession']) {
@@ -505,6 +519,33 @@ class ContractController extends Controller
     }
 
     /**
+     * Hand the template's attachments to a fresh contract.
+     *
+     * The files are duplicated rather than referenced, so editing or deleting
+     * one contract's copy never touches the template or its siblings.
+     */
+    private function copyTemplateDocuments(ContractTemplate $template, Contract $contract): void
+    {
+        foreach ($template->documents as $document) {
+            $copy = 'contracts/' . Str::random(40) . '.' . pathinfo($document->file_path, PATHINFO_EXTENSION);
+
+            if (!Storage::disk('public')->exists($document->file_path)
+                || !Storage::disk('public')->copy($document->file_path, $copy)) {
+                continue;
+            }
+
+            $contract->documents()->create([
+                'title' => $document->title,
+                'category' => 'contract',
+                'file_path' => $copy,
+                'file_size' => $document->file_size,
+                'mime_type' => $document->mime_type,
+                'notes' => $document->notes,
+            ]);
+        }
+    }
+
+    /**
      * Lay the PDF out once to learn how many pages it has.
      */
     private function countPages(array $data): int
@@ -546,53 +587,6 @@ class ContractController extends Controller
 
         if ($validated['preamble_mode'] !== 'custom') {
             $validated['preamble_text'] = null;
-        }
-    }
-
-    /**
-     * Resolve the contract logo from the request and write logo_* keys into $validated.
-     *
-     * logo_source: keep | none | artwork | upload
-     *  - keep    → leave the existing logo_path untouched (default)
-     *  - none    → remove the logo
-     *  - artwork → reference an existing ArtworkLogo's file
-     *  - upload  → store the freshly uploaded file
-     */
-    private function handleLogo(Request $request, array &$validated, ?Contract $contract = null): void
-    {
-        $validated['logo_in_header'] = $request->boolean('logo_in_header');
-        $validated['logo_as_watermark'] = $request->boolean('logo_as_watermark');
-
-        $source = $request->input('logo_source', 'keep');
-
-        switch ($source) {
-            case 'none':
-                $validated['logo_path'] = null;
-                break;
-
-            case 'upload':
-                if ($request->hasFile('logo_file')) {
-                    $validated['logo_path'] = $request->file('logo_file')->store('contracts/logos', 'public');
-                } else {
-                    unset($validated['logo_path']); // nothing uploaded → keep current
-                }
-                break;
-
-            case 'artwork':
-                $logo = $request->filled('artwork_logo_id')
-                    ? ArtworkLogo::find($request->input('artwork_logo_id'))
-                    : null;
-                if ($logo) {
-                    $validated['logo_path'] = $logo->file_path;
-                } else {
-                    unset($validated['logo_path']);
-                }
-                break;
-
-            case 'keep':
-            default:
-                unset($validated['logo_path']); // do not modify
-                break;
         }
     }
 }

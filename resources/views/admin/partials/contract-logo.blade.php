@@ -1,13 +1,15 @@
-{{-- Contract logo picker (Artwork logo OR direct upload) + placement toggles --}}
-{{-- Usage: @include('admin.partials.contract-logo', ['contract' => $contract ?? null]) --}}
+{{-- Logo picker (Artwork logo OR direct upload) + placement toggles --}}
+{{-- Used by contracts and by contract templates, which store the same columns. --}}
+{{-- Usage: @include('admin.partials.contract-logo', ['model' => $contract ?? null]) --}}
 
 @php
-    $logoContract = $contract ?? null;
-    $hasLogo = $logoContract && $logoContract->logo_path;
-    $currentLogoUrl = $hasLogo ? \Illuminate\Support\Facades\Storage::disk('public')->url($logoContract->logo_path) : null;
+    $logoModel = $model ?? null;
+    $hasLogo = $logoModel && $logoModel->logo_path;
+    $currentLogoUrl = $hasLogo ? \Illuminate\Support\Facades\Storage::disk('public')->url($logoModel->logo_path) : null;
     $defaultSource = old('logo_source', $hasLogo ? 'keep' : 'none');
-    $defaultHeader = old('logo_in_header', $logoContract?->logo_in_header) ? true : false;
-    $defaultWatermark = old('logo_as_watermark', $logoContract?->logo_as_watermark) ? true : false;
+    $defaultHeader = old('logo_in_header', $logoModel?->logo_in_header) ? true : false;
+    $defaultWatermark = old('logo_as_watermark', $logoModel?->logo_as_watermark) ? true : false;
+    $offerTemplateLogo = $offerTemplateLogo ?? false;
 @endphp
 
 <div class="border-t border-gray-200 dark:border-gray-700 pt-6"
@@ -16,7 +18,8 @@
         hasLogo: {{ $hasLogo ? 'true' : 'false' }},
         inHeader: {{ $defaultHeader ? 'true' : 'false' }},
         asWatermark: {{ $defaultWatermark ? 'true' : 'false' }},
-     })">
+     })"
+     @template-logo-set.window="setTemplateLogo($event.detail)">
     <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Logo</p>
     <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Wird im PDF oben rechts und/oder als Wasserzeichen eingefügt.</p>
 
@@ -31,6 +34,16 @@
             <span class="flex items-center gap-3">
                 <img src="{{ $currentLogoUrl }}" alt="Logo" class="h-8 w-auto max-w-[80px] object-contain bg-white rounded border border-gray-200">
                 <span class="text-sm text-gray-700 dark:text-gray-300">Aktuelles Logo behalten</span>
+            </span>
+        </label>
+        @endif
+
+        @if($offerTemplateLogo)
+        <label x-show="templateLogo" x-cloak class="flex items-center gap-3 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
+            <input type="radio" value="template" x-model="source" class="text-blue-600 focus:ring-blue-500">
+            <span class="flex items-center gap-3">
+                <img :src="templateLogo?.url" alt="" class="h-8 w-auto max-w-[80px] object-contain bg-white rounded border border-gray-200">
+                <span class="text-sm text-gray-700 dark:text-gray-300">Logo aus der Vorlage <span x-text="templateLogo?.label"></span></span>
             </span>
         </label>
         @endif
@@ -116,6 +129,22 @@ function contractLogo(init) {
         open: false,
         loading: false,
         selectedLogo: null,
+        templateLogo: null,
+
+        /**
+         * A chosen contract template may carry its own logo. Selecting it here
+         * only records the intent - the file itself is copied server side.
+         */
+        setTemplateLogo(detail) {
+            this.templateLogo = detail?.url ? detail : null;
+            if (this.templateLogo) {
+                this.source = 'template';
+                this.inHeader = !!detail.in_header;
+                this.asWatermark = !!detail.as_watermark;
+            } else if (this.source === 'template') {
+                this.source = 'none';
+            }
+        },
 
         async search() {
             this.loading = true;

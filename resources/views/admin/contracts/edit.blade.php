@@ -70,79 +70,17 @@
                 </div>
             </div>
 
-            {{-- Zession (Vorschusszahlung) --}}
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-6" x-data="{ hasZession: {{ old('has_zession', $contract->has_zession) ? 'true' : 'false' }} }">
-                <div class="flex items-center gap-3 mb-3">
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="hidden" name="has_zession" value="0">
-                        <input type="checkbox" name="has_zession" value="1" x-model="hasZession" class="sr-only peer">
-                        <div class="w-9 h-5 bg-gray-200 dark:bg-gray-600 peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Zession (Vorschusszahlung)</span>
-                </div>
-                <div x-show="hasZession" x-transition class="space-y-3 ml-12">
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Vorschuss, der mit künftigen Einnahmen verrechnet wird.</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="zession_amount" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Betrag</label>
-                            <input type="number" name="zession_amount" id="zession_amount" value="{{ old('zession_amount', $contract->zession_amount) }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="0.00">
-                        </div>
-                        <div>
-                            <label for="zession_currency" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Währung</label>
-                            <select name="zession_currency" id="zession_currency" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                                @foreach(['CHF' => 'CHF', 'EUR' => 'EUR', 'USD' => 'USD'] as $code => $label)
-                                    <option value="{{ $code }}" {{ old('zession_currency', $contract->zession_currency) === $code ? 'selected' : '' }}>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="zession_notes" class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Notizen zur Zession</label>
-                        <textarea name="zession_notes" id="zession_notes" rows="2" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="z.B. Rückzahlungsbedingungen...">{{ old('zession_notes', $contract->zession_notes) }}</textarea>
-                    </div>
-                </div>
-            </div>
+            @include('admin.partials.contract-zession', [
+                'has' => (bool) old('has_zession', $contract->has_zession),
+                'amount' => old('zession_amount', $contract->zession_amount),
+                'currency' => old('zession_currency', $contract->zession_currency ?? 'CHF'),
+                'notes' => old('zession_notes', $contract->zession_notes),
+            ])
 
-            {{-- Territory --}}
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-6" x-data="territorySelector()">
-                <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Geltungsbereich / Territory</p>
-
-                <div class="flex items-center gap-3 mb-3">
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" x-model="worldwide" @change="onWorldwideToggle()" class="sr-only peer">
-                        <div class="w-9 h-5 bg-gray-200 dark:bg-gray-600 peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                    <span class="text-sm text-gray-700 dark:text-gray-300">Weltweit</span>
-                </div>
-                <input type="hidden" name="territory_worldwide" :value="worldwide ? '1' : '0'">
-
-                <div x-show="!worldwide" x-transition>
-                    <div class="flex flex-wrap gap-2 mb-3">
-                        @foreach($territoryPresets as $key => $preset)
-                            @if($key !== 'world')
-                            <button type="button"
-                                @click="togglePreset('{{ $key }}')"
-                                :class="isPresetActive('{{ $key }}') ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-600' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'"
-                                class="px-3 py-1.5 text-xs font-medium rounded-lg border hover:shadow-sm transition-colors">
-                                {{ $preset['label'] }}
-                            </button>
-                            @endif
-                        @endforeach
-                    </div>
-
-                    <div class="max-h-48 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-1">
-                            <template x-for="country in allCountries" :key="country.code">
-                                <label class="inline-flex items-center gap-1.5 text-xs cursor-pointer py-0.5">
-                                    <input type="checkbox" :value="country.code" name="territory[]" :checked="selected.includes(country.code)" @change="toggleCountry(country.code)" class="rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
-                                    <span class="text-gray-700 dark:text-gray-300 truncate" x-text="country.name"></span>
-                                </label>
-                            </template>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-400 mt-1"><span x-text="selected.length"></span> Länder ausgewählt</p>
-                </div>
-            </div>
+            @include('admin.partials.contract-territory', [
+                'territory' => old('territory', $contract->territory ?? []),
+                'territoryPresets' => $territoryPresets,
+            ])
 
             {{-- Vertragsparteien --}}
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
@@ -234,7 +172,11 @@
                 <p x-show="Math.abs(totalShare - 100) >= 0.01" class="text-red-500 text-xs mt-1">Die Summe der Anteile muss genau 100% ergeben.</p>
             </div>
 
-            @include('admin.partials.contract-preamble', ['contract' => $contract])
+            @include('admin.partials.contract-preamble', [
+                'mode' => old('preamble_mode', $contract->preamble_mode ?? 'auto'),
+                'showPartiesTable' => (bool) old('show_parties_table', $contract->show_parties_table ?? true),
+                'text' => old('preamble_text', $contract->preamble_text ?? ''),
+            ])
 
             {{-- Vertragsgegenstand --}}
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
@@ -280,7 +222,7 @@
                 'closingValue' => old('closing_note', $contract->closing_note ?? ''),
             ])
 
-            @include('admin.partials.contract-logo', ['contract' => $contract])
+            @include('admin.partials.contract-logo', ['model' => $contract])
 
             <div>
                 <label for="document" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Neues Dokument hochladen</label>
@@ -347,126 +289,12 @@
 </div>
 
 <script>
-function territorySelector() {
-    const presets = @json($territoryPresets);
-    const existingTerritory = @json(old('territory', $contract->territory ?? []));
-    return {
-        worldwide: existingTerritory.includes('ALL') || {{ old('territory_worldwide', (is_array($contract->territory) && in_array('ALL', $contract->territory)) ? '1' : '0') ? 'true' : 'false' }},
-        selected: existingTerritory.filter(c => c !== 'ALL'),
-        presets: presets,
-        allCountries: [
-            {code:'AF',name:'Afghanistan'},{code:'EG',name:'Ägypten'},{code:'AL',name:'Albanien'},{code:'DZ',name:'Algerien'},
-            {code:'AD',name:'Andorra'},{code:'AR',name:'Argentinien'},{code:'AM',name:'Armenien'},{code:'AZ',name:'Aserbaidschan'},
-            {code:'AU',name:'Australien'},{code:'BE',name:'Belgien'},{code:'BA',name:'Bosnien und Herzegowina'},{code:'BR',name:'Brasilien'},
-            {code:'BG',name:'Bulgarien'},{code:'CL',name:'Chile'},{code:'CN',name:'China'},{code:'CR',name:'Costa Rica'},
-            {code:'DK',name:'Dänemark'},{code:'DE',name:'Deutschland'},{code:'EC',name:'Ecuador'},{code:'EE',name:'Estland'},
-            {code:'FI',name:'Finnland'},{code:'FR',name:'Frankreich'},{code:'GE',name:'Georgien'},{code:'GH',name:'Ghana'},
-            {code:'GR',name:'Griechenland'},{code:'GB',name:'Grossbritannien'},{code:'GT',name:'Guatemala'},
-            {code:'HN',name:'Honduras'},{code:'IN',name:'Indien'},{code:'ID',name:'Indonesien'},{code:'IQ',name:'Irak'},
-            {code:'IR',name:'Iran'},{code:'IE',name:'Irland'},{code:'IS',name:'Island'},{code:'IL',name:'Israel'},
-            {code:'IT',name:'Italien'},{code:'JP',name:'Japan'},{code:'JO',name:'Jordanien'},{code:'CA',name:'Kanada'},
-            {code:'KZ',name:'Kasachstan'},{code:'KE',name:'Kenia'},{code:'CO',name:'Kolumbien'},{code:'XK',name:'Kosovo'},
-            {code:'HR',name:'Kroatien'},{code:'CU',name:'Kuba'},{code:'LV',name:'Lettland'},{code:'LB',name:'Libanon'},
-            {code:'LI',name:'Liechtenstein'},{code:'LT',name:'Litauen'},{code:'LU',name:'Luxemburg'},{code:'MY',name:'Malaysia'},
-            {code:'MT',name:'Malta'},{code:'MA',name:'Marokko'},{code:'MX',name:'Mexiko'},{code:'MD',name:'Moldau'},
-            {code:'MC',name:'Monaco'},{code:'ME',name:'Montenegro'},{code:'MZ',name:'Mosambik'},{code:'NZ',name:'Neuseeland'},
-            {code:'NL',name:'Niederlande'},{code:'NG',name:'Nigeria'},{code:'MK',name:'Nordmazedonien'},{code:'NO',name:'Norwegen'},
-            {code:'AT',name:'Österreich'},{code:'PK',name:'Pakistan'},{code:'PA',name:'Panama'},{code:'PY',name:'Paraguay'},
-            {code:'PE',name:'Peru'},{code:'PH',name:'Philippinen'},{code:'PL',name:'Polen'},{code:'PT',name:'Portugal'},
-            {code:'RO',name:'Rumänien'},{code:'RU',name:'Russland'},{code:'SA',name:'Saudi-Arabien'},{code:'SE',name:'Schweden'},
-            {code:'CH',name:'Schweiz'},{code:'RS',name:'Serbien'},{code:'SG',name:'Singapur'},{code:'SK',name:'Slowakei'},
-            {code:'SI',name:'Slowenien'},{code:'ES',name:'Spanien'},{code:'ZA',name:'Südafrika'},{code:'KR',name:'Südkorea'},
-            {code:'TW',name:'Taiwan'},{code:'TH',name:'Thailand'},{code:'CZ',name:'Tschechien'},{code:'TN',name:'Tunesien'},
-            {code:'TR',name:'Türkei'},{code:'UA',name:'Ukraine'},{code:'HU',name:'Ungarn'},{code:'UY',name:'Uruguay'},
-            {code:'US',name:'USA'},{code:'AE',name:'VAE'},{code:'VE',name:'Venezuela'},{code:'VN',name:'Vietnam'},
-            {code:'BY',name:'Weissrussland'},{code:'CY',name:'Zypern'}
-        ],
-        onWorldwideToggle() {
-            if (this.worldwide) this.selected = [];
-        },
-        toggleCountry(code) {
-            const idx = this.selected.indexOf(code);
-            if (idx >= 0) { this.selected.splice(idx, 1); } else { this.selected.push(code); }
-        },
-        togglePreset(key) {
-            const countries = this.presets[key]?.countries || [];
-            const allPresent = countries.every(c => this.selected.includes(c));
-            if (allPresent) {
-                this.selected = this.selected.filter(c => !countries.includes(c));
-            } else {
-                countries.forEach(c => { if (!this.selected.includes(c)) this.selected.push(c); });
-            }
-        },
-        isPresetActive(key) {
-            const countries = this.presets[key]?.countries || [];
-            return countries.length > 0 && countries.every(c => this.selected.includes(c));
-        }
-    };
-}
-
 function contractForm() {
     return {
         orgMeta: @json($orgMeta),
         contactMeta: @json($contactMeta),
-        preambleMode: @json(old('preamble_mode', $contract->preamble_mode ?? 'auto')),
-        /**
-         * Mirrors Contract::preambleBlocks() so the admin sees what the PDF
-         * will print before saving.
-         */
         get preamblePreview() {
-            const groups = [];
-            this.parties.forEach(p => {
-                const role = (p.role_label || '').trim();
-                const key = role ? role.toLowerCase() : null;
-                const last = groups[groups.length - 1];
-                if (key && last && last.key === key) {
-                    last.parties.push(p);
-                } else {
-                    groups.push({ key, role, parties: [p] });
-                }
-            });
-
-            const entityOf = (p) => p.type === 'organization'
-                ? this.orgMeta[p.organization_id]
-                : this.contactMeta[p.contact_id];
-
-            const blocks = [];
-            groups.forEach(g => {
-                const lines = [];
-                const joint = g.parties.length > 1;
-                const orgIds = [...new Set(g.parties.filter(p => p.type === 'organization' && p.organization_id).map(p => String(p.organization_id)))];
-                const sharedOrg = (joint && orgIds.length === 1 && g.parties.every(p => String(p.organization_id) === orgIds[0]))
-                    ? this.orgMeta[orgIds[0]]
-                    : null;
-
-                if (sharedOrg) {
-                    lines.push(sharedOrg.name);
-                    lines.push('bestehend aus');
-                    g.parties.forEach(p => {
-                        const c = this.contactMeta[p.contact_id];
-                        if (!c) return;
-                        lines.push(c.address ? c.name + ', ' + c.address : c.name);
-                    });
-                } else {
-                    g.parties.forEach(p => {
-                        const e = entityOf(p);
-                        if (!e) return;
-                        lines.push(e.name);
-                        if (p.type === 'organization' && p.contact_id && this.contactMeta[p.contact_id]) {
-                            lines.push('vertreten durch ' + this.contactMeta[p.contact_id].name);
-                        }
-                        if (e.address) lines.push(e.address);
-                    });
-                }
-
-                if (lines.length === 0) return;
-                if (g.role) {
-                    lines.push('(nachfolgend ' + (joint ? 'gemeinsam ' : '') + '\u00ab' + g.role + '\u00bb)');
-                }
-                blocks.push(lines.join('\n'));
-            });
-
-            return blocks.join('\n\nund\n\n');
+            return contractPreamblePreview(this.parties, this.orgMeta, this.contactMeta);
         },
         orgContactsMap: @json($orgContactsMap),
         orgNames: @json($organizations->pluck('primary_name', 'id')),
