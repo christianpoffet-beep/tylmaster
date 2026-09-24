@@ -38,9 +38,27 @@ class ContractFormRendersTest extends TestCase
         ContractParty::create(['contract_id' => $contract->id, 'organization_id' => $org->id, 'share' => 50, 'role_label' => 'Label', 'sort_order' => 0]);
         ContractParty::create(['contract_id' => $contract->id, 'contact_id' => $contact->id, 'share' => 50, 'role_label' => 'Künstler', 'sort_order' => 1]);
 
-        $this->actingAs($user)->get('/admin/contracts/create')->assertOk();
-        $this->actingAs($user)->get("/admin/contracts/{$contract->id}/edit")->assertOk();
+        foreach (['/admin/contracts/create', "/admin/contracts/{$contract->id}/edit"] as $url) {
+            $response = $this->actingAs($user)->get($url);
+            $response->assertOk();
+            $this->assertBalancedAlpineTemplates($response->getContent(), $url);
+        }
+
         $this->actingAs($user)->get("/admin/contracts/{$contract->id}")->assertOk();
+    }
+
+    /**
+     * An unclosed <template x-for> swallows the whole rest of the form: Alpine
+     * never renders it and the page simply stops. A 200 does not catch that, so
+     * the tags are counted.
+     */
+    protected function assertBalancedAlpineTemplates(string $html, string $where): void
+    {
+        $this->assertSame(
+            preg_match_all('/<template[\s>]/', $html),
+            preg_match_all('/<\/template>/', $html),
+            "Unbalanced <template> tags in {$where} — everything after the stray tag stays invisible."
+        );
     }
 
     /**
@@ -102,8 +120,11 @@ class ContractFormRendersTest extends TestCase
             'default_sections' => [['title' => 'Vergütung', 'body' => '80/20.', 'numbered' => true, 'page_break' => false]],
         ]);
 
-        $this->actingAs($user)->get('/admin/contract-templates/create')->assertOk();
-        $this->actingAs($user)->get("/admin/contract-templates/{$template->id}/edit")->assertOk();
+        foreach (['/admin/contract-templates/create', "/admin/contract-templates/{$template->id}/edit"] as $url) {
+            $response = $this->actingAs($user)->get($url);
+            $response->assertOk();
+            $this->assertBalancedAlpineTemplates($response->getContent(), $url);
+        }
 
         $this->actingAs($user)
             ->get("/admin/contract-templates/{$template->id}/data")

@@ -216,6 +216,7 @@
                             </div>
                         </div>
                     </div>
+                </template>
 
                 <datalist id="contract-role-labels">
                     <option value="Label"></option>
