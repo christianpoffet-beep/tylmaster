@@ -413,7 +413,14 @@ class ContractController extends Controller
             $logoAbsolutePath = Storage::disk('public')->path($contract->logo_path);
         }
 
-        $pdf = Pdf::loadView('admin.contracts.pdf', compact('contract', 'typeLabels', 't', 'headerParty', 'logoAbsolutePath'));
+        $data = compact('contract', 'typeLabels', 't', 'headerParty', 'logoAbsolutePath');
+
+        // dompdf knows no "pages" counter — the total only exists once the
+        // document has been laid out. The footer sits outside the text flow,
+        // so printing the number it reports cannot shift the pagination.
+        $data['pageCount'] = $this->countPages($data);
+
+        $pdf = Pdf::loadView('admin.contracts.pdf', $data);
         $pdf->setPaper('A4', 'portrait');
 
         $filename = ($contract->contract_number ?? 'Vertrag') . '_' . now()->format('Ymd_His') . '.pdf';
@@ -495,6 +502,20 @@ class ContractController extends Controller
         }
 
         return response()->json($results);
+    }
+
+    /**
+     * Lay the PDF out once to learn how many pages it has.
+     */
+    private function countPages(array $data): int
+    {
+        $probe = Pdf::loadView('admin.contracts.pdf', $data + ['pageCount' => null]);
+        $probe->setPaper('A4', 'portrait');
+
+        $dompdf = $probe->getDomPDF();
+        $dompdf->render();
+
+        return $dompdf->getCanvas()->get_page_count();
     }
 
     /**

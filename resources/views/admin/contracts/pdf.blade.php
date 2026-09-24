@@ -373,11 +373,27 @@
             bottom: -1.7cm;
             left: 0;
             right: 0;
-            text-align: center;
             font-size: 7pt;
             color: #9ca3af;
             border-top: 1px solid #e5e7eb;
             padding-top: 5px;
+        }
+        .footer table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .footer td {
+            font-size: 7pt;
+            color: #9ca3af;
+            padding: 0;
+        }
+        /*
+         * dompdf resolves the current page only inside a fixed-position element,
+         * and only through generated content - hence the pseudo element instead
+         * of a Blade expression. The total comes from the controller.
+         */
+        .page-number:after {
+            content: "{{ $t['page'] }} " counter(page)@if($pageCount ?? null) " {{ $t['page_of'] }} {{ $pageCount }}"@endif;
         }
 
         /* Status badge */
@@ -404,7 +420,12 @@
     @endif
 
     <div class="footer">
-        {{ $contract->contract_number ?? '' }} &middot; {{ $t['generated_on'] }} {{ now()->format('d.m.Y H:i') }} &middot; The Yelling Light
+        <table>
+            <tr>
+                <td style="text-align: left;">{{ $contract->contract_number ?? '' }} &middot; {{ $t['generated_on'] }} {{ now()->format('d.m.Y H:i') }} &middot; The Yelling Light</td>
+                <td style="text-align: right; white-space: nowrap;"><span class="page-number"></span></td>
+            </tr>
+        </table>
     </div>
 
     <div class="header">

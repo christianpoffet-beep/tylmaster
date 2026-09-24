@@ -176,7 +176,38 @@ class ContractPdfTest extends TestCase
         $this->assertStringContainsString('Beispielbedingungen für den Test.', $html);
     }
 
-    protected function renderPdfView(Contract $contract): string
+    /**
+     * dompdf has no "pages" counter, so the total is counted in a first pass
+     * and handed to the view. Without it only the page number is printed —
+     * never "von 0".
+     */
+    public function test_the_footer_numbers_the_pages(): void
+    {
+        $contract = $this->makeContract();
+
+        $withTotal = $this->renderPdfView($contract, 3);
+        $this->assertStringContainsString('content: "Seite " counter(page) " von 3";', $withTotal);
+
+        $withoutTotal = $this->renderPdfView($contract);
+        $this->assertStringContainsString('content: "Seite " counter(page);', $withoutTotal);
+        $this->assertStringNotContainsString('von 0', $withoutTotal);
+    }
+
+    /**
+     * The download path has to report the number of pages it actually produced.
+     */
+    public function test_the_pdf_route_counts_its_own_pages(): void
+    {
+        $contract = $this->makeContract();
+
+        $response = $this->actingAs(User::factory()->create())
+            ->post("/admin/contracts/{$contract->id}/pdf");
+
+        $response->assertOk();
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+    }
+
+    protected function renderPdfView(Contract $contract, ?int $pageCount = null): string
     {
         return view('admin.contracts.pdf', [
             'contract' => $contract->fresh()->load(['parties.organization', 'parties.contact', 'projects', 'tracks.contacts', 'releases']),
@@ -184,6 +215,7 @@ class ContractPdfTest extends TestCase
             't' => Contract::pdfStrings($contract->language),
             'headerParty' => $contract->header_party,
             'logoAbsolutePath' => null,
+            'pageCount' => $pageCount,
         ])->render();
     }
 
