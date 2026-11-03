@@ -8,6 +8,11 @@
         @page {
             margin: 2.2cm 2cm 2.6cm 2cm;
         }
+        /*
+         * DejaVu Sans ships with dompdf in normal and bold only. Any other
+         * weight (600!) finds no file and silently falls back to Times-Bold,
+         * so emphasis uses "bold" throughout.
+         */
         body {
             font-family: 'DejaVu Sans', sans-serif;
             font-size: 10pt;
@@ -48,8 +53,11 @@
             line-height: 1.5;
         }
         .header-party .party-name {
-            font-weight: 600;
+            font-weight: bold;
             color: #374151;
+        }
+        .nowrap {
+            white-space: nowrap;
         }
 
         /* Watermark */
@@ -77,13 +85,9 @@
             page-break-inside: avoid;
         }
         .meta-table td {
-            padding: 5px 10px;
+            padding: 6px 10px;
             font-size: 9pt;
             vertical-align: middle;
-            border-bottom: 1px solid #eef0f3;
-        }
-        .meta-table tr.last td {
-            border-bottom: none;
         }
         .meta-table .label {
             color: #6b7280;
@@ -92,7 +96,7 @@
         }
         .meta-table .value {
             color: #1a1a1a;
-            font-weight: 600;
+            font-weight: bold;
             width: 35%;
         }
 
@@ -131,7 +135,7 @@
             line-height: 1.45;
         }
         .preamble-name {
-            font-weight: 600;
+            font-weight: bold;
             color: #1a1a1a;
         }
         .preamble-role {
@@ -154,7 +158,7 @@
             padding: 6px 10px;
             text-align: left;
             font-size: 8pt;
-            font-weight: 600;
+            font-weight: bold;
             color: #374151;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -175,7 +179,7 @@
         }
         .parties-table .share {
             text-align: right;
-            font-weight: 600;
+            font-weight: bold;
             white-space: nowrap;
         }
         .party-address {
@@ -224,7 +228,7 @@
             padding: 3px 10px;
             border-radius: 3px;
             font-size: 9pt;
-            font-weight: 600;
+            font-weight: bold;
         }
 
         /* Rights table */
@@ -238,7 +242,7 @@
             padding: 6px 10px;
             text-align: left;
             font-size: 8pt;
-            font-weight: 600;
+            font-weight: bold;
             color: #374151;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -281,6 +285,14 @@
             color: #6b7280;
         }
 
+        /* Annex: same heading level as the clauses, one block per topic */
+        .annex-block {
+            margin-bottom: 16px;
+        }
+        .annex-block .clause-title {
+            margin-bottom: 6px;
+        }
+
         /* Relations */
         .relation-list {
             list-style: none;
@@ -309,7 +321,7 @@
         }
         .track-credit-title {
             font-size: 9pt;
-            font-weight: 600;
+            font-weight: bold;
             color: #1a1a1a;
             margin-bottom: 2px;
         }
@@ -363,7 +375,7 @@
         }
         .signature-name {
             font-size: 9pt;
-            font-weight: 600;
+            font-weight: bold;
             color: #1a1a1a;
         }
 
@@ -402,9 +414,15 @@
             padding: 2px 10px;
             border-radius: 10px;
             font-size: 8pt;
-            font-weight: 600;
+            font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+        .contract-number .status-badge {
+            margin-left: 6px;
+            padding: 0 8px;
+            font-size: 7pt;
+            vertical-align: middle;
         }
         .status-draft { background: #f3f4f6; color: #6b7280; }
         .status-active { background: #d1fae5; color: #065f46; }
@@ -422,20 +440,40 @@
     <div class="footer">
         <table>
             <tr>
-                <td style="text-align: left;">{{ $contract->contract_number ?? '' }} &middot; {{ $t['generated_on'] }} {{ now()->format('d.m.Y H:i') }} &middot; The Yelling Light</td>
+                <td style="text-align: left;">{{ $contract->contract_number ?? '' }} &middot; {{ $t['generated_on'] }} {{ now()->format('d.m.Y H:i') }} &middot; {{ $headerParty['name'] ?? 'The Yelling Light' }}</td>
                 <td style="text-align: right; white-space: nowrap;"><span class="page-number"></span></td>
             </tr>
         </table>
     </div>
 
+    @php
+        $typeName = $typeLabels[$contract->type] ?? ucfirst((string) $contract->type);
+        // Each detail stays on one line; only the gaps between them may wrap.
+        // The first entry of the first line is the party name.
+        $partyLines = [];
+        if ($headerParty) {
+            $partyLines = array_values(array_filter([
+                array_merge([$headerParty['name']], $headerParty['address_lines'], array_filter([$headerParty['website']])),
+                array_values(array_filter([
+                    $headerParty['contact_name'],
+                    $headerParty['phone'] ? $t['phone_short'] . ' ' . $headerParty['phone'] : null,
+                    $headerParty['email'],
+                ])),
+            ]));
+        }
+    @endphp
     <div class="header">
         <table style="width:100%; border-collapse:collapse;">
             <tr>
                 <td style="vertical-align:top;">
                     <h1>{{ $contract->title }}</h1>
-                    @if($contract->contract_number)
-                        <p class="contract-number">{{ $contract->contract_number }}</p>
-                    @endif
+                    <p class="contract-number">
+                        {{ $typeName !== '' ? strtr($t['type_title'], [':type' => $typeName]) : $t['subtitle'] }}@if($contract->contract_number) &middot; {{ $contract->contract_number }}@endif
+                        {{-- The status only matters on paper while the contract is not in force. --}}
+                        @if($contract->status && $contract->status !== 'active')
+                            <span class="status-badge status-{{ $contract->status }}">{{ $t['status_' . $contract->status] ?? $contract->status }}</span>
+                        @endif
+                    </p>
                 </td>
                 @if($contract->logo_in_header && $logoAbsolutePath)
                 <td style="vertical-align:top; text-align:right; width:190px;">
@@ -447,34 +485,27 @@
 
         @if($headerParty)
         <div class="header-party">
-            <span class="party-name">{{ $headerParty['name'] }}</span>@if($headerParty['contact_name']) &middot; {{ $headerParty['contact_name'] }}@endif
-            @foreach($headerParty['address_lines'] as $line)
-                &middot; {{ $line }}
+            @foreach($partyLines as $items)
+                <div>
+                    @foreach($items as $item)
+                        @if(!$loop->first) &middot; @endif<span class="nowrap{{ $loop->parent->first && $loop->first ? ' party-name' : '' }}">{{ $item }}</span>
+                    @endforeach
+                </div>
             @endforeach
-            @if($headerParty['website']) &middot; {{ $headerParty['website'] }}@endif
-            @if($headerParty['phone']) &middot; {{ $t['phone_short'] }} {{ $headerParty['phone'] }}@endif
-            @if($headerParty['email']) &middot; {{ $headerParty['email'] }}@endif
         </div>
         @endif
     </div>
 
-    {{-- Meta Information --}}
+    @if($contract->start_date || $contract->end_date)
     <table class="meta-table">
         <tr>
-            <td class="label">{{ $t['meta_type'] }}</td>
-            <td class="value">{{ $typeLabels[$contract->type] ?? ucfirst($contract->type) }}</td>
-            <td class="label">{{ $t['meta_status'] }}</td>
-            <td class="value">
-                <span class="status-badge status-{{ $contract->status }}">{{ $t['status_' . $contract->status] ?? $contract->status }}</span>
-            </td>
-        </tr>
-        <tr class="last">
             <td class="label">{{ $t['meta_start'] }}</td>
             <td class="value">{{ $contract->start_date?->format('d.m.Y') ?? '—' }}</td>
             <td class="label">{{ $t['meta_end'] }}</td>
-            <td class="value">{{ $contract->end_date?->format('d.m.Y') ?? '—' }}</td>
+            <td class="value">{{ $contract->end_date?->format('d.m.Y') ?? $t['meta_open_ended'] }}</td>
         </tr>
     </table>
+    @endif
 
     {{-- Vertragsparteien: overview table plus the prose preamble --}}
     @php
@@ -525,12 +556,12 @@
                             <div class="party-address">{{ $party->role_label }}</div>
                         @endif
                     </td>
-                    <td class="share">{{ number_format($party->share, 2) }}%</td>
+                    <td class="share">{{ \App\Models\Contract::formatPercent($party->share) }}</td>
                 </tr>
                 @endforeach
                 <tr class="total-row">
                     <td colspan="2">{{ $t['parties_total'] }}</td>
-                    <td class="share">{{ number_format($contract->parties->sum('share'), 2) }}%</td>
+                    <td class="share">{{ \App\Models\Contract::formatPercent($contract->parties->sum('share')) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -560,102 +591,79 @@
     @php
         $autoNumber = $contract->auto_number_sections ?? true;
         $clauseNo = 0;
+        $sections = $contract->resolvedSections($t);
     @endphp
 
-    {{-- Vertragsgegenstand --}}
-    @if($contract->subject)
-    @php if ($autoNumber) { $clauseNo++; } @endphp
+    {{-- Bestimmungen: the subject is clause 1, the section editor (or the legacy terms block) continues --}}
+    @if($contract->subject || count($sections))
     <div class="section">
-        @include('admin.contracts.partials.clause', [
-            'title' => $contract->subject_heading ?: $t['subject_title'],
-            'number' => $autoNumber ? $clauseNo : null,
-            'titleClass' => 'section-title',
-            'body' => $contract->subject,
-        ])
+        @if($contract->subject)
+            @php if ($autoNumber) { $clauseNo++; } @endphp
+            <div class="clause">
+                @include('admin.contracts.partials.clause', [
+                    'title' => $contract->subject_heading ?: $t['subject_title'],
+                    'number' => $autoNumber ? $clauseNo : null,
+                    'titleClass' => 'clause-title',
+                    'body' => $contract->subject,
+                ])
+            </div>
+        @endif
+        @foreach($sections as $section)
+            @php if ($autoNumber && $section['numbered']) { $clauseNo++; } @endphp
+            <div class="clause" @if($section['page_break'] && ($contract->subject || !$loop->first)) style="page-break-before: always;" @endif>
+                @include('admin.contracts.partials.clause', [
+                    'title' => $section['title'],
+                    'number' => ($autoNumber && $section['numbered']) ? $clauseNo : null,
+                    'titleClass' => 'clause-title',
+                    'body' => $section['body'],
+                ])
+            </div>
+        @endforeach
     </div>
     @endif
 
-    {{-- Zession --}}
-    @if($contract->has_zession)
+    {{-- Schlussbestimmungen --}}
+    @if($contract->closing_note)
     <div class="section section-compact">
-        <div class="section-title">{{ $t['zession_title'] }}</div>
-        <div class="zession-box">
-            <div class="amount">{{ $contract->zession_currency }} {{ number_format($contract->zession_amount, 2, '.', "'") }}</div>
-            <div class="note">{{ $t['zession_note'] }}</div>
-            @if($contract->zession_notes)
-                <div class="note" style="margin-top: 6px;">{{ $contract->zession_notes }}</div>
-            @endif
-        </div>
+        @include('admin.contracts.partials.text-block', ['text' => $contract->closing_note])
     </div>
     @endif
 
-    {{-- Territory --}}
-    @if($contract->territory && count($contract->territory) > 0)
-    <div class="section section-compact">
-        <div class="section-title">{{ $t['territory_title'] }}</div>
-        <div class="territory-list">
-            @if(in_array('ALL', $contract->territory))
-                <span class="territory-worldwide">{{ $t['territory_worldwide'] }}</span>
-            @else
-                @foreach($contract->territory as $code)
-                    <span class="territory-badge">{{ $code }}</span>
-                @endforeach
-            @endif
-        </div>
-    </div>
-    @endif
-
-    {{-- Rights / Vergütung --}}
-    @if($contract->rights && count($contract->rights) > 0)
+    {{--
+        Anhang: the data the clauses refer to ("die im Anhang aufgeführten
+        Aufnahmen"). Its heading is printed inside whichever block comes
+        first, so it can never end a page on its own.
+    --}}
     @php
-        $rLabels = $contract->resolvedRightsLabels($t['party_default_prefix']);
-        $rPartiesStr = count($rLabels) > 1
-            ? implode(', ', array_slice($rLabels, 0, -1)) . ' ' . $t['list_conjunction'] . ' ' . end($rLabels)
-            : ($rLabels[0] ?? '');
+        $hasRelations = $contract->projects->count() || $contract->tracks->count() || $contract->releases->count() || $contract->relations_note;
+        $hasRights = $contract->rights && count($contract->rights) > 0;
+        $hasTerritory = $contract->territory && count($contract->territory) > 0;
+        $annexHeadingPending = true;
     @endphp
-    <div class="section section-compact">
-        <div class="section-title">{{ $t['rights_title'] }}</div>
-        <p class="rights-label">{{ strtr($t['rights_intro'], [':parties' => $rPartiesStr]) }}</p>
-        <table class="rights-table">
-            <thead>
-                <tr>
-                    <th>{{ $t['rights_col_type'] }}</th>
-                    <th>{{ $t['rights_col_split'] }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($contract->rights as $right)
-                <tr>
-                    <td style="font-weight: 600;">{{ $right['label'] }}</td>
-                    <td>
-                        @if(($right['mode'] ?? 'split') === 'split')
-                            @php $sv = $contract->rightSplitValues($right); @endphp
-                            @foreach($rLabels as $li => $lname)@if(!$loop->first) / @endif{{ $sv[$li] ?? 0 }}% {{ $lname }}@endforeach
-                        @else
-                            {{ $right['custom_text'] ?? '' }}
-                        @endif
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-    @endif
+    @if($hasRelations || $hasRights || $contract->has_zession || $hasTerritory)
+    <div class="section">
 
     {{-- Related Projects, Tracks, Releases --}}
-    @if($contract->projects->count() || $contract->tracks->count() || $contract->releases->count() || $contract->relations_note)
+    @if($hasRelations)
     @php
         $roleLabels = collect(\App\Models\Setting::creditRoles())->flatMap(fn($roles) => $roles)->toArray();
+        // The annex already says "Anhang" - "Anhang: Aufnahmen" would say it twice.
+        $relationsTitle = $contract->relations_heading ?: $t['relations_title'];
+        $relationsTitle = preg_replace('/^' . preg_quote($t['annex_title'], '/') . '\s*[:–-]\s*/iu', '', $relationsTitle) ?: $relationsTitle;
     @endphp
-    <div class="section">
+    <div class="annex-block">
         <div class="keep-together">
-            <div class="section-title">{{ $contract->relations_heading ?: $t['relations_title'] }}</div>
+            @if($annexHeadingPending)
+                <div class="section-title">{{ $t['annex_title'] }}</div>
+                @php $annexHeadingPending = false; @endphp
+            @endif
+            <div class="clause-title">{{ $relationsTitle }}</div>
             <div class="relations-note">{{ $contract->relations_note ?: $t['relations_intro_default'] }}</div>
         </div>
 
         @if($contract->projects->count())
             <div class="section-compact">
-                <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin-bottom: 3px;">{{ $t['relations_projects'] }}</p>
+                <p style="font-size: 9pt; font-weight: bold; color: #6b7280; margin-bottom: 3px;">{{ $t['relations_projects'] }}</p>
                 <ul class="relation-list">
                     @foreach($contract->projects as $project)
                         <li>{{ $project->name }}</li>
@@ -669,7 +677,7 @@
             @foreach($contract->tracks as $track)
                 <div class="track-credit-block">
                     @if($loop->first)
-                        <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin: 8px 0 4px;">{{ $t['relations_tracks'] }}</p>
+                        <p style="font-size: 9pt; font-weight: bold; color: #6b7280; margin: 8px 0 4px;">{{ $t['relations_tracks'] }}</p>
                     @endif
                     <div class="track-credit-title">
                         {{ $track->display_title }}@if($track->isrc) <span class="track-credit-isrc">{{ $track->isrc_formatted }}</span>@endif
@@ -700,7 +708,7 @@
 
         @if($contract->releases->count())
             <div class="section-compact">
-                <p style="font-size: 9pt; font-weight: 600; color: #6b7280; margin: 8px 0 3px;">{{ $t['relations_releases'] }}</p>
+                <p style="font-size: 9pt; font-weight: bold; color: #6b7280; margin: 8px 0 3px;">{{ $t['relations_releases'] }}</p>
                 <ul class="relation-list">
                     @foreach($contract->releases as $release)
                         <li>{{ $release->title }}{{ $release->upc ? ' (UPC: ' . $release->upc . ')' : '' }}</li>
@@ -711,28 +719,85 @@
     </div>
     @endif
 
-    {{-- Bedingungen: numbered clauses, or the legacy single terms block --}}
-    @php $sections = $contract->resolvedSections($t); @endphp
-    @if(count($sections))
-    <div class="section">
-        @foreach($sections as $section)
-            @php if ($autoNumber && $section['numbered']) { $clauseNo++; } @endphp
-            <div class="clause" @if($section['page_break'] && !$loop->first) style="page-break-before: always;" @endif>
-                @include('admin.contracts.partials.clause', [
-                    'title' => $section['title'],
-                    'number' => ($autoNumber && $section['numbered']) ? $clauseNo : null,
-                    'titleClass' => 'clause-title',
-                    'body' => $section['body'],
-                ])
-            </div>
-        @endforeach
+    {{-- Rights / Vergütung --}}
+    @if($hasRights)
+    @php
+        $rLabels = $contract->resolvedRightsLabels($t['party_default_prefix']);
+        $rPartiesStr = count($rLabels) > 1
+            ? implode(', ', array_slice($rLabels, 0, -1)) . ' ' . $t['list_conjunction'] . ' ' . end($rLabels)
+            : ($rLabels[0] ?? '');
+    @endphp
+    <div class="annex-block section-compact">
+        @if($annexHeadingPending)
+            <div class="section-title">{{ $t['annex_title'] }}</div>
+            @php $annexHeadingPending = false; @endphp
+        @endif
+        <div class="clause-title">{{ $t['rights_title'] }}</div>
+        <p class="rights-label">{{ strtr($t['rights_intro'], [':parties' => $rPartiesStr]) }}</p>
+        <table class="rights-table">
+            <thead>
+                <tr>
+                    <th>{{ $t['rights_col_type'] }}</th>
+                    <th>{{ $t['rights_col_split'] }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($contract->rights as $right)
+                <tr>
+                    <td style="font-weight: bold;">{{ $right['label'] }}</td>
+                    <td>
+                        @if(($right['mode'] ?? 'split') === 'split')
+                            @php $sv = $contract->rightSplitValues($right); @endphp
+                            @foreach($rLabels as $li => $lname)@if(!$loop->first) / @endif{{ \App\Models\Contract::formatPercent($sv[$li] ?? 0) }} {{ $lname }}@endforeach
+                        @else
+                            {{ $right['custom_text'] ?? '' }}
+                        @endif
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
     @endif
 
-    {{-- Schlussbestimmungen --}}
-    @if($contract->closing_note)
-    <div class="section section-compact">
-        @include('admin.contracts.partials.text-block', ['text' => $contract->closing_note])
+    {{-- Zession --}}
+    @if($contract->has_zession)
+    <div class="annex-block section-compact">
+        @if($annexHeadingPending)
+            <div class="section-title">{{ $t['annex_title'] }}</div>
+            @php $annexHeadingPending = false; @endphp
+        @endif
+        <div class="clause-title">{{ $t['zession_title'] }}</div>
+        <div class="zession-box">
+            <div class="amount">{{ $contract->zession_currency }} {{ number_format($contract->zession_amount, 2, '.', "'") }}</div>
+            <div class="note">{{ $t['zession_note'] }}</div>
+            @if($contract->zession_notes)
+                <div class="note" style="margin-top: 6px;">{{ $contract->zession_notes }}</div>
+            @endif
+        </div>
+    </div>
+    @endif
+
+    {{-- Territory --}}
+    @if($hasTerritory)
+    <div class="annex-block section-compact">
+        @if($annexHeadingPending)
+            <div class="section-title">{{ $t['annex_title'] }}</div>
+            @php $annexHeadingPending = false; @endphp
+        @endif
+        <div class="clause-title">{{ $t['territory_title'] }}</div>
+        <div class="territory-list">
+            @if(in_array('ALL', $contract->territory))
+                <span class="territory-worldwide">{{ $t['territory_worldwide'] }}</span>
+            @else
+                @foreach($contract->territory as $code)
+                    <span class="territory-badge">{{ $code }}</span>
+                @endforeach
+            @endif
+        </div>
+    </div>
+    @endif
+
     </div>
     @endif
 

@@ -166,7 +166,13 @@ function contractSections(initial, editorId, subjectField) {
                 return allCaps ? titleCase(title) : title;
             };
 
-            const titleCase = (t) => t.toLowerCase().replace(/(^|[\s(/-])(\p{L})/gu, (m, sep, ch) => sep + ch.toUpperCase());
+            // German keeps articles, conjunctions and prepositions lowercase
+            // ("Folgen der Vertragsbeendigung"), except as the first word.
+            const SMALL_WORDS = new Set(['und', 'oder', 'sowie', 'bzw', 'der', 'die', 'das', 'des', 'dem', 'den',
+                'ein', 'eine', 'einer', 'eines', 'von', 'vom', 'zu', 'zum', 'zur', 'für', 'mit', 'ohne', 'im', 'in',
+                'am', 'an', 'auf', 'aus', 'bei', 'nach', 'über', 'unter', 'gegen', 'gemäss', 'and', 'or', 'of', 'the']);
+            const titleCase = (t) => t.toLowerCase().replace(/(^|[\s(/-])(\p{L}+)/gu, (m, sep, word, offset) =>
+                sep + (offset > 0 && SMALL_WORDS.has(word) ? word : word.charAt(0).toUpperCase() + word.slice(1)));
 
             const found = [];
             let current = null;

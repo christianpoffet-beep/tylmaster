@@ -197,7 +197,7 @@
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <div class="flex items-baseline justify-between mb-1">
                     <label for="relations_note" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Verknüpfungen</label>
-                    <input type="text" name="relations_heading" value="{{ old('relations_heading', $contract->relations_heading ?? '') }}" placeholder="Eigener Titel, z.B. Anhang: Aufnahmen" class="w-72 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                    <input type="text" name="relations_heading" value="{{ old('relations_heading', $contract->relations_heading ?? '') }}" placeholder="Eigener Titel, z.B. Aufnahmen" class="w-72 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
                 </div>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Einleitungstext zu den verknüpften Projekten, Tracks und Produkten (im PDF). Bei Tracks werden die Credits automatisch eingeblendet.</p>
                 <textarea name="relations_note" id="relations_note" rows="2" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('relations_note', $contract->relations_note ?? 'Folgende Songs sind Bestandteil dieses Vertrages.') }}</textarea>

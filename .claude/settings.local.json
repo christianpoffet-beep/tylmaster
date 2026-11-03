@@ -3,7 +3,9 @@
     "allow": [
       "Bash(php artisan make:migration expand_tasks_module)",
       "Bash(C:/php/php-8.3.29-Win32-vs16-x64/php.exe artisan db:seed --class=ContactTypeSeeder)",
-      "Bash(C:/php/php-8.3.29-Win32-vs16-x64/php.exe artisan db:seed --class=ProjectTypeSeeder)"
+      "Bash(C:/php/php-8.3.29-Win32-vs16-x64/php.exe artisan db:seed --class=ProjectTypeSeeder)",
+      "Bash(curl -s -o /dev/null -w \"Laravel: HTTP %{http_code}\\\\n\" http://127.0.0.1:8000)",
+      "Bash(curl -s -o /dev/null -w \"Vite: HTTP %{http_code}\\\\n\" http://localhost:5173)"
     ]
   }
 }
