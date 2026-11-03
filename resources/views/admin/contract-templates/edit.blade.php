@@ -182,7 +182,7 @@
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <div class="flex items-baseline justify-between mb-1">
                     <label for="default_relations_note" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Standard-Verknüpfungstext</label>
-                    <input type="text" name="default_relations_heading" value="{{ old('default_relations_heading', $contractTemplate->default_relations_heading) }}" placeholder="Eigener Titel, z.B. Anhang: Aufnahmen" class="w-72 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                    <input type="text" name="default_relations_heading" value="{{ old('default_relations_heading', $contractTemplate->default_relations_heading) }}" placeholder="Eigener Titel, z.B. Aufnahmen" class="w-72 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
                 </div>
                 <textarea name="default_relations_note" id="default_relations_note" rows="2" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Einleitungstext zu den Verknüpfungen, z.B. «Folgende Songs sind Bestandteil dieses Vertrages.»">{{ old('default_relations_note', $contractTemplate->default_relations_note) }}</textarea>
                 <p class="text-xs text-gray-400 mt-1">Wird beim Erstellen eines neuen Vertrags ins Feld «Verknüpfungen» übernommen.</p>

@@ -128,6 +128,70 @@ class ContractPdfTest extends TestCase
     }
 
     /**
+     * Two band members, but only the first carries a role (or the rights table
+     * holds fewer labels than there are parties): the second still belongs to
+     * the band's side instead of standing alone without "nachfolgend".
+     */
+    public function test_a_band_member_without_a_role_joins_the_one_before(): void
+    {
+        $contract = $this->makeContract();
+        $contract->parties()->delete();
+        $contract->update(['rights_labels' => ['Label', 'Band']]);
+
+        $band = Organization::create(['type' => 'band', 'names' => ['Red Tape Redemption']]);
+        $label = Organization::create(['type' => 'label', 'names' => ['Test Label']]);
+
+        ContractParty::create(['contract_id' => $contract->id, 'organization_id' => $label->id, 'share' => 20, 'sort_order' => 0]);
+        foreach (['Tobias' => 'Kalt', 'Lukas' => 'Oberholzer'] as $first => $last) {
+            ContractParty::create([
+                'contract_id' => $contract->id,
+                'organization_id' => $band->id,
+                'contact_id' => Contact::create(['first_name' => $first, 'last_name' => $last])->id,
+                'share' => 40,
+                'sort_order' => $last === 'Kalt' ? 1 : 2,
+            ]);
+        }
+        $contract->load(['parties.organization', 'parties.contact']);
+
+        $blocks = $contract->preambleBlocks(Contract::pdfStrings('de'));
+
+        $this->assertCount(2, $blocks);
+        $this->assertSame([
+            'Red Tape Redemption',
+            'bestehend aus',
+            'Tobias Kalt',
+            'Lukas Oberholzer',
+            '(nachfolgend gemeinsam «Band»)',
+        ], $blocks[1]['lines']);
+    }
+
+    /**
+     * The letterhead reads like one: no "Typ" row, the kind of contract next
+     * to its number, Swiss phone numbers grouped, no "https://".
+     */
+    public function test_the_header_names_the_kind_of_contract(): void
+    {
+        $contract = $this->makeContract();
+        $contract->update(['type' => 'label', 'end_date' => null, 'start_date' => '2026-09-01']);
+        Organization::first()->update(['phone' => '+41795676789', 'websites' => ['https://www.example.test/']]);
+
+        $html = view('admin.contracts.pdf', [
+            'contract' => $contract->fresh()->load(['parties.organization', 'parties.contact', 'projects', 'tracks.contacts', 'releases']),
+            'typeLabels' => ['label' => 'Label'],
+            't' => Contract::pdfStrings('de'),
+            'headerParty' => $contract->fresh()->header_party,
+            'logoAbsolutePath' => null,
+        ])->render();
+
+        $this->assertStringContainsString('Labelvertrag', $html);
+        $this->assertStringContainsString('+41 79 567 67 89', $html);
+        $this->assertStringContainsString('>www.example.test<', $html);
+        $this->assertStringContainsString('unbefristet', $html);
+        $this->assertStringNotContainsString('>Typ<', $html);
+        $this->assertStringContainsString('>50%<', $html);
+    }
+
+    /**
      * A hand-written preamble sitting in the subject must not be duplicated by
      * the generated one — switching the mode off is what does that.
      */
@@ -161,6 +225,37 @@ class ContractPdfTest extends TestCase
         $this->assertStringContainsString('2.</span> Vertragsdauer', $html);
         $this->assertStringContainsString('3.</span> Gerichtsstand', $html);
         $this->assertStringNotContainsString('3.</span> Hinweis', $html);
+    }
+
+    /**
+     * The clauses come first and all share one heading level; the data they
+     * refer to (recordings, remuneration, territory) follows as the annex,
+     * still above the signatures.
+     */
+    public function test_the_data_blocks_follow_the_clauses_as_annex(): void
+    {
+        $contract = $this->makeContract();
+        $contract->update([
+            'relations_heading' => 'Anhang: Aufnahmen',
+            'relations_note' => 'Folgende Aufnahmen sind Gegenstand dieses Vertrags.',
+            'sections' => [
+                ['title' => 'Gerichtsstand', 'body' => 'Winterthur.', 'numbered' => true, 'page_break' => false],
+            ],
+        ]);
+
+        $html = $this->renderPdfView($contract);
+
+        $this->assertStringContainsString('<div class="clause-title"><span class="clause-number">1.</span> Vertragsgegenstand', $html);
+        $this->assertSame(1, substr_count($html, '>Anhang</div>'));
+        $this->assertStringNotContainsString('Anhang: Aufnahmen', $html);
+
+        $positions = array_map(fn ($needle) => strpos($html, $needle), [
+            '2.</span> Gerichtsstand', '>Anhang</div>', '>Aufnahmen</div>', '>Vergütung</div>', '>Vertragsgebiet</div>', 'Ort, Datum, Unterschrift',
+        ]);
+        $sorted = $positions;
+        sort($sorted);
+        $this->assertNotContains(false, $positions);
+        $this->assertSame($sorted, $positions, 'Clauses, annex and signatures are out of order.');
     }
 
     /**

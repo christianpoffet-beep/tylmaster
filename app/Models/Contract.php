@@ -86,16 +86,24 @@ class Contract extends Model
      *
      * Consecutive parties carrying the same role label ("Label", "Künstler")
      * belong to one side of the contract and are named together. A party
-     * without a role label stands on its own.
+     * without a role takes the one of the party before it when both belong
+     * to the same organization (two band members); otherwise it stands alone.
      *
      * @return array<int, array{role: ?string, parties: array<int, ContractParty>}>
      */
     public function partyRoleGroups(): array
     {
         $groups = [];
+        $prev = null;
+        $prevRole = null;
 
         foreach ($this->parties as $i => $party) {
             $role = $this->partyRoleLabel($party, $i);
+            if ($role === null && $prev && $party->organization_id && $prev->organization_id === $party->organization_id) {
+                $role = $prevRole;
+            }
+            $prev = $party;
+            $prevRole = $role;
             $key = $role !== null ? mb_strtolower($role) : null;
             $last = count($groups) > 0 ? $groups[count($groups) - 1] : null;
 
@@ -264,16 +272,27 @@ class Contract extends Model
     }
 
     /**
+     * A share as printed in the PDF: "20%", "33.33%" — no trailing zeros, so
+     * the parties table and the remuneration table read the same.
+     */
+    public static function formatPercent($value): string
+    {
+        $formatted = rtrim(rtrim(number_format((float) $value, 2, '.', ''), '0'), '.');
+
+        return ($formatted === '' || $formatted === '-0' ? '0' : $formatted) . '%';
+    }
+
+    /**
      * Translation strings for the contract PDF, keyed by language.
      * Falls back to German for unknown languages.
      */
     public const PDF_STRINGS = [
         'de' => [
             'subtitle' => 'Vertrag',
-            'meta_type' => 'Typ',
-            'meta_status' => 'Status',
-            'meta_start' => 'Startdatum',
-            'meta_end' => 'Enddatum',
+            'type_title' => ':typevertrag',
+            'meta_start' => 'Vertragsbeginn',
+            'meta_end' => 'Vertragsende',
+            'meta_open_ended' => 'unbefristet',
             'status_draft' => 'Entwurf',
             'status_active' => 'Aktiv',
             'status_expired' => 'Ausgelaufen',
@@ -285,7 +304,7 @@ class Contract extends Model
             'subject_title' => 'Vertragsgegenstand',
             'zession_title' => 'Zession (Vorschusszahlung)',
             'zession_note' => 'Dieser Betrag wird mit künftigen Einnahmen verrechnet.',
-            'territory_title' => 'Geltungsbereich / Territory',
+            'territory_title' => 'Vertragsgebiet',
             'territory_worldwide' => 'Weltweit',
             'rights_title' => 'Vergütung',
             'rights_intro' => 'Die Einnahmen werden zwischen :parties wie folgt aufgeteilt:',
@@ -315,14 +334,15 @@ class Contract extends Model
             'preamble_hereinafter_joint' => 'nachfolgend gemeinsam «:role»',
             'preamble_and' => 'und',
             'closing_title' => 'Schlussbestimmungen',
+            'annex_title' => 'Anhang',
             'parties_total' => 'Total',
         ],
         'en' => [
             'subtitle' => 'Contract',
-            'meta_type' => 'Type',
-            'meta_status' => 'Status',
+            'type_title' => ':type agreement',
             'meta_start' => 'Start date',
             'meta_end' => 'End date',
+            'meta_open_ended' => 'open-ended',
             'status_draft' => 'Draft',
             'status_active' => 'Active',
             'status_expired' => 'Expired',
@@ -364,14 +384,15 @@ class Contract extends Model
             'preamble_hereinafter_joint' => 'hereinafter jointly “:role”',
             'preamble_and' => 'and',
             'closing_title' => 'Final provisions',
+            'annex_title' => 'Annex',
             'parties_total' => 'Total',
         ],
         'es' => [
             'subtitle' => 'Contrato',
-            'meta_type' => 'Tipo',
-            'meta_status' => 'Estado',
+            'type_title' => 'Contrato de :type',
             'meta_start' => 'Fecha de inicio',
             'meta_end' => 'Fecha de finalización',
+            'meta_open_ended' => 'indefinido',
             'status_draft' => 'Borrador',
             'status_active' => 'Activo',
             'status_expired' => 'Expirado',
@@ -413,6 +434,7 @@ class Contract extends Model
             'preamble_hereinafter_joint' => 'en adelante conjuntamente «:role»',
             'preamble_and' => 'y',
             'closing_title' => 'Disposiciones finales',
+            'annex_title' => 'Anexo',
             'parties_total' => 'Total',
         ],
     ];
@@ -466,10 +488,29 @@ class Contract extends Model
             'name' => $name,
             'contact_name' => $contactName,
             'address_lines' => $addressLines,
-            'website' => $website ?: null,
-            'phone' => $entity->phone ?: null,
+            // A letterhead shows "www.example.com", not the full URL.
+            'website' => $website ? rtrim(preg_replace('#^https?://#i', '', $website), '/') : null,
+            'phone' => $entity->phone ? self::formatPhone($entity->phone) : null,
             'email' => $entity->email ?: null,
         ];
+    }
+
+    /**
+     * Swiss numbers in their usual grouping ("+41 79 567 67 89",
+     * "079 567 67 89"); anything else is printed as entered.
+     */
+    protected static function formatPhone(string $phone): string
+    {
+        $digits = preg_replace('/[^\d+]/', '', $phone);
+
+        if (preg_match('/^(?:\+41|0041)(\d{2})(\d{3})(\d{2})(\d{2})$/', $digits, $m)) {
+            return "+41 {$m[1]} {$m[2]} {$m[3]} {$m[4]}";
+        }
+        if (preg_match('/^0(\d{2})(\d{3})(\d{2})(\d{2})$/', $digits, $m)) {
+            return "0{$m[1]} {$m[2]} {$m[3]} {$m[4]}";
+        }
+
+        return trim($phone);
     }
 
     /**

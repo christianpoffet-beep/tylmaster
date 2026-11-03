@@ -54,8 +54,17 @@
  */
 function contractPreamblePreview(parties, orgMeta, contactMeta) {
     const groups = [];
+    let prev = null;
+    let prevRole = '';
     (parties || []).forEach(p => {
-        const role = (p.role_label || '').trim();
+        let role = (p.role_label || '').trim();
+        // A band member without a role belongs to the side of the one before.
+        if (!role && prev && p.type === 'organization' && p.organization_id
+            && String(prev.organization_id) === String(p.organization_id)) {
+            role = prevRole;
+        }
+        prev = p;
+        prevRole = role;
         const key = role ? role.toLowerCase() : null;
         const last = groups[groups.length - 1];
         if (key && last && last.key === key) {
