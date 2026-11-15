@@ -154,7 +154,7 @@
         @endphp
         <div x-data="{
             open: {{ $track->releases->count() ? 'true' : 'false' }},
-            rows: @json(array_values($existingReleases)),
+            rows: @js(array_values($existingReleases)),
             addRow() { this.rows.push({ release_id: '', track_number: '', disc_number: 1, role: 'main' }); },
             removeRow(index) { this.rows.splice(index, 1); }
         }" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mt-6">

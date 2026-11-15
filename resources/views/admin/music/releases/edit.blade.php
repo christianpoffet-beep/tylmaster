@@ -13,18 +13,17 @@
             $musicGroups[$group] = $types;
         }
     }
-    $allMusicTypes = collect($musicGroups)->flatten()->toArray();
     $allMerchTypes = collect($merchGroups)->flatten()->toArray();
-    $currentTypes = old('product_type', is_array($release->product_type) ? $release->product_type : ($release->product_type ? [$release->product_type] : []));
+    $currentTypes = (array) old('product_type', is_array($release->product_type) ? $release->product_type : ($release->product_type ? [$release->product_type] : []));
+    $currentTypes = array_values(array_filter($currentTypes, fn ($type) => filled($type)));
 @endphp
 
 @section('content')
+{{-- The music sections show without a type yet, or with any type that is not merchandise --}}
 <div class="max-w-4xl" x-data="{
-    selectedTypes: @json($currentTypes),
-    musicTypes: @json($allMusicTypes),
-    merchTypes: @json($allMerchTypes),
-    get isMusic() { return this.selectedTypes.some(t => this.musicTypes.includes(t)); },
-    get isMerch() { return this.selectedTypes.some(t => this.merchTypes.includes(t)); }
+    selectedTypes: @js($currentTypes),
+    merchTypes: @js($allMerchTypes),
+    get isMusic() { return !this.selectedTypes.length || this.selectedTypes.some(t => !this.merchTypes.includes(t)); }
 }" @product-types-changed.window="selectedTypes = $event.detail">
     <form method="POST" action="{{ route('admin.releases.update', $release) }}" enctype="multipart/form-data">
         @csrf
@@ -149,43 +148,8 @@
             </div>
         </div>
 
-        {{-- Musik: Tracklist --}}
-        @php
-            $selectedTrackIds = old('track_ids', $release->tracks->pluck('id')->toArray());
-            $trackNumbers = [];
-            foreach ($release->tracks as $t) {
-                $trackNumbers[$t->id] = $t->pivot->track_number;
-            }
-        @endphp
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6" x-data="{ trackFilter: '' }">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Tracklist</h3>
-            @if($allTracks->count())
-                <input type="text" x-model="trackFilter" placeholder="Titel, Alternativtitel, ISRC, Band, Label, Verlag oder Credit suchen..." class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500 mb-3">
-                <div class="max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
-                    @foreach($allTracks as $track)
-                        <label class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer"
-                            x-show="!trackFilter || trackFilter.toLowerCase().split(/\s+/).filter(Boolean).every(term => @js($track->search_haystack).includes(term))" x-cloak>
-                            <input type="checkbox" name="track_ids[]" value="{{ $track->id }}"
-                                {{ in_array($track->id, $selectedTrackIds) ? 'checked' : '' }}
-                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0">
-                            <input type="number" name="track_numbers[{{ $track->id }}]"
-                                value="{{ old('track_numbers.' . $track->id, $trackNumbers[$track->id] ?? '') }}"
-                                min="1" placeholder="#"
-                                class="w-16 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm text-center focus:border-blue-500 focus:ring-blue-500 flex-shrink-0">
-                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ $track->display_title }}</span>
-                            @if($track->band_names)
-                                <span class="text-xs text-gray-400 truncate">{{ $track->band_names }}</span>
-                            @endif
-                            @if($track->isrc)
-                                <span class="text-xs text-gray-400 font-mono ml-auto">{{ $track->isrc_formatted }}</span>
-                            @endif
-                        </label>
-                    @endforeach
-                </div>
-            @else
-                <p class="text-sm text-gray-400">Keine Tracks vorhanden.</p>
-            @endif
-        </div>
+        {{-- Tracklist --}}
+        @include('admin.partials.release-tracklist', ['tracklist' => $tracklist])
 
         {{-- Musik: Territory --}}
         <div x-show="isMusic" x-transition x-cloak>
