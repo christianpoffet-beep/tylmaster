@@ -19,16 +19,22 @@ class ReleaseController extends Controller
 
     public function index(Request $request)
     {
-        $query = Release::withCount('tracks')->with(['organizations' => fn ($q) => $q->where('type', 'label')]);
+        $query = Release::withCount('tracks')->with(['organizations' => fn ($q) => $q->whereIn('type', ['band', 'label'])]);
 
         if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
+            $needle = mb_strtolower(trim($search));
+            $orgIds = Organization::whereIn('type', ['band', 'label'])->get()
+                ->filter(fn ($org) => str_contains(mb_strtolower($org->all_names), $needle))
+                ->pluck('id');
+
+            $query->where(function ($q) use ($search, $orgIds) {
                 $q->where('title', 'like', "%{$search}%")
                     ->orWhere('ean_upc', 'like', "%{$search}%")
                     ->orWhere('upc', 'like', "%{$search}%")
                     ->orWhere('catalog_number', 'like', "%{$search}%")
                     ->orWhere('label_name', 'like', "%{$search}%")
-                    ->orWhere('main_artist', 'like', "%{$search}%");
+                    ->orWhere('main_artist', 'like', "%{$search}%")
+                    ->orWhereHas('organizations', fn ($o) => $o->whereIn('organizations.id', $orgIds));
             });
         }
 
@@ -75,9 +81,7 @@ class ReleaseController extends Controller
             'product_type.*' => 'nullable|string|max:100',
             'ean_upc' => 'nullable|string|max:30',
             'release_date' => 'nullable|date',
-            'label_name' => 'nullable|string|max:255',
             'catalog_number' => 'nullable|string|max:50',
-            'main_artist' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:5000',
             'release_info' => 'nullable|string|max:5000',
             'release_info_internal' => 'nullable|string|max:5000',
@@ -142,9 +146,10 @@ class ReleaseController extends Controller
         $this->syncSubmitted($request, $release->projects(), 'project_ids');
         $this->syncSubmitted($request, $release->contracts(), 'contract_ids');
 
-        // Auto-fill label_name from tracks
+        // Without a label the product takes its tracks' labels; old text gives way to linked organizations
         $release->load('tracks.organizations');
         $release->syncLabelFromTracks();
+        $release->clearSupersededNames();
 
         return redirect()->route('admin.releases.show', $release)->with('success', 'Produkt erstellt.');
     }
@@ -185,9 +190,7 @@ class ReleaseController extends Controller
             'product_type.*' => 'nullable|string|max:100',
             'ean_upc' => 'nullable|string|max:30',
             'release_date' => 'nullable|date',
-            'label_name' => 'nullable|string|max:255',
             'catalog_number' => 'nullable|string|max:50',
-            'main_artist' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:5000',
             'release_info' => 'nullable|string|max:5000',
             'release_info_internal' => 'nullable|string|max:5000',
@@ -252,9 +255,10 @@ class ReleaseController extends Controller
         $this->syncSubmitted($request, $release->projects(), 'project_ids');
         $this->syncSubmitted($request, $release->contracts(), 'contract_ids');
 
-        // Auto-fill label_name from tracks
+        // Without a label the product takes its tracks' labels; old text gives way to linked organizations
         $release->load('tracks.organizations');
         $release->syncLabelFromTracks();
+        $release->clearSupersededNames();
 
         return redirect()->route('admin.releases.show', $release)->with('success', 'Produkt aktualisiert.');
     }
