@@ -129,8 +129,36 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">Deploy abschliessen</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Fuehrt offene Migrationen aus und leert die Caches. Nach jedem Deploy einmal ausfuehren.
+            Fuehrt offene Migrationen aus und leert die Caches. Passiert nach einem Deploy automatisch beim ersten Seitenaufruf,
+            sobald neue Migrationen, Konfiguration oder Routen ankommen. Der Knopf ist fuer einen zweiten Versuch oder einen Durchlauf von Hand.
         </p>
+
+        <div class="mb-2 text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Automatisch nach Deploy:</span>
+            @if(config('deploy.auto_finish'))
+                <span class="text-green-600 dark:text-green-400 font-medium">aktiv</span>
+            @else
+                <span class="text-gray-900 dark:text-gray-100 font-medium">aus</span>
+                <span class="text-gray-500 dark:text-gray-400">(Umgebung {{ app()->environment() }}; einschalten mit DEPLOY_AUTO_FINISH=true in der .env)</span>
+            @endif
+        </div>
+
+        @php $lastDeployRun = app(\App\Services\DeployFinisher::class)->lastRun(); @endphp
+        @if($lastDeployRun)
+            <div class="mb-4 text-sm">
+                <span class="text-gray-500 dark:text-gray-400">Zuletzt:</span>
+                <span class="text-gray-900 dark:text-gray-100">{{ \Illuminate\Support\Carbon::parse($lastDeployRun['at'])->timezone(config('app.timezone'))->format('d.m.Y H:i') }}</span>
+                <span class="text-gray-500 dark:text-gray-400">({{ ($lastDeployRun['trigger'] ?? '') === 'auto' ? 'automatisch nach Deploy' : 'per Knopf' }})</span>
+                @if($lastDeployRun['ok'] ?? false)
+                    <span class="text-green-600 dark:text-green-400 font-medium">erfolgreich</span>
+                @else
+                    <span class="text-red-600 dark:text-red-400 font-medium">fehlgeschlagen, bitte von Hand wiederholen</span>
+                    @foreach(collect($lastDeployRun['output'] ?? [])->filter(fn ($line) => str_starts_with((string) $line, 'FEHLER')) as $command => $line)
+                        <pre class="mt-2 text-xs bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap text-red-700 dark:text-red-300">{{ $command }}: {{ $line }}</pre>
+                    @endforeach
+                @endif
+            </div>
+        @endif
 
         <form method="POST" action="{{ route('admin.deploy-refresh') }}"
               onsubmit="return confirm('Migrationen ausfuehren und Caches leeren?')">

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Artisan;
+use App\Services\DeployFinisher;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -12,35 +12,20 @@ use Illuminate\Support\Facades\Log;
  * The hosting has no SSH access, so this replaces the artisan commands that
  * would otherwise be run on the server. It sits behind auth and an admin check
  * instead of the shared token the earlier deploy scripts used.
+ *
+ * Normally the FinishDeploy middleware does this on its own after a deploy;
+ * the button is for a second try or a run on demand.
  */
 class DeployController extends Controller
 {
-    protected const COMMANDS = [
-        'migrate' => ['--force' => true],
-        'view:clear' => [],
-        'cache:clear' => [],
-        'route:clear' => [],
-        'config:clear' => [],
-    ];
-
-    public function refresh()
+    public function refresh(DeployFinisher $finisher)
     {
         abort_unless(auth()->user()?->isAdmin(), 403);
 
-        $output = [];
+        $result = $finisher->run('button');
 
-        foreach (self::COMMANDS as $command => $parameters) {
-            try {
-                Artisan::call($command, $parameters);
-                $output[$command] = trim(Artisan::output());
-            } catch (\Throwable $e) {
-                $output[$command] = 'FEHLER: ' . $e->getMessage();
-                Log::error("Deploy refresh failed on '{$command}'", ['error' => $e->getMessage()]);
-            }
-        }
+        Log::info('Deploy refresh ausgefuehrt', ['user_id' => auth()->id(), 'ok' => $result['ok']]);
 
-        Log::info('Deploy refresh ausgefuehrt', ['user_id' => auth()->id()]);
-
-        return back()->with('deployOutput', $output);
+        return back()->with('deployOutput', $result['output']);
     }
 }

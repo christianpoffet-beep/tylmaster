@@ -12,6 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->remove(\Illuminate\Http\Middleware\ValidatePostSize::class);
+        // No SSH on the hosting: the first request after a deploy runs its migrations.
+        $middleware->web(prepend: [\App\Http\Middleware\FinishDeploy::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
