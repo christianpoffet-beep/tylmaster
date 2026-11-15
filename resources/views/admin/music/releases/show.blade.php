@@ -191,8 +191,26 @@
         </x-admin.collapsible-card>
     @endif
 
-    {{-- Tracklist --}}
+    {{-- Tracklist: plays as an album in the global player, from the first song or any other --}}
+    @php
+        $album = $release->playerQueue();
+        $queuePosition = collect($album['items'])->pluck('trackId')->flip();
+        $withoutAudio = $release->tracks->count() - count($album['items']);
+    @endphp
+    <div x-data="{ album: @js($album) }">
     <x-admin.collapsible-card title="Tracklist" :count="$release->tracks->count()" class="mt-6">
+        @if(count($album['items']))
+            <x-slot:actions>
+                <button type="button"
+                        @click="$store.player.isCurrent(album.id) ? $store.player.toggle() : $store.player.playQueue(album, 0)"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition"
+                        title="{{ $withoutAudio ? count($album['items']) . ' von ' . $release->tracks->count() . ' Tracks haben eine Audiodatei' : 'Alle Tracks nacheinander abspielen' }}">
+                    <svg x-show="!($store.player.isCurrent(album.id) && $store.player.playing)" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <svg x-show="$store.player.isCurrent(album.id) && $store.player.playing" x-cloak class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    <span x-text="$store.player.isCurrent(album.id) ? ($store.player.playing ? 'Pause' : 'Weiter abspielen') : 'Album abspielen'">Album abspielen</span>
+                </button>
+            </x-slot:actions>
+        @endif
         @if($release->tracks->count())
             @php $hasRoles = $release->tracks->contains(fn($t) => $t->pivot->role && $t->pivot->role !== 'main'); @endphp
             <div class="overflow-x-auto">
@@ -210,17 +228,23 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
                         @foreach($release->tracks->sortBy(['pivot.disc_number', 'pivot.track_number']) as $track)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                            @php $position = $queuePosition[$track->id] ?? null; @endphp
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                @if($position !== null) :class="$store.player.isCurrent(album.id, {{ $position }}) && 'bg-blue-50/70 dark:bg-blue-900/20'" @endif>
                                 <td class="py-2 pr-3 text-sm text-gray-400 dark:text-gray-500 font-mono text-right">
                                     {{ $track->pivot->track_number ?? $loop->iteration }}
                                 </td>
                                 <td class="py-2 px-3 text-sm">
                                     <div class="flex items-center gap-2">
-                                        @if($track->mainAudioFile)
+                                        @if($position !== null)
+                                            {{-- Starts the album here; on the song that is playing, pauses and continues --}}
                                             <button type="button"
-                                                    @click="$dispatch('play-track', @js($track->mainAudioFile->playerPayload()))"
-                                                    class="w-6 h-6 flex items-center justify-center rounded-full bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white transition flex-shrink-0">
-                                                <svg class="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                                    @click="$store.player.playQueue(album, {{ $position }})"
+                                                    :title="$store.player.isCurrent(album.id, {{ $position }}) && $store.player.playing ? 'Pause' : 'Album ab hier abspielen'"
+                                                    class="w-6 h-6 flex items-center justify-center rounded-full bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white transition flex-shrink-0"
+                                                    :class="$store.player.isCurrent(album.id, {{ $position }}) && 'ring-2 ring-blue-300 dark:ring-blue-500'">
+                                                <svg x-show="!($store.player.isCurrent(album.id, {{ $position }}) && $store.player.playing)" class="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                                <svg x-show="$store.player.isCurrent(album.id, {{ $position }}) && $store.player.playing" x-cloak class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                                             </button>
                                         @endif
                                         <a href="{{ route('admin.tracks.show', $track) }}" class="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">
@@ -249,6 +273,7 @@
             <p class="text-sm text-gray-500 dark:text-gray-400">Keine Tracks zugewiesen.</p>
         @endif
     </x-admin.collapsible-card>
+    </div>
 
     {{-- Band --}}
     @php $bands = $release->organizations->where('type', 'band'); @endphp
