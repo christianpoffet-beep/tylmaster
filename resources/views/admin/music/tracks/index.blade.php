@@ -4,37 +4,59 @@
 
 @section('content')
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-    <form method="GET" action="{{ route('admin.tracks.index') }}" class="flex flex-wrap gap-2">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Titel, Alternativtitel oder ISRC suchen..." class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-        <select name="status" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+    @php
+        $filterClass = 'rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500';
+        $isFiltered = collect(request()->only(['search', 'status', 'band', 'genre', 'release', 'recording_year']))->filter(fn ($v) => filled($v))->isNotEmpty();
+    @endphp
+    {{-- Dropdowns filter right away; the search runs on Enter or "Filtern". --}}
+    <form method="GET" action="{{ route('admin.tracks.index') }}" class="flex flex-wrap items-center gap-2">
+        @foreach(['sort', 'dir'] as $keep)
+            @if(request($keep))<input type="hidden" name="{{ $keep }}" value="{{ request($keep) }}">@endif
+        @endforeach
+        <input type="search" name="search" value="{{ request('search') }}"
+               placeholder="Suchen: Titel, Band, Person, Produkt, ISRC …"
+               title="Jedes Wort muss irgendwo vorkommen: Titel, Alternativtitel, Version, ISRC, Band, Label, Publisher, Credits, Produkt, Projekt, Genre, Aufnahmeort, Notizen. Mehrere Wörter als &quot;Phrase&quot; in Anführungszeichen."
+               class="{{ $filterClass }} w-full sm:w-80">
+        @if($bands->isNotEmpty())
+            <select name="band" onchange="this.form.submit()" class="{{ $filterClass }}">
+                <option value="">Alle Bands</option>
+                @foreach($bands as $band)
+                    <option value="{{ $band->id }}" @selected(request('band') == $band->id)>{{ $band->primary_name }}</option>
+                @endforeach
+            </select>
+        @endif
+        <select name="status" onchange="this.form.submit()" class="{{ $filterClass }}">
             <option value="">Alle Status</option>
             @foreach(['draft' => 'Draft', 'released' => 'Released', 'archived' => 'Archived'] as $v => $l)
-                <option value="{{ $v }}" {{ request('status') === $v ? 'selected' : '' }}>{{ $l }}</option>
+                <option value="{{ $v }}" @selected(request('status') === $v)>{{ $l }}</option>
             @endforeach
         </select>
-        <select name="genre" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-            <option value="">Alle Genres</option>
-            @foreach($genres as $genre)
-                <option value="{{ $genre->id }}" {{ request('genre') == $genre->id ? 'selected' : '' }}>{{ $genre->name }}</option>
-            @endforeach
-        </select>
-        <select name="release" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+        @if($genres->isNotEmpty())
+            <select name="genre" onchange="this.form.submit()" class="{{ $filterClass }}">
+                <option value="">Alle Genres</option>
+                @foreach($genres as $genre)
+                    <option value="{{ $genre }}" @selected(request('genre') === $genre)>{{ $genre }}</option>
+                @endforeach
+            </select>
+        @endif
+        <select name="release" onchange="this.form.submit()" class="{{ $filterClass }}">
             <option value="">Alle Produkte</option>
             @foreach($releases as $release)
-                <option value="{{ $release->id }}" {{ request('release') == $release->id ? 'selected' : '' }}>{{ $release->title }}</option>
+                <option value="{{ $release->id }}" @selected(request('release') == $release->id)>{{ $release->title }}</option>
             @endforeach
         </select>
         @if($recordingYears->count())
-            <select name="recording_year" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+            <select name="recording_year" onchange="this.form.submit()" class="{{ $filterClass }}">
                 <option value="">Alle Aufnahmejahre</option>
                 @foreach($recordingYears as $year)
-                    <option value="{{ $year }}" {{ request('recording_year') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                    <option value="{{ $year }}" @selected(request('recording_year') == $year)>{{ $year }}</option>
                 @endforeach
             </select>
         @endif
         <button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">Filtern</button>
-        @if(request('search') || request('status') || request('genre') || request('release') || request('recording_year'))
-            <a href="{{ route('admin.tracks.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-300">Zurücksetzen</a>
+        @if($isFiltered)
+            <a href="{{ route('admin.tracks.index') }}" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-300">Zurücksetzen</a>
+            <span class="text-sm text-gray-500 dark:text-gray-400">{{ $tracks->total() }} {{ $tracks->total() === 1 ? 'Track' : 'Tracks' }} gefunden</span>
         @endif
     </form>
     <a href="{{ route('admin.tracks.create') }}" class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 whitespace-nowrap">+ Neuer Track</a>

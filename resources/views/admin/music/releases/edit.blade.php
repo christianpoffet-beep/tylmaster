@@ -164,7 +164,7 @@
                 <div class="max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
                     @foreach($allTracks as $track)
                         <label class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer"
-                            x-show="!trackFilter || @js($track->search_haystack).includes(trackFilter.toLowerCase())" x-cloak>
+                            x-show="!trackFilter || trackFilter.toLowerCase().split(/\s+/).filter(Boolean).every(term => @js($track->search_haystack).includes(term))" x-cloak>
                             <input type="checkbox" name="track_ids[]" value="{{ $track->id }}"
                                 {{ in_array($track->id, $selectedTrackIds) ? 'checked' : '' }}
                                 class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0">
