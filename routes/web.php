@@ -118,6 +118,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('contracts-search', [ContractController::class, 'search'])->name('contracts.search');
     Route::get('contracts-logo-search', [ContractController::class, 'logoSearch'])->name('contracts.logo-search');
     Route::get('tracks-search', [TrackController::class, 'search'])->name('tracks.search');
+    Route::get('tracks-isrc/next', [TrackController::class, 'nextIsrc'])->name('tracks.nextIsrc');
+    Route::get('tracks-isrc/check', [TrackController::class, 'checkIsrc'])->name('tracks.checkIsrc');
     Route::get('artworks-search', [ArtworkController::class, 'search'])->name('artworks.search');
     Route::get('releases-search', [ReleaseController::class, 'search'])->name('releases.search');
     Route::get('releases-next-catalog-number', [ReleaseController::class, 'nextCatalogNumber'])->name('releases.nextCatalogNumber');

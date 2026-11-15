@@ -10,6 +10,7 @@ use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Contract;
 use App\Models\Organization;
+use App\Services\IsrcRegistry;
 use App\Services\TrackMetadataTransfer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -118,7 +119,7 @@ class TrackController extends Controller
         $this->syncAudioFiles($track, $request);
         $this->syncRelations($track, $request);
 
-        return $this->withDuplicateTitleWarning(
+        return $this->withDuplicateWarnings(
             redirect()->route('admin.tracks.show', $track)->with('success', 'Track erstellt.'),
             $track
         );
@@ -281,7 +282,7 @@ class TrackController extends Controller
         $this->syncAudioFiles($track, $request);
         $this->syncRelations($track, $request);
 
-        return $this->withDuplicateTitleWarning(
+        return $this->withDuplicateWarnings(
             redirect()->route('admin.tracks.show', $track)->with('success', 'Track aktualisiert.'),
             $track
         );
@@ -626,11 +627,46 @@ class TrackController extends Controller
     }
 
     /**
-     * A doublette in the catalogue usually shows up as an alternative title that
-     * another track already carries as its own title. Worth pointing out - but
-     * only as a hint, the save itself goes through.
+     * The next free ISRC for the form's "Generieren" button. The codes already
+     * typed into the form (not saved yet) come along as taken[], so several
+     * versions in one form get different numbers.
      */
-    private function withDuplicateTitleWarning(RedirectResponse $redirect, Track $track): RedirectResponse
+    public function nextIsrc(Request $request, IsrcRegistry $isrcs)
+    {
+        $taken = array_filter((array) $request->input('taken', []), 'is_string');
+
+        try {
+            $code = $isrcs->next($taken);
+        } catch (\OverflowException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['isrc' => $code, 'formatted' => Track::formatIsrc($code)]);
+    }
+
+    /** Where else an ISRC is in use, for the warning under the field. */
+    public function checkIsrc(Request $request, IsrcRegistry $isrcs)
+    {
+        $trackId = $request->filled('track') ? (int) $request->input('track') : null;
+
+        return response()->json(['duplicates' => $isrcs->duplicates($request->input('isrc'), $trackId)]);
+    }
+
+    /**
+     * Hints after saving - the save itself always goes through:
+     * - an alternative title that another track carries as its own title, the
+     *   usual shape of a doublette in the catalogue;
+     * - an ISRC (of the track or one of its versions) that another track
+     *   already uses.
+     */
+    private function withDuplicateWarnings(RedirectResponse $redirect, Track $track): RedirectResponse
+    {
+        $warnings = array_filter([$this->duplicateTitleWarning($track), $this->duplicateIsrcWarning($track)]);
+
+        return $warnings ? $redirect->with('warning', implode(' ', $warnings)) : $redirect;
+    }
+
+    private function duplicateTitleWarning(Track $track): ?string
     {
         $needles = collect($track->alternative_titles ?? [])
             ->map(fn ($title) => mb_strtolower(trim($title)))
@@ -638,7 +674,7 @@ class TrackController extends Controller
             ->all();
 
         if (!$needles) {
-            return $redirect;
+            return null;
         }
 
         $clashes = Track::where('id', '!=', $track->id)
@@ -650,12 +686,39 @@ class TrackController extends Controller
             ->pluck('title');
 
         if ($clashes->isEmpty()) {
-            return $redirect;
+            return null;
         }
 
-        return $redirect->with('warning', $clashes->count() === 1
+        return $clashes->count() === 1
             ? 'Achtung: Der Track "' . $clashes->first() . '" trägt diesen Titel bereits. Allenfalls eine Doublette?'
-            : 'Achtung: Die Tracks "' . $clashes->join('", "') . '" tragen diese Titel bereits. Allenfalls Doubletten?');
+            : 'Achtung: Die Tracks "' . $clashes->join('", "') . '" tragen diese Titel bereits. Allenfalls Doubletten?';
+    }
+
+    private function duplicateIsrcWarning(Track $track): ?string
+    {
+        $isrcs = app(IsrcRegistry::class);
+        $codes = collect([$track->isrc])
+            ->merge($track->audioFiles()->pluck('isrc'))
+            ->map(fn ($code) => Track::normalizeIsrc($code))
+            ->filter()
+            ->unique();
+
+        // Two versions of this very track with the same code
+        $ownVersions = $track->audioFiles()->pluck('isrc')->map(fn ($code) => Track::normalizeIsrc($code))->filter();
+        $doubledHere = $ownVersions->duplicates()->unique()->values();
+
+        $messages = [];
+        foreach ($codes as $code) {
+            $elsewhere = $isrcs->duplicates($code, $track->id)->pluck('label');
+            if ($elsewhere->isNotEmpty()) {
+                $messages[] = 'ISRC ' . Track::formatIsrc($code) . ' ist bereits vergeben: ' . $elsewhere->join(', ') . '.';
+            }
+        }
+        foreach ($doubledHere as $code) {
+            $messages[] = 'ISRC ' . Track::formatIsrc($code) . ' steht bei mehreren Audioversionen dieses Tracks.';
+        }
+
+        return $messages ? 'Achtung: ' . implode(' ', $messages) : null;
     }
 
     /** Blank rows and duplicates are dropped so the stored JSON stays a clean list. */
