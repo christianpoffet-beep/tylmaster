@@ -84,6 +84,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::resource('tracks', TrackController::class);
     Route::get('tracks/{track}/copy-metadata', [TrackController::class, 'copyMetadata'])->name('tracks.copyMetadata');
     Route::get('tracks/{track}/download', [TrackController::class, 'download'])->name('tracks.download');
+    Route::get('tracks/{track}/audio-files/{audioFile}/download', [TrackController::class, 'downloadAudioFile'])->name('tracks.audioFiles.download');
     Route::post('tracks/bulk-update', [TrackController::class, 'bulkUpdate'])->name('tracks.bulkUpdate');
     Route::resource('releases', ReleaseController::class);
 

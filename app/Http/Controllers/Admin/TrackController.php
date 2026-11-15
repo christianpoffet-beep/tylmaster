@@ -4,25 +4,28 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Track;
+use App\Models\TrackAudioFile;
 use App\Models\Release;
 use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Contract;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class TrackController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Track::with(['releases', 'organizations', 'contacts']);
+        $query = Track::with(['releases', 'organizations', 'contacts', 'mainAudioFile']);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
                   ->orWhere('isrc', 'like', "%{$search}%")
+                  // The ISRC of any version finds its track, typed with or without dashes.
+                  ->when(Track::normalizeIsrc($search), fn ($q, $isrc) => $q->orWhereHas('audioFiles', fn ($a) => $a->where('isrc', 'like', "%{$isrc}%")))
                   ->orWhere('version', 'like', "%{$search}%")
                   ->orWhere('composers', 'like', "%{$search}%")
                   ->orWhere('producers', 'like', "%{$search}%")
@@ -95,9 +98,10 @@ class TrackController extends Controller
             'musical_key' => 'nullable|string|in:' . implode(',', Track::MUSICAL_KEYS),
             'recording_location' => 'nullable|string|max:255',
             'recording_years' => ['nullable', 'string', 'max:50', 'regex:' . Track::RECORDING_YEARS_REGEX],
-            'audio_file' => 'nullable|file|mimes:mp3,wav,flac,aac,m4a,ogg|max:307200',
+            ...$this->audioFileRules(),
         ], [
             'recording_years.regex' => 'Bitte ein Jahr (z.B. 2026) oder einen Zeitraum (z.B. 2024 - 2026) erfassen.',
+            ...$this->audioFileMessages(),
         ]);
 
         // Clean ISRC: strip dashes
@@ -107,21 +111,9 @@ class TrackController extends Controller
 
         $validated = $this->normalizeTitlesAndRecording($validated, $request);
 
-        if ($request->hasFile('audio_file')) {
-            $file = $request->file('audio_file');
-            $ext = strtolower($file->getClientOriginalExtension());
-            $name = substr(bin2hex(random_bytes(10)), 0, 20) . '.' . $ext;
-            $validated['audio_file_path'] = $file->storeAs('tracks', $name, 'public');
-            $validated['audio_format'] = $ext;
+        $track = Track::create($this->withoutAudioInput($validated));
 
-            // Extract audio metadata via getID3
-            $meta = $this->extractAudioMetadata($file->getRealPath());
-            $validated = array_merge($validated, $meta);
-        }
-        unset($validated['audio_file']);
-
-        $track = Track::create($validated);
-
+        $this->syncAudioFiles($track, $request);
         $this->syncRelations($track, $request);
 
         return $this->withDuplicateTitleWarning(
@@ -190,7 +182,7 @@ class TrackController extends Controller
 
     public function show(Track $track)
     {
-        $track->load(['releases.artworks.images', 'releases.artworks.logos', 'releases.artworks.credits.creditable', 'contacts', 'projects', 'contracts', 'organizations', 'documents']);
+        $track->load(['releases.artworks.images', 'releases.artworks.logos', 'releases.artworks.credits.creditable', 'contacts', 'projects', 'contracts', 'organizations', 'documents', 'audioFiles']);
         return view('admin.music.tracks.show', compact('track'));
     }
 
@@ -200,7 +192,7 @@ class TrackController extends Controller
         $genres = Genre::orderBy('name')->get();
         $projects = Project::orderBy('name')->get();
         $contracts = Contract::orderBy('title')->get();
-        $track->load(['contacts', 'releases', 'organizations', 'projects', 'contracts']);
+        $track->load(['contacts', 'releases', 'organizations', 'projects', 'contracts', 'audioFiles']);
         return view('admin.music.tracks.edit', compact('track', 'releases', 'genres', 'projects', 'contracts'));
     }
 
@@ -223,9 +215,10 @@ class TrackController extends Controller
             'musical_key' => 'nullable|string|in:' . implode(',', Track::MUSICAL_KEYS),
             'recording_location' => 'nullable|string|max:255',
             'recording_years' => ['nullable', 'string', 'max:50', 'regex:' . Track::RECORDING_YEARS_REGEX],
-            'audio_file' => 'nullable|file|mimes:mp3,wav,flac,aac,m4a,ogg|max:307200',
+            ...$this->audioFileRules(),
         ], [
             'recording_years.regex' => 'Bitte ein Jahr (z.B. 2026) oder einen Zeitraum (z.B. 2024 - 2026) erfassen.',
+            ...$this->audioFileMessages(),
         ]);
 
         if (!empty($validated['isrc'])) {
@@ -234,21 +227,9 @@ class TrackController extends Controller
 
         $validated = $this->normalizeTitlesAndRecording($validated, $request);
 
-        if ($request->hasFile('audio_file')) {
-            $file = $request->file('audio_file');
-            $ext = strtolower($file->getClientOriginalExtension());
-            $name = substr(bin2hex(random_bytes(10)), 0, 20) . '.' . $ext;
-            $validated['audio_file_path'] = $file->storeAs('tracks', $name, 'public');
-            $validated['audio_format'] = $ext;
+        $track->update($this->withoutAudioInput($validated));
 
-            // Extract audio metadata via getID3
-            $meta = $this->extractAudioMetadata($file->getRealPath());
-            $validated = array_merge($validated, $meta);
-        }
-        unset($validated['audio_file']);
-
-        $track->update($validated);
-
+        $this->syncAudioFiles($track, $request);
         $this->syncRelations($track, $request);
 
         return $this->withDuplicateTitleWarning(
@@ -257,16 +238,34 @@ class TrackController extends Controller
         );
     }
 
+    /** The main version - what the download icon in the tracklist hands out. */
     public function download(Track $track)
     {
-        if (!$track->audio_file_path || !Storage::disk('public')->exists($track->audio_file_path)) {
+        $audioFile = $track->mainAudioFile;
+
+        if (!$audioFile) {
             abort(404, 'Audiodatei nicht gefunden.');
         }
 
-        $extension = pathinfo($track->audio_file_path, PATHINFO_EXTENSION);
-        $filename = Str::slug($track->display_title) . '.' . $extension;
+        return $this->sendAudioFile($audioFile);
+    }
 
-        return Storage::disk('public')->download($track->audio_file_path, $filename);
+    public function downloadAudioFile(Track $track, TrackAudioFile $audioFile)
+    {
+        if ((int) $audioFile->track_id !== (int) $track->id) {
+            abort(404);
+        }
+
+        return $this->sendAudioFile($audioFile);
+    }
+
+    private function sendAudioFile(TrackAudioFile $audioFile)
+    {
+        if (!Storage::disk('public')->exists($audioFile->file_path)) {
+            abort(404, 'Audiodatei nicht gefunden.');
+        }
+
+        return Storage::disk('public')->download($audioFile->file_path, $audioFile->download_name);
     }
 
     public function destroy(Track $track)
@@ -384,6 +383,172 @@ class TrackController extends Controller
         }
     }
 
+    private function audioFileRules(): array
+    {
+        $isrc = ['nullable', 'string', 'max:20', 'regex:' . Track::ISRC_REGEX];
+
+        return [
+            'audio_files' => 'nullable|array',
+            'audio_files.*.file' => 'nullable|file|mimes:mp3,wav,flac,aac,m4a,ogg|max:307200',
+            'audio_files.*.title' => 'nullable|string|max:255',
+            'audio_files.*.isrc' => $isrc,
+            'audio_files.*.notes' => 'nullable|string|max:2000',
+            'existing_audio_files' => 'nullable|array',
+            'existing_audio_files.*.title' => 'nullable|string|max:255',
+            'existing_audio_files.*.isrc' => $isrc,
+            'existing_audio_files.*.notes' => 'nullable|string|max:2000',
+            'existing_audio_files.*.delete' => 'nullable|boolean',
+            'main_audio_file' => ['nullable', 'string', 'regex:/^(existing|new):[A-Za-z0-9_-]+$/'],
+        ];
+    }
+
+    private function audioFileMessages(): array
+    {
+        $isrc = 'Bitte einen gültigen ISRC erfassen (z.B. CH-TYL-26-00001).';
+
+        return [
+            'audio_files.*.isrc.regex' => $isrc,
+            'existing_audio_files.*.isrc.regex' => $isrc,
+            'audio_files.*.file.mimes' => 'Erlaubt sind MP3, WAV, FLAC, AAC, M4A und OGG.',
+            'audio_files.*.file.max' => 'Eine Audiodatei darf höchstens 300 MB gross sein.',
+            'audio_files.*.file.uploaded' => 'Die Datei kam nicht vollständig an, vermutlich ist sie grösser, als der Server annimmt.',
+        ];
+    }
+
+    /** The version fields are handled by syncAudioFiles(), not written onto the track. */
+    private function withoutAudioInput(array $validated): array
+    {
+        unset($validated['audio_files'], $validated['existing_audio_files'], $validated['main_audio_file']);
+
+        return $validated;
+    }
+
+    /**
+     * Existing versions only change in the fields the form actually sent, and
+     * only get removed when their delete flag (set by Alpine) says so. A save
+     * without the audio section therefore leaves every version as it was.
+     */
+    private function syncAudioFiles(Track $track, Request $request): void
+    {
+        $mainBefore = $track->audioFiles()->where('is_main', true)->value('id');
+
+        foreach ((array) $request->input('existing_audio_files', []) as $id => $data) {
+            $audioFile = $track->audioFiles()->whereKey($id)->first();
+            if (!$audioFile || !is_array($data)) continue;
+
+            if (!empty($data['delete'])) {
+                $this->deleteAudioFile($audioFile);
+                continue;
+            }
+
+            $audioFile->update($this->audioFileFields($data));
+        }
+
+        // New uploads, remembered by the row key the form gave them so the
+        // main-version radio ("new:<key>") can point at one of them.
+        $rows = (array) $request->input('audio_files', []);
+        $created = [];
+        $sortOrder = (int) $track->audioFiles()->reorder()->max('sort_order');
+
+        foreach (array_keys($rows + (array) $request->file('audio_files', [])) as $key) {
+            $upload = $request->file("audio_files.{$key}.file");
+            if (!$upload instanceof UploadedFile) continue;
+
+            $created[(string) $key] = $this->storeAudioFile($track, $upload, (array) ($rows[$key] ?? []), ++$sortOrder);
+        }
+
+        $this->applyMainSelection($track, $request->input('main_audio_file'), $created);
+
+        // As before with the single file: the duration follows the audio. Now
+        // it is the main version's, whenever a different one takes that place.
+        $main = $track->audioFiles()->where('is_main', true)->first();
+        if ($main && $main->id !== (int) $mainBefore && $main->duration_seconds) {
+            $track->update(['duration_seconds' => $main->duration_seconds]);
+        }
+    }
+
+    /** Title, ISRC and remark - each only if it was submitted. */
+    private function audioFileFields(array $data): array
+    {
+        $fields = [];
+
+        foreach (['title', 'notes'] as $field) {
+            if (array_key_exists($field, $data)) {
+                $fields[$field] = filled($data[$field]) ? trim($data[$field]) : null;
+            }
+        }
+
+        if (array_key_exists('isrc', $data)) {
+            $fields['isrc'] = Track::normalizeIsrc($data['isrc']);
+        }
+
+        return $fields;
+    }
+
+    private function storeAudioFile(Track $track, UploadedFile $upload, array $data, int $sortOrder): TrackAudioFile
+    {
+        $ext = strtolower($upload->getClientOriginalExtension());
+        $meta = $this->extractAudioMetadata($upload->getRealPath());
+        $path = $upload->storeAs('tracks', bin2hex(random_bytes(10)) . '.' . $ext, 'public');
+
+        return $track->audioFiles()->create(array_merge([
+            'file_path' => $path,
+            'original_name' => $upload->getClientOriginalName(),
+            'file_size' => $upload->getSize(),
+            'audio_format' => $ext ?: null,
+            'is_main' => false,
+            'sort_order' => $sortOrder,
+        ], $meta, $this->audioFileFields($data)));
+    }
+
+    /** "existing:<id>" or "new:<row key>"; anything that does not resolve keeps the current main. */
+    private function applyMainSelection(Track $track, ?string $selector, array $created): void
+    {
+        $chosen = null;
+
+        if ($selector && preg_match('/^(existing|new):(.+)$/', $selector, $m)) {
+            $chosen = $m[1] === 'existing'
+                ? $track->audioFiles()->whereKey((int) $m[2])->first()
+                : ($created[$m[2]] ?? null);
+        }
+
+        if ($chosen) {
+            $track->audioFiles()->reorder()->where('id', '!=', $chosen->id)->update(['is_main' => false]);
+            $chosen->update(['is_main' => true]);
+        }
+
+        $this->ensureExactlyOneMain($track);
+    }
+
+    /** As soon as a track has audio, exactly one version is the main one. */
+    private function ensureExactlyOneMain(Track $track): void
+    {
+        $byOrder = fn () => $track->audioFiles()->reorder()->orderBy('sort_order')->orderBy('id');
+
+        $mains = $byOrder()->where('is_main', true)->pluck('id');
+
+        if ($mains->count() > 1) {
+            $track->audioFiles()->reorder()->whereIn('id', $mains->slice(1)->all())->update(['is_main' => false]);
+        } elseif ($mains->isEmpty()) {
+            $byOrder()->first()?->update(['is_main' => true]);
+        }
+    }
+
+    /**
+     * Removes the version and its file. Only files this form uploaded itself
+     * (under tracks/) are deleted from storage, and only once no other version
+     * points at them - an imported submission keeps its own file.
+     */
+    private function deleteAudioFile(TrackAudioFile $audioFile): void
+    {
+        $path = $audioFile->file_path;
+        $audioFile->delete();
+
+        if (str_starts_with($path, 'tracks/') && !TrackAudioFile::where('file_path', $path)->exists()) {
+            Storage::disk('public')->delete($path);
+        }
+    }
+
     /**
      * The alternative titles come from an Alpine repeater, so the same guard as
      * the relation sections applies: without the marker the section never
@@ -475,8 +640,9 @@ class TrackController extends Controller
             if (!empty($info['audio']['channels'])) {
                 $meta['channels'] = (int) $info['audio']['channels'];
             }
-            if (!empty($info['fileformat'])) {
-                $meta['audio_format'] = strtolower($info['fileformat']);
+            // A WAV reports its container ("riff") as fileformat; the data format is what matters.
+            if (!empty($info['audio']['dataformat']) || !empty($info['fileformat'])) {
+                $meta['audio_format'] = strtolower($info['audio']['dataformat'] ?? $info['fileformat']);
             }
         } catch (\Exception $e) {
             // Silently fail — metadata is optional
@@ -493,6 +659,7 @@ class TrackController extends Controller
             $query->where(function ($qb) use ($q) {
                 $qb->where('title', 'like', "%{$q}%")
                    ->orWhere('isrc', 'like', "%{$q}%")
+                   ->when(Track::normalizeIsrc($q), fn ($qb, $isrc) => $qb->orWhereHas('audioFiles', fn ($a) => $a->where('isrc', 'like', "%{$isrc}%")))
                    // Alternative titles sit in a JSON column, so the LIKE runs over its raw text.
                    ->orWhereRaw('LOWER(alternative_titles) LIKE ?', ['%' . mb_strtolower($q) . '%']);
             });

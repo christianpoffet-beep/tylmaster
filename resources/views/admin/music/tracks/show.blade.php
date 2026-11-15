@@ -223,24 +223,45 @@
         </dl>
     </div>
 
-    {{-- Audio --}}
-    @if($track->audio_file_path)
-        <div class="mt-6 flex items-center gap-3" x-data>
-            <button type="button"
-                    @click="$dispatch('play-track', { title: '{{ addslashes($track->display_title) }}', artist: '{{ addslashes($track->organizations->where("type", "band")->pluck("primary_name")->join(", ")) }}', url: '{{ Storage::disk('public')->url($track->audio_file_path) }}' })"
-                    class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white transition flex-shrink-0">
-                <svg class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            </button>
-            <div>
-                <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ basename($track->audio_file_path) }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ strtoupper($track->audio_format ?? pathinfo($track->audio_file_path, PATHINFO_EXTENSION)) }}
-                    @if($track->bitrate) &middot; {{ $track->bitrate }} kbps @endif
-                    @if($track->sample_rate) &middot; {{ number_format($track->sample_rate) }} Hz @endif
-                    @if($track->channels) &middot; {{ $track->channels == 1 ? 'Mono' : 'Stereo' }} @endif
-                </p>
+    {{-- Audio: alle Versionen, Main Version zuoberst --}}
+    @if($track->audioFiles->isNotEmpty())
+        <x-admin.collapsible-card title="Audiodateien" :count="$track->audioFiles->count()" class="mt-6">
+            <div class="divide-y divide-gray-100 dark:divide-gray-700/60">
+                @foreach($track->audioFiles as $audioFile)
+                    <div class="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                        <button type="button" title="Abspielen"
+                                @click="$dispatch('play-track', @js($audioFile->playerPayload()))"
+                                class="w-9 h-9 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white transition flex-shrink-0">
+                            <svg class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $audioFile->label }}</span>
+                                @if($audioFile->is_main)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">Main Version</span>
+                                @endif
+                            </div>
+                            @if($audioFile->isrc)
+                                <p class="mt-0.5 text-xs text-gray-600 dark:text-gray-300"><span class="text-gray-400 dark:text-gray-500">ISRC</span> <span class="font-mono">{{ $audioFile->isrc_formatted }}</span></p>
+                            @endif
+                            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 break-all">
+                                @if($audioFile->title){{ $audioFile->original_name ?: basename($audioFile->file_path) }} &middot; @endif{{ $audioFile->technical_summary }}
+                            </p>
+                            @if($audioFile->notes)
+                                <p class="mt-1.5 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ $audioFile->notes }}</p>
+                            @endif
+                        </div>
+
+                        <a href="{{ route('admin.tracks.audioFiles.download', [$track, $audioFile]) }}"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex-shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            <span class="hidden sm:inline">Download</span>
+                        </a>
+                    </div>
+                @endforeach
             </div>
-        </div>
+        </x-admin.collapsible-card>
     @endif
 
     {{-- Releases --}}

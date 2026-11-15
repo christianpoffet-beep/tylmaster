@@ -9,11 +9,15 @@ class Track extends Model
 {
     use LogsActivity;
 
+    /*
+     * The columns audio_file_path, bitrate, sample_rate, audio_format and
+     * channels still exist on the table but are no longer used: the audio now
+     * lives in track_audio_files, one row per version (see audioFiles()).
+     */
     protected $fillable = [
         'title', 'version', 'alternative_titles', 'isrc', 'genre', 'duration_seconds', 'status',
         'composers', 'producers', 'language', 'description',
         'bpm', 'musical_key', 'recording_location', 'recording_years',
-        'audio_file_path', 'bitrate', 'sample_rate', 'audio_format', 'channels',
     ];
 
     protected $casts = [
@@ -97,6 +101,22 @@ class Track extends Model
         return $this->belongsToMany(Release::class, 'product_track')
             ->withPivot('track_number', 'disc_number', 'role')
             ->withTimestamps();
+    }
+
+    /** All audio versions, main version first. */
+    public function audioFiles()
+    {
+        return $this->hasMany(TrackAudioFile::class)
+            ->chaperone()
+            ->orderByDesc('is_main')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
+    /** The version that lists, products and the player use for this track. */
+    public function mainAudioFile()
+    {
+        return $this->hasOne(TrackAudioFile::class)->chaperone()->where('is_main', true);
     }
 
     public const INSTRUMENTS = [
@@ -232,9 +252,23 @@ class Track extends Model
 
     public function getIsrcFormattedAttribute(): ?string
     {
-        if (!$this->isrc) return null;
-        $clean = strtoupper(preg_replace('/[^A-Z0-9]/i', '', $this->isrc));
-        if (strlen($clean) !== 12) return $this->isrc;
+        return static::formatIsrc($this->isrc);
+    }
+
+    /** How an ISRC is stored: uppercase, without dashes. */
+    public static function normalizeIsrc(?string $isrc): ?string
+    {
+        $clean = strtoupper(preg_replace('/[^A-Z0-9]/i', '', (string) $isrc));
+
+        return $clean !== '' ? $clean : null;
+    }
+
+    /** CHTYL2600001 becomes CH-TYL-26-00001; anything that is not 12 characters stays as it is. */
+    public static function formatIsrc(?string $isrc): ?string
+    {
+        if (!$isrc) return null;
+        $clean = strtoupper(preg_replace('/[^A-Z0-9]/i', '', $isrc));
+        if (strlen($clean) !== 12) return $isrc;
         return substr($clean, 0, 2) . '-' . substr($clean, 2, 3) . '-' . substr($clean, 5, 2) . '-' . substr($clean, 7, 5);
     }
 

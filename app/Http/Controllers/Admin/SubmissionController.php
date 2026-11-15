@@ -158,9 +158,16 @@ class SubmissionController extends Controller
                     'title' => $submission->track_title,
                     'genre' => $submission->genre,
                     'release_id' => $release->id,
-                    'audio_file_path' => $submission->file_path,
                     'status' => 'pending',
                 ]);
+                if ($submission->file_path) {
+                    $track->audioFiles()->create([
+                        'file_path' => $submission->file_path,
+                        'original_name' => basename($submission->file_path),
+                        'audio_format' => strtolower(pathinfo($submission->file_path, PATHINFO_EXTENSION)) ?: null,
+                        'is_main' => true,
+                    ]);
+                }
                 $track->contacts()->attach($contact->id, ['role' => 'artist']);
             }
             return;
