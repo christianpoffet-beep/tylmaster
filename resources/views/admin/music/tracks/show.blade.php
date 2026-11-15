@@ -29,7 +29,7 @@
                     @endswitch
                 </div>
             </div>
-            <div class="flex gap-2" x-data="copyModal()" x-init="init()">
+            <div class="flex gap-2" x-data="copyModal(@js($copyModalConfig))" x-init="init()">
                 <button type="button" @click="openModal()" class="px-4 py-2 bg-gray-600 dark:bg-gray-500 text-white text-sm rounded-lg hover:bg-gray-700 dark:hover:bg-gray-400 transition">
                     Metadaten kopieren
                 </button>
@@ -40,141 +40,159 @@
                     <button type="submit" class="px-4 py-2 bg-red-600 dark:bg-red-700 text-white text-sm rounded-lg hover:bg-red-700 dark:hover:bg-red-600">Löschen</button>
                 </form>
 
-                {{-- Copy Metadata Modal --}}
+                {{-- Copy metadata: 1. choose what to copy, per chapter or item - 2. paste it into other tracks --}}
                 <div x-show="showModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" @keydown.escape.window="showModal = false">
                     <div class="fixed inset-0 bg-black/50" @click="showModal = false"></div>
-                    <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6" @click.stop>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Metadaten kopieren</h3>
-
-                        <div class="space-y-1 text-sm" x-show="data">
-                            {{-- Grunddaten --}}
-                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-3 mb-1">Grunddaten</p>
-                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.title" class="rounded border-gray-300 text-blue-600"> Titel <span class="text-gray-400" x-show="data" x-text="data?.title ? '(' + data.title + ')' : ''"></span></label>
-                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.version" class="rounded border-gray-300 text-blue-600"> Version <span class="text-gray-400" x-show="data?.version" x-text="'(' + (data?.version || '') + ')'"></span></label>
-                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.alternative_titles" class="rounded border-gray-300 text-blue-600"> Alternativtitel <span class="text-gray-400" x-text="data?.alternative_titles?.length ? '(' + data.alternative_titles.join(', ') + ')' : '(keine)'"></span></label>
-                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.status" class="rounded border-gray-300 text-blue-600"> Status <span class="text-gray-400" x-text="'(' + (data?.status || '-') + ')'"></span></label>
-                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.genre" class="rounded border-gray-300 text-blue-600"> Genre <span class="text-gray-400" x-text="'(' + (data?.genre || '-') + ')'"></span></label>
-                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.duration" class="rounded border-gray-300 text-blue-600"> Dauer</label>
-
-                            {{-- Band --}}
-                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Band</p>
-                            <template x-if="data?.bands?.length > 0">
-                                <div class="space-y-1 ml-1">
-                                    <template x-for="(b, i) in data.bands" :key="'band-'+i">
-                                        <label class="flex items-center gap-2">
-                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 band-cb" :value="b.id" @change="toggleItem('selectedBands', b.id, $event.target.checked)">
-                                            <span x-text="b.name"></span>
-                                        </label>
-                                    </template>
-                                </div>
-                            </template>
-                            <p x-show="!data?.bands?.length" class="text-gray-400 ml-1">Keine</p>
-
-                            {{-- Credits --}}
-                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Credits</p>
-                            <template x-if="data?.credits?.length > 0">
-                                <div class="space-y-1 ml-1">
-                                    <template x-for="(c, i) in data.credits" :key="'credit-'+i">
-                                        <label class="flex items-center gap-2">
-                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 credit-cb" :value="i" @change="toggleItem('selectedCredits', i, $event.target.checked)">
-                                            <span x-text="c.name + (c.ipi_number ? ' [IPI ' + c.ipi_number + ']' : '') + ' (' + c.role + (c.instrument ? ', ' + c.instrument : '') + ')'"></span>
-                                        </label>
-                                    </template>
-                                </div>
-                            </template>
-                            <p x-show="!data?.credits?.length" class="text-gray-400 ml-1">Keine</p>
-
-                            {{-- Label --}}
-                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Label</p>
-                            <template x-if="data?.labels?.length > 0">
-                                <div class="space-y-1 ml-1">
-                                    <template x-for="(l, i) in data.labels" :key="'label-'+i">
-                                        <label class="flex items-center gap-2">
-                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 label-cb" :value="l.id" @change="toggleItem('selectedLabels', l.id, $event.target.checked)">
-                                            <span x-text="l.name"></span>
-                                        </label>
-                                    </template>
-                                </div>
-                            </template>
-                            <p x-show="!data?.labels?.length" class="text-gray-400 ml-1">Keine</p>
-
-                            {{-- Publisher --}}
-                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Publisher</p>
-                            <template x-if="data?.publishers?.length > 0">
-                                <div class="space-y-1 ml-1">
-                                    <template x-for="(p, i) in data.publishers" :key="'pub-'+i">
-                                        <label class="flex items-center gap-2">
-                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 pub-cb" :value="p.id" @change="toggleItem('selectedPublishers', p.id, $event.target.checked)">
-                                            <span x-text="p.name"></span>
-                                        </label>
-                                    </template>
-                                </div>
-                            </template>
-                            <p x-show="!data?.publishers?.length" class="text-gray-400 ml-1">Keine</p>
-
-                            {{-- Produkte --}}
-                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Produkte</p>
-                            <template x-if="data?.releases?.length > 0">
-                                <div class="space-y-1 ml-1">
-                                    <template x-for="(r, i) in data.releases" :key="'rel-'+i">
-                                        <label class="flex items-center gap-2">
-                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 rel-cb" :value="r.id" @change="toggleItem('selectedReleases', r.id, $event.target.checked)">
-                                            <span x-text="r.title + (r.track_number ? ' (#' + r.track_number + ')' : '')"></span>
-                                        </label>
-                                    </template>
-                                </div>
-                            </template>
-                            <p x-show="!data?.releases?.length" class="text-gray-400 ml-1">Keine</p>
-
-                            {{-- Projekte --}}
-                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Projekte</p>
-                            <template x-if="data?.projects?.length > 0">
-                                <div class="space-y-1 ml-1">
-                                    <template x-for="(p, i) in data.projects" :key="'proj-'+i">
-                                        <label class="flex items-center gap-2">
-                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 proj-cb" :value="p.id" @change="toggleItem('selectedProjects', p.id, $event.target.checked)">
-                                            <span x-text="p.name"></span>
-                                        </label>
-                                    </template>
-                                </div>
-                            </template>
-                            <p x-show="!data?.projects?.length" class="text-gray-400 ml-1">Keine</p>
-
-                            {{-- Verträge --}}
-                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Verträge</p>
-                            <template x-if="data?.contracts?.length > 0">
-                                <div class="space-y-1 ml-1">
-                                    <template x-for="(c, i) in data.contracts" :key="'con-'+i">
-                                        <label class="flex items-center gap-2">
-                                            <input type="checkbox" checked class="rounded border-gray-300 text-blue-600 con-cb" :value="c.id" @change="toggleItem('selectedContracts', c.id, $event.target.checked)">
-                                            <span x-text="c.title"></span>
-                                        </label>
-                                    </template>
-                                </div>
-                            </template>
-                            <p x-show="!data?.contracts?.length" class="text-gray-400 ml-1">Keine</p>
-
-                            {{-- Notizen --}}
-                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Notizen</p>
-                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.description" class="rounded border-gray-300 text-blue-600"> Beschreibung <span class="text-gray-400" x-text="data?.description ? '(' + data.description.substring(0, 40) + (data.description.length > 40 ? '...' : '') + ')' : '(leer)'"></span></label>
-
-                            {{-- Musik-Details --}}
-                            <p class="font-semibold text-gray-700 dark:text-gray-300 mt-4 mb-1">Musik-Details</p>
-                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.bpm" class="rounded border-gray-300 text-blue-600"> BPM <span class="text-gray-400" x-text="'(' + (data?.bpm || '-') + ')'"></span></label>
-                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.musical_key" class="rounded border-gray-300 text-blue-600"> Tonart <span class="text-gray-400" x-text="'(' + (data?.musical_key || '-') + ')'"></span></label>
-                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.language" class="rounded border-gray-300 text-blue-600"> Sprache <span class="text-gray-400" x-text="'(' + (data?.language || '-') + ')'"></span></label>
-                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.recording_location" class="rounded border-gray-300 text-blue-600"> Aufnahmeort <span class="text-gray-400" x-text="'(' + (data?.recording_location || '-') + ')'"></span></label>
-                            <label class="flex items-center gap-2"><input type="checkbox" x-model="fields.recording_years" class="rounded border-gray-300 text-blue-600"> Aufnahmejahr(e) <span class="text-gray-400" x-text="'(' + (data?.recording_years || '-') + ')'"></span></label>
+                    <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[85vh] flex flex-col text-left" @click.stop>
+                        {{-- Header --}}
+                        <div class="px-6 pt-5 pb-3 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between gap-4">
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100" x-text="step === 1 ? 'Metadaten kopieren' : 'In andere Tracks einfügen'"></h3>
+                                <span class="text-xs text-gray-400 whitespace-nowrap" x-text="'Schritt ' + step + ' von 2'"></span>
+                            </div>
+                            <label x-show="data && step === 1" class="mt-2 inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 cursor-pointer">
+                                <input type="checkbox" class="rounded border-gray-300 text-blue-600"
+                                       :checked="allState() === 'all'"
+                                       x-effect="$el.indeterminate = allState() === 'some'"
+                                       @change="toggleAll($event.target.checked)">
+                                Alles auswählen
+                            </label>
                         </div>
 
-                        {{-- Loading --}}
-                        <div x-show="!data" class="py-8 text-center text-gray-400">Laden...</div>
+                        {{-- Body --}}
+                        <div class="flex-1 overflow-y-auto px-6 py-4">
+                            <div x-show="!data" class="py-8 text-center text-gray-400">Laden...</div>
 
-                        {{-- Actions --}}
-                        <div class="flex gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <button type="button" @click="doCopy()" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">Kopieren</button>
-                            <button type="button" @click="showModal = false" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">Abbrechen</button>
-                            <span x-show="copied" x-transition class="text-sm text-green-600 dark:text-green-400 self-center ml-auto">Kopiert!</span>
+                            {{-- Step 1: what to copy --}}
+                            <div x-show="data && step === 1" class="space-y-4 text-sm">
+                                <template x-for="section in sections" :key="section.key">
+                                    <div>
+                                        <label class="flex items-center gap-2 pb-1 mb-1.5 border-b border-gray-100 dark:border-gray-700 font-semibold text-gray-800 dark:text-gray-200"
+                                               :class="available(section).length ? 'cursor-pointer' : 'opacity-50'">
+                                            <input type="checkbox" class="rounded border-gray-300 text-blue-600"
+                                                   :disabled="!available(section).length"
+                                                   :checked="sectionState(section) === 'all'"
+                                                   x-effect="$el.indeterminate = sectionState(section) === 'some'"
+                                                   @change="toggleSection(section, $event.target.checked)">
+                                            <span x-text="section.label"></span>
+                                            <span class="font-normal text-gray-400" x-show="available(section).length" x-text="chosen(section).length + ' von ' + available(section).length"></span>
+                                        </label>
+                                        <div class="space-y-1 ml-6">
+                                            <template x-for="field in (section.fields || [])" :key="field.key">
+                                                <label class="flex items-start gap-2" :class="hasValue(field.key) ? 'cursor-pointer' : 'opacity-50'">
+                                                    <input type="checkbox" class="mt-0.5 rounded border-gray-300 text-blue-600" x-model="fields[field.key]" :disabled="!hasValue(field.key)">
+                                                    <span><span class="text-gray-800 dark:text-gray-200" x-text="field.label"></span> <span class="text-gray-400" x-text="preview(field.key)"></span></span>
+                                                </label>
+                                            </template>
+                                            <template x-for="item in listItems(section)" :key="section.key + '-' + item.value">
+                                                <label class="flex items-start gap-2 cursor-pointer">
+                                                    <input type="checkbox" class="mt-0.5 rounded border-gray-300 text-blue-600"
+                                                           :checked="selected[section.list].includes(item.value)"
+                                                           @change="toggleItem(section.list, item.value, $event.target.checked)">
+                                                    <span class="text-gray-800 dark:text-gray-200" x-text="item.label"></span>
+                                                </label>
+                                            </template>
+                                            <p x-show="section.list && !listItems(section).length" class="text-gray-400">Keine</p>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            {{-- Step 2: which tracks to paste into --}}
+                            <div x-show="data && step === 2" class="space-y-3 text-sm">
+                                <p class="text-gray-600 dark:text-gray-300">
+                                    <span class="font-medium text-gray-800 dark:text-gray-200">Kopiert:</span>
+                                    <span x-text="summary() || 'nichts ausgewählt'"></span>
+                                    <button type="button" @click="step = 1" class="ml-1 text-blue-600 dark:text-blue-400 hover:underline">Auswahl ändern</button>
+                                </p>
+
+                                <div class="flex flex-wrap gap-2">
+                                    <input type="search" x-model="search" @input.debounce.300ms="loadTargets()" placeholder="Suchen: Titel, Band, Person, Produkt, ISRC …"
+                                           class="flex-1 min-w-[12rem] rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <select x-model="filterBand" @change="loadTargets()" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="">Alle Bands</option>
+                                        <template x-for="band in bands" :key="'b' + band.id"><option :value="band.id" x-text="band.name"></option></template>
+                                    </select>
+                                    <select x-model="filterRelease" @change="loadTargets()" class="max-w-[14rem] rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="">Alle Produkte</option>
+                                        <template x-for="release in releases" :key="'r' + release.id"><option :value="release.id" x-text="release.title"></option></template>
+                                    </select>
+                                </div>
+
+                                <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                    <label class="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-600 dark:text-gray-300"
+                                           :class="results.length && 'cursor-pointer'">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600"
+                                               :disabled="!results.length"
+                                               :checked="results.length > 0 && results.every(r => isTarget(r.id))"
+                                               x-effect="$el.indeterminate = results.some(r => isTarget(r.id)) && !results.every(r => isTarget(r.id))"
+                                               @change="toggleAllResults($event.target.checked)">
+                                        <span x-text="resultsLabel()"></span>
+                                    </label>
+                                    <div class="max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+                                        <template x-for="result in results" :key="'res' + result.id">
+                                            <label class="flex items-start gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                                                <input type="checkbox" class="mt-0.5 rounded border-gray-300 text-blue-600" :checked="isTarget(result.id)" @change="toggleTarget(result, $event.target.checked)">
+                                                <span class="min-w-0 flex-1">
+                                                    <span class="block font-medium text-gray-900 dark:text-gray-100" x-text="result.title"></span>
+                                                    <span class="block text-xs text-gray-500 dark:text-gray-400 truncate" x-text="[result.artist, result.products, result.isrc].filter(Boolean).join(' · ')"></span>
+                                                </span>
+                                                <span class="text-xs text-gray-400" x-text="result.status"></span>
+                                            </label>
+                                        </template>
+                                        <p x-show="!loading && !results.length" class="px-3 py-4 text-center text-gray-400">Keine Tracks gefunden.</p>
+                                    </div>
+                                </div>
+
+                                <div x-show="targets.length" class="flex flex-wrap items-center gap-1.5">
+                                    <span class="text-xs text-gray-500 dark:text-gray-400" x-text="'Ausgewählt (' + targets.length + '):'"></span>
+                                    <template x-for="target in targets" :key="'t' + target.id">
+                                        <span class="inline-flex items-center gap-0.5 pl-2 pr-1 py-0.5 rounded-full text-xs bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                                            <span x-text="target.title"></span>
+                                            <button type="button" @click="toggleTarget(target, false)" class="px-1 hover:text-blue-900 dark:hover:text-white" title="Abwählen">&times;</button>
+                                        </span>
+                                    </template>
+                                </div>
+
+                                <fieldset x-show="selectsLists()" class="space-y-1 pt-1">
+                                    <legend class="font-medium text-gray-800 dark:text-gray-200 mb-1">Listen (Band, Credits, Label, Produkte …):</legend>
+                                    <label class="flex items-start gap-2 cursor-pointer">
+                                        <input type="radio" value="add" x-model="mode" class="mt-0.5 text-blue-600 focus:ring-blue-500">
+                                        <span><span class="font-medium">Ergänzen</span> <span class="text-gray-500 dark:text-gray-400">– was die Tracks schon haben, bleibt</span></span>
+                                    </label>
+                                    <label class="flex items-start gap-2 cursor-pointer">
+                                        <input type="radio" value="replace" x-model="mode" class="mt-0.5 text-blue-600 focus:ring-blue-500">
+                                        <span><span class="font-medium">Ersetzen</span> <span class="text-gray-500 dark:text-gray-400">– danach stehen dort nur die kopierten Einträge</span></span>
+                                    </label>
+                                </fieldset>
+
+                                <p x-show="overwritesTitle()" class="px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300"
+                                   x-text="'Achtung: ' + overwritesTitle() + ' wird in allen ausgewählten Tracks überschrieben.'"></p>
+                                <p x-show="selected.releases.length" class="text-xs text-gray-500 dark:text-gray-400">Bei neu verknüpften Produkten bleibt die Track-Nummer leer.</p>
+                            </div>
+                        </div>
+
+                        {{-- Footer --}}
+                        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                            <div x-show="step === 1" class="flex flex-wrap items-center gap-3">
+                                <button type="button" @click="copyAndContinue()" :disabled="!data" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition disabled:opacity-50">Kopieren &amp; Tracks wählen</button>
+                                <button type="button" @click="copyOnly()" :disabled="!data" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition" title="Für den Knopf &quot;Metadaten einfügen&quot; beim Erfassen oder Bearbeiten eines Tracks">Nur kopieren</button>
+                                <button type="button" @click="showModal = false" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100">Abbrechen</button>
+                                <span x-show="copied" x-transition class="text-sm text-green-600 dark:text-green-400 ml-auto">Kopiert!</span>
+                            </div>
+                            <form x-show="step === 2" method="POST" action="{{ route('admin.tracks.applyMetadata', $track) }}" class="flex flex-wrap items-center gap-3"
+                                  @submit="if (!confirm(confirmText())) $event.preventDefault()">
+                                @csrf
+                                <input type="hidden" name="mode" :value="mode">
+                                <template x-for="target in targets" :key="'tid' + target.id"><input type="hidden" name="target_ids[]" :value="target.id"></template>
+                                <template x-for="field in selectedFields()" :key="'f-' + field"><input type="hidden" name="fields[]" :value="field"></template>
+                                <template x-if="fields.alternative_titles && hasValue('alternative_titles')"><input type="hidden" name="alternative_titles" value="1"></template>
+                                <template x-for="entry in selectedListEntries()" :key="entry.name + entry.value"><input type="hidden" :name="entry.name" :value="entry.value"></template>
+                                <button type="submit" :disabled="!targets.length || !summary()" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                        x-text="targets.length ? 'In ' + targets.length + (targets.length === 1 ? ' Track' : ' Tracks') + ' einfügen' : 'Tracks auswählen'"></button>
+                                <button type="button" @click="step = 1" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">Zurück</button>
+                                <button type="button" @click="showModal = false" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 ml-auto">Schliessen</button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -452,78 +470,269 @@
 
 @push('scripts')
 <script>
-function copyModal() {
+/*
+ * "Metadaten kopieren": step 1 picks what to copy - single fields, or whole
+ * chapters at once. The choice goes to localStorage, where the paste button
+ * of the track form picks it up. Step 2 pastes it straight into other tracks,
+ * found with the same search as the tracklist.
+ */
+function copyModal(config) {
+    const FIELD_KEYS = ['title', 'version', 'status', 'genre', 'duration_seconds', 'description', 'bpm', 'musical_key', 'language', 'recording_location', 'recording_years'];
+    const LISTS = ['bands', 'credits', 'labels', 'publishers', 'releases', 'projects', 'contracts'];
+
     return {
         showModal: false,
+        step: 1,
         data: null,
         copied: false,
+        bands: config.bands || [],
+        releases: config.releases || [],
+        roleLabels: config.roleLabels || {},
+
         fields: {
-            title: true, version: true, alternative_titles: false, status: true, genre: true, duration: false,
+            title: true, version: true, alternative_titles: false, status: true, genre: true, duration_seconds: false,
             description: true, bpm: false, musical_key: false, language: true,
             recording_location: true, recording_years: true,
         },
-        selectedBands: [],
-        selectedLabels: [],
-        selectedPublishers: [],
-        selectedCredits: [],
-        selectedReleases: [],
-        selectedProjects: [],
-        selectedContracts: [],
+        selected: { bands: [], credits: [], labels: [], publishers: [], releases: [], projects: [], contracts: [] },
+
+        sections: [
+            { key: 'basic', label: 'Grunddaten', fields: [
+                { key: 'title', label: 'Titel' }, { key: 'version', label: 'Version' },
+                { key: 'alternative_titles', label: 'Alternativtitel' }, { key: 'status', label: 'Status' },
+                { key: 'genre', label: 'Genre' }, { key: 'duration_seconds', label: 'Dauer' },
+            ] },
+            { key: 'bands', label: 'Band', list: 'bands' },
+            { key: 'credits', label: 'Credits', list: 'credits' },
+            { key: 'labels', label: 'Label', list: 'labels' },
+            { key: 'publishers', label: 'Publisher', list: 'publishers' },
+            { key: 'releases', label: 'Produkte', list: 'releases' },
+            { key: 'projects', label: 'Projekte', list: 'projects' },
+            { key: 'contracts', label: 'Verträge', list: 'contracts' },
+            { key: 'notes', label: 'Notizen', fields: [{ key: 'description', label: 'Beschreibung' }] },
+            { key: 'details', label: 'Musik-Details', fields: [
+                { key: 'bpm', label: 'BPM' }, { key: 'musical_key', label: 'Tonart' }, { key: 'language', label: 'Sprache' },
+                { key: 'recording_location', label: 'Aufnahmeort' }, { key: 'recording_years', label: 'Aufnahmejahr(e)' },
+            ] },
+        ],
+
+        // Step 2
+        search: '',
+        filterBand: '',
+        filterRelease: '',
+        results: [],
+        loading: false,
+        targets: [],
+        mode: 'add',
+        _searchTicket: 0,
 
         init() {},
 
         async openModal() {
             this.showModal = true;
+            this.step = 1;
             this.copied = false;
             if (!this.data) {
-                const res = await fetch('{{ route("admin.tracks.copyMetadata", $track) }}');
+                const res = await fetch(config.copyUrl, { headers: { 'Accept': 'application/json' } });
                 this.data = await res.json();
-                // Default: all relational items selected
-                this.selectedBands = (this.data.bands || []).map(b => b.id);
-                this.selectedLabels = (this.data.labels || []).map(l => l.id);
-                this.selectedPublishers = (this.data.publishers || []).map(p => p.id);
-                this.selectedCredits = (this.data.credits || []).map((_, i) => i);
-                this.selectedReleases = (this.data.releases || []).map(r => r.id);
-                this.selectedProjects = (this.data.projects || []).map(p => p.id);
-                this.selectedContracts = (this.data.contracts || []).map(c => c.id);
+                // Every linked entry is selected to begin with
+                this.selected = {
+                    bands: (this.data.bands || []).map(b => b.id),
+                    credits: (this.data.credits || []).map(c => c.key),
+                    labels: (this.data.labels || []).map(l => l.id),
+                    publishers: (this.data.publishers || []).map(p => p.id),
+                    releases: (this.data.releases || []).map(r => r.id),
+                    projects: (this.data.projects || []).map(p => p.id),
+                    contracts: (this.data.contracts || []).map(c => c.id),
+                };
             }
         },
 
-        toggleItem(list, val, checked) {
-            if (checked) {
-                if (!this[list].includes(val)) this[list].push(val);
+        // --- Step 1: what to copy ---------------------------------------------
+
+        hasValue(key) {
+            const value = this.data?.[key];
+            if (Array.isArray(value)) return value.length > 0;
+            return value !== null && value !== undefined && value !== '';
+        },
+
+        preview(key) {
+            if (!this.hasValue(key)) return '(leer)';
+            let value = this.data[key];
+            if (key === 'alternative_titles') value = value.join(', ');
+            if (key === 'duration_seconds') value = Math.floor(value / 60) + ':' + String(value % 60).padStart(2, '0');
+            value = String(value);
+            return '(' + (value.length > 40 ? value.substring(0, 40) + '…' : value) + ')';
+        },
+
+        listItems(section) {
+            if (!section.list || !this.data) return [];
+            const rows = this.data[section.list] || [];
+            switch (section.list) {
+                case 'credits':
+                    return rows.map(c => ({
+                        value: c.key,
+                        label: c.name + (c.ipi_number ? ' [IPI ' + c.ipi_number + ']' : '')
+                            + ' (' + (this.roleLabels[c.role] || c.role) + (c.instrument ? ', ' + c.instrument : '') + ')',
+                    }));
+                case 'releases':
+                    return rows.map(r => ({ value: r.id, label: r.title + (r.track_number ? ' (#' + r.track_number + ')' : '') }));
+                case 'contracts':
+                    return rows.map(c => ({ value: c.id, label: c.title }));
+                default:
+                    return rows.map(o => ({ value: o.id, label: o.name }));
+            }
+        },
+
+        // What a chapter offers to pick (empty fields cannot be copied) ...
+        available(section) {
+            if (section.list) return this.listItems(section).map(item => item.value);
+            return section.fields.map(f => f.key).filter(key => this.hasValue(key));
+        },
+
+        // ... and what of it is picked
+        chosen(section) {
+            if (section.list) return this.selected[section.list].filter(value => this.available(section).includes(value));
+            return this.available(section).filter(key => this.fields[key]);
+        },
+
+        sectionState(section) {
+            const available = this.available(section).length;
+            const chosen = this.chosen(section).length;
+            if (!available || !chosen) return 'none';
+            return chosen === available ? 'all' : 'some';
+        },
+
+        toggleSection(section, on) {
+            if (section.list) {
+                this.selected[section.list] = on ? this.available(section) : [];
             } else {
-                this[list] = this[list].filter(v => v !== val);
+                this.available(section).forEach(key => { this.fields[key] = on; });
             }
         },
 
-        doCopy() {
+        allState() {
+            const states = this.sections.filter(s => this.available(s).length).map(s => this.sectionState(s));
+            if (!states.length || states.every(s => s === 'none')) return 'none';
+            return states.every(s => s === 'all') ? 'all' : 'some';
+        },
+
+        toggleAll(on) {
+            this.sections.forEach(section => this.toggleSection(section, on));
+        },
+
+        toggleItem(list, value, checked) {
+            if (checked) {
+                if (!this.selected[list].includes(value)) this.selected[list].push(value);
+            } else {
+                this.selected[list] = this.selected[list].filter(v => v !== value);
+            }
+        },
+
+        selectedFields() {
+            return FIELD_KEYS.filter(key => this.fields[key] && this.hasValue(key));
+        },
+
+        selectsLists() {
+            return (this.fields.alternative_titles && this.hasValue('alternative_titles'))
+                || LISTS.some(list => this.selected[list].length);
+        },
+
+        selectedListEntries() {
+            return LISTS.flatMap(list => this.selected[list].map(value => ({ name: list + '[]', value })));
+        },
+
+        summary() {
+            if (!this.data) return '';
+            return this.sections.flatMap(section => {
+                if (section.list) {
+                    const n = this.chosen(section).length;
+                    return n ? [section.label + ' (' + n + ')'] : [];
+                }
+                return section.fields.filter(f => this.chosen(section).includes(f.key)).map(f => f.label);
+            }).join(', ');
+        },
+
+        // The format the paste button in the track form reads
+        clipboard() {
             const result = {};
-            if (this.fields.title) result.title = this.data.title;
-            if (this.fields.version) result.version = this.data.version;
-            if (this.fields.status) result.status = this.data.status;
-            if (this.fields.genre) result.genre = this.data.genre;
-            if (this.fields.duration) result.duration_seconds = this.data.duration_seconds;
-            if (this.fields.language) result.language = this.data.language;
-            if (this.fields.bpm) result.bpm = this.data.bpm;
-            if (this.fields.musical_key) result.musical_key = this.data.musical_key;
+            this.selectedFields().forEach(key => { result[key] = this.data[key]; });
             if (this.fields.alternative_titles) result.alternative_titles = this.data.alternative_titles;
-            if (this.fields.recording_location) result.recording_location = this.data.recording_location;
-            if (this.fields.recording_years) result.recording_years = this.data.recording_years;
-            if (this.fields.description) result.description = this.data.description;
+            ['bands', 'labels', 'publishers', 'releases', 'projects', 'contracts'].forEach(list => {
+                result[list] = (this.data[list] || []).filter(row => this.selected[list].includes(row.id));
+            });
+            result.credits = (this.data.credits || []).filter(c => this.selected.credits.includes(c.key));
+            return result;
+        },
 
-            result.bands = (this.data.bands || []).filter(b => this.selectedBands.includes(b.id));
-            result.labels = (this.data.labels || []).filter(l => this.selectedLabels.includes(l.id));
-            result.publishers = (this.data.publishers || []).filter(p => this.selectedPublishers.includes(p.id));
-            result.credits = (this.data.credits || []).filter((_, i) => this.selectedCredits.includes(i));
-            result.releases = (this.data.releases || []).filter(r => this.selectedReleases.includes(r.id));
-            result.projects = (this.data.projects || []).filter(p => this.selectedProjects.includes(p.id));
-            result.contracts = (this.data.contracts || []).filter(c => this.selectedContracts.includes(c.id));
-
-            localStorage.setItem('tyl_track_metadata', JSON.stringify(result));
+        writeClipboard() {
+            localStorage.setItem('tyl_track_metadata', JSON.stringify(this.clipboard()));
             this.copied = true;
+        },
+
+        copyOnly() {
+            this.writeClipboard();
             setTimeout(() => { this.showModal = false; this.copied = false; }, 1200);
-        }
+        },
+
+        copyAndContinue() {
+            this.writeClipboard();
+            this.step = 2;
+            if (!this.results.length) this.loadTargets();
+        },
+
+        // --- Step 2: where to paste ---------------------------------------------
+
+        async loadTargets() {
+            const ticket = ++this._searchTicket;
+            const params = new URLSearchParams({ q: this.search, exclude: config.trackId });
+            if (this.filterBand) params.set('band', this.filterBand);
+            if (this.filterRelease) params.set('release', this.filterRelease);
+
+            this.loading = true;
+            try {
+                const res = await fetch(config.searchUrl + '?' + params, { headers: { 'Accept': 'application/json' } });
+                const rows = await res.json();
+                if (ticket === this._searchTicket) this.results = rows;
+            } finally {
+                // A slower, older request must not overwrite a newer result
+                if (ticket === this._searchTicket) this.loading = false;
+            }
+        },
+
+        resultsLabel() {
+            if (this.loading) return 'Suche …';
+            if (!this.results.length) return 'Keine Treffer';
+            return (this.results.length >= 50 ? 'Erste 50 Treffer (Suche eingrenzen)' : this.results.length + ' Treffer') + ' – alle auswählen';
+        },
+
+        isTarget(id) {
+            return this.targets.some(t => t.id === id);
+        },
+
+        toggleTarget(track, on) {
+            if (on && !this.isTarget(track.id)) {
+                this.targets.push({ id: track.id, title: track.title });
+            } else if (!on) {
+                this.targets = this.targets.filter(t => t.id !== track.id);
+            }
+        },
+
+        toggleAllResults(on) {
+            this.results.forEach(track => this.toggleTarget(track, on));
+        },
+
+        overwritesTitle() {
+            const parts = [this.fields.title && this.hasValue('title') && 'Titel', this.fields.version && this.hasValue('version') && 'Version'].filter(Boolean);
+            return parts.join(' und ');
+        },
+
+        confirmText() {
+            let text = 'Metadaten in ' + this.targets.length + (this.targets.length === 1 ? ' Track' : ' Tracks') + ' einfügen?';
+            if (this.mode === 'replace' && this.selectsLists()) text += '\n\nDie ausgewählten Listen werden ersetzt.';
+            if (this.overwritesTitle()) text += '\n\n' + this.overwritesTitle() + ' wird überschrieben.';
+            return text;
+        },
     };
 }
 </script>
