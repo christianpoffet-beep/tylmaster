@@ -35,7 +35,7 @@ class FormMarkerCoverageTest extends TestCase
             'Kontakt'       => ['contact', ['project_ids', 'organization_ids']],
             'Aufgabe'       => ['task', ['contact_ids', 'contract_ids', 'track_ids', 'linked_project_ids', 'submission_ids']],
             'Vertrag'       => ['contract', ['project_ids', 'track_ids', 'release_ids']],
-            'Produkt'       => ['release', ['band_ids', 'label_ids', 'publisher_ids', 'credits', 'artwork_ids', 'project_ids', 'contract_ids']],
+            'Produkt'       => ['release', ['product_type', 'track_ids', 'band_ids', 'label_ids', 'publisher_ids', 'credits', 'artwork_ids', 'project_ids', 'contract_ids']],
             'Adresskreis'   => ['addressCircle', ['organization_ids', 'project_ids']],
             'Artwork'       => ['artwork', ['project_ids']],
         ];

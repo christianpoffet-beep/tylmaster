@@ -86,9 +86,19 @@ class TrackMetadataSearchTest extends TestCase
         Track::create(['title' => "Rock 'n' Roll \"live\""]);
         $release = Release::create(['title' => 'Sammlung 2026']);
 
-        $this->actingAs(User::factory()->create())
+        $html = $this->actingAs(User::factory()->create())
             ->get("/admin/releases/{$release->id}/edit")
             ->assertOk()
-            ->assertSee("Rock 'n' Roll \"live\"");
+            ->getContent();
+
+        // The tracklist hands its tracks to Alpine; the attribute has to arrive in one piece
+        $dom = new \DOMDocument();
+        @$dom->loadHTML($html);
+        $config = collect((new \DOMXPath($dom))->query('//*[@x-data]'))
+            ->map(fn ($node) => $node->getAttribute('x-data'))
+            ->first(fn ($value) => str_starts_with($value, 'releaseTracklist('));
+
+        $this->assertSame(1, preg_match("/^releaseTracklist\\(JSON\\.parse\\('(.*)'\\)\\)$/s", (string) $config, $m), 'The tracklist data was cut short.');
+        $this->assertSame("Rock 'n' Roll \"live\"", json_decode(json_decode('"' . $m[1] . '"'), true)['tracks'][0]['title']);
     }
 }

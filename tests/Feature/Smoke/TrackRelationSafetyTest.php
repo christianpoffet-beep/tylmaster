@@ -153,6 +153,16 @@ class TrackRelationSafetyTest extends TestCase
             ->get("/admin/tracks/{$this->track->id}/edit")
             ->getContent();
 
-        $this->assertStringContainsString('"release_id":"' . $this->release->id . '"', $html);
+        // Read the attribute as the browser does: raw quotes in it used to cut it short
+        $dom = new \DOMDocument();
+        @$dom->loadHTML($html);
+        $xData = collect((new \DOMXPath($dom))->query('//*[@x-data]'))
+            ->map(fn ($node) => $node->getAttribute('x-data'))
+            ->first(fn ($value) => str_contains($value, 'removeRow('));
+
+        $this->assertNotNull($xData, 'The products component did not reach the page in one piece.');
+        $this->assertSame(1, preg_match("/rows: JSON\\.parse\\('(.*?)'\\)/s", $xData, $m));
+        $rows = json_decode(json_decode('"' . $m[1] . '"'), true);
+        $this->assertEquals($this->release->id, $rows[0]['release_id']);
     }
 }

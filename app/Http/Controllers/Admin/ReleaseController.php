@@ -57,15 +57,13 @@ class ReleaseController extends Controller
         $projects = Project::orderBy('name')->get();
         $contracts = Contract::orderBy('title')->get();
         $artworks = Artwork::orderBy('title')->get();
-        $artworks = Artwork::orderBy('title')->get();
         $templates = ProductTemplate::orderBy('sort_order')->get();
-        // organizations and contacts feed the tracklist filter
-        $allTracks = Track::with(Track::SEARCH_RELATIONS)->orderBy('title')->get();
+        $tracklist = $this->tracklistConfig(null);
         $catalogs = Organization::where('type', 'label')->whereNotNull('catalogs')->get()
             ->flatMap(fn ($org) => collect($org->catalogs)->map(fn ($c) => ['prefix' => $c, 'label' => $org->primary_name]))
             ->unique('prefix')->sortBy('prefix')->values();
 
-        return view('admin.music.releases.create', compact('territoryPresets', 'projects', 'contracts', 'artworks', 'templates', 'allTracks', 'catalogs'));
+        return view('admin.music.releases.create', compact('territoryPresets', 'projects', 'contracts', 'artworks', 'templates', 'tracklist', 'catalogs'));
     }
 
     public function store(Request $request)
@@ -74,6 +72,7 @@ class ReleaseController extends Controller
             'title' => 'required|string|max:255',
             'title_language' => 'nullable|string|max:10',
             'product_type' => 'nullable|array',
+            'product_type.*' => 'nullable|string|max:100',
             'ean_upc' => 'nullable|string|max:30',
             'release_date' => 'nullable|date',
             'label_name' => 'nullable|string|max:255',
@@ -92,6 +91,9 @@ class ReleaseController extends Controller
             'cover_image' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 
+        // Before the cover is stored, so a rejected form leaves no file behind
+        $this->validateTracklist($request);
+
         if ($request->input('territory_worldwide')) {
             $validated['territory'] = ['ALL'];
         } else {
@@ -102,6 +104,8 @@ class ReleaseController extends Controller
             $validated['cover_image_path'] = $request->file('cover_image')->store('covers', 'public');
         }
         unset($validated['cover_image']);
+
+        $this->applyProductTypes($request, $validated);
 
         $release = Release::create($validated);
 
@@ -164,13 +168,12 @@ class ReleaseController extends Controller
         $contracts = Contract::orderBy('title')->get();
         $artworks = Artwork::orderBy('title')->get();
         $templates = ProductTemplate::orderBy('sort_order')->get();
-        // organizations and contacts feed the tracklist filter
-        $allTracks = Track::with(Track::SEARCH_RELATIONS)->orderBy('title')->get();
+        $tracklist = $this->tracklistConfig($release);
         $catalogs = Organization::where('type', 'label')->whereNotNull('catalogs')->get()
             ->flatMap(fn ($org) => collect($org->catalogs)->map(fn ($c) => ['prefix' => $c, 'label' => $org->primary_name]))
             ->unique('prefix')->sortBy('prefix')->values();
 
-        return view('admin.music.releases.edit', compact('release', 'territoryPresets', 'projects', 'contracts', 'artworks', 'templates', 'allTracks', 'catalogs'));
+        return view('admin.music.releases.edit', compact('release', 'territoryPresets', 'projects', 'contracts', 'artworks', 'templates', 'tracklist', 'catalogs'));
     }
 
     public function update(Request $request, Release $release)
@@ -179,6 +182,7 @@ class ReleaseController extends Controller
             'title' => 'required|string|max:255',
             'title_language' => 'nullable|string|max:10',
             'product_type' => 'nullable|array',
+            'product_type.*' => 'nullable|string|max:100',
             'ean_upc' => 'nullable|string|max:30',
             'release_date' => 'nullable|date',
             'label_name' => 'nullable|string|max:255',
@@ -197,6 +201,9 @@ class ReleaseController extends Controller
             'cover_image' => 'nullable|file|image|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 
+        // Before the cover is stored, so a rejected form leaves no file behind
+        $this->validateTracklist($request);
+
         if ($request->input('territory_worldwide')) {
             $validated['territory'] = ['ALL'];
         } else {
@@ -208,10 +215,7 @@ class ReleaseController extends Controller
         }
         unset($validated['cover_image']);
 
-        // Ensure product_type is always set (even as empty array)
-        if (! isset($validated['product_type'])) {
-            $validated['product_type'] = [];
-        }
+        $this->applyProductTypes($request, $validated);
 
         $release->update($validated);
 
@@ -262,23 +266,121 @@ class ReleaseController extends Controller
         return redirect()->route('admin.releases.index')->with('success', 'Produkt gelöscht.');
     }
 
+    /**
+     * The type field builds its inputs in the browser and reports in with a
+     * marker. Without marker and types the section never rendered, and the
+     * stored types stay as they are; with the marker an empty field clears them.
+     */
+    private function applyProductTypes(Request $request, array &$validated): void
+    {
+        if (! $request->has('product_type') && ! $this->sectionSubmitted($request, 'product_type')) {
+            unset($validated['product_type']);
+
+            return;
+        }
+
+        $validated['product_type'] = collect($validated['product_type'] ?? [])
+            ->filter(fn ($type) => filled($type))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function validateTracklist(Request $request): void
+    {
+        $request->validate([
+            'track_ids' => 'nullable|array',
+            'track_ids.*' => 'integer|exists:tracks,id',
+            'track_numbers' => 'nullable|array',
+            'track_numbers.*' => 'nullable|integer|min:1|max:9999',
+        ], [
+            'track_numbers.*.integer' => 'Tracknummern müssen ganze Zahlen sein.',
+            'track_numbers.*.min' => 'Tracknummern beginnen bei 1.',
+        ]);
+    }
+
+    /**
+     * Only runs when the tracklist reported in. Disc number and role of a
+     * track already on the product are kept - the track form can set them.
+     */
     private function syncTracks(Release $release, Request $request): void
     {
-        $trackIds = $request->input('track_ids', []);
-        $trackNumbers = $request->input('track_numbers', []);
+        if (! $this->sectionSubmitted($request, 'track_ids')) {
+            return;
+        }
+
+        $numbers = $request->input('track_numbers', []);
+        $current = $release->tracks()->get()->keyBy('id');
 
         $syncData = [];
-        foreach ($trackIds as $trackId) {
-            if (! $trackId) {
-                continue;
-            }
+        foreach (array_unique(array_filter(array_map('intval', $request->input('track_ids', [])))) as $trackId) {
+            $pivot = $current->get($trackId)?->pivot;
+            $number = $numbers[$trackId] ?? null;
+
             $syncData[$trackId] = [
-                'track_number' => $trackNumbers[$trackId] ?? null,
-                'disc_number' => 1,
-                'role' => 'main',
+                'track_number' => filled($number) ? (int) $number : null,
+                'disc_number' => $pivot->disc_number ?? 1,
+                'role' => $pivot->role ?? 'main',
             ];
         }
+
         $release->tracks()->sync($syncData);
+    }
+
+    /**
+     * Data for the tracklist field: the rows on the product (or the ones just
+     * submitted, after a validation error) and every track with what the
+     * picker searches and filters by.
+     */
+    private function tracklistConfig(?Release $release): array
+    {
+        $tracks = Track::with(Track::SEARCH_RELATIONS)->orderBy('title')->get();
+
+        if (old('track_ids_submitted')) {
+            $numbers = (array) old('track_numbers', []);
+            $rows = collect((array) old('track_ids', []))
+                ->map(fn ($id) => ['id' => (int) $id, 'number' => filled($numbers[$id] ?? null) ? (int) $numbers[$id] : null]);
+        } elseif ($release) {
+            // Numbered tracks first, in order; tracks without a number after them
+            $rows = $release->tracks
+                ->map(fn ($track) => ['id' => $track->id, 'number' => $track->pivot->track_number])
+                ->sortBy(fn ($row) => [$row['number'] === null ? 1 : 0, (int) $row['number']])
+                ->values();
+        } else {
+            $rows = collect();
+        }
+
+        $bands = $tracks->flatMap(fn ($track) => $track->organizations->where('type', 'band'))
+            ->unique('id')
+            ->sortBy(fn ($band) => mb_strtolower($band->primary_name))
+            ->map(fn ($band) => ['id' => $band->id, 'name' => $band->primary_name])
+            ->values()
+            ->all();
+
+        $releases = $tracks->flatMap(fn ($track) => $track->releases)
+            ->unique('id')
+            ->reject(fn ($other) => $release && $other->id === $release->id)
+            ->sortBy(fn ($other) => mb_strtolower($other->title))
+            ->map(fn ($other) => ['id' => $other->id, 'title' => $other->title.($other->catalog_number ? " ({$other->catalog_number})" : '')])
+            ->values()
+            ->all();
+
+        return [
+            'rows' => $rows->values()->all(),
+            'bands' => $bands,
+            'releases' => $releases,
+            'tracks' => $tracks->map(fn (Track $track) => [
+                'id' => $track->id,
+                'title' => $track->display_title,
+                'bands' => $track->band_names,
+                'bandIds' => $track->organizations->where('type', 'band')->pluck('id')->values()->all(),
+                'releases' => $track->releases->map(fn ($other) => ['id' => $other->id, 'number' => $other->pivot->track_number])->values()->all(),
+                'isrc' => $track->isrc_formatted,
+                'duration' => $track->duration_seconds ? $track->formatted_duration : null,
+                'seconds' => (int) $track->duration_seconds,
+                'haystack' => $track->search_haystack,
+            ])->values()->all(),
+        ];
     }
 
     private function syncArtworks(Release $release, Request $request): void

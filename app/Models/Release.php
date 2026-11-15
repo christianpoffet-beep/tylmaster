@@ -49,6 +49,25 @@ class Release extends Model
         ],
     ];
 
+    /** Topped up into the quick picks of the type field while few products exist. */
+    public const COMMON_PRODUCT_TYPES = [
+        'Digital Single', 'Digital EP', 'Digital Album', 'CD', 'Vinyl 12"', 'Vinyl 7"', 'Single', 'Album (LP)',
+    ];
+
+    /** Quick picks for the type field: the types used most, then common formats - only types the settings still list. */
+    public static function frequentProductTypes(int $limit = 8): array
+    {
+        $known = Setting::productTypeValues();
+        $used = static::pluck('product_type')->flatten()->filter(fn ($type) => filled($type))->countBy()->sortDesc()->keys();
+
+        return $used->merge(self::COMMON_PRODUCT_TYPES)
+            ->unique()
+            ->filter(fn ($type) => in_array($type, $known, true))
+            ->take($limit)
+            ->values()
+            ->all();
+    }
+
     public function tracks()
     {
         return $this->belongsToMany(Track::class, 'product_track')
