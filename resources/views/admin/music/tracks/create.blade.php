@@ -52,7 +52,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="isrc" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ISRC</label>
-                    <input type="text" name="isrc" id="isrc" value="{{ old('isrc') }}" placeholder="CC-XXX-YY-NNNNN" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    @include('admin.partials.isrc-input', ['inputAttributes' => 'name="isrc" id="isrc" value="' . e(old('isrc')) . '"', 'trackId' => null, 'scope' => 'track', 'inputClass' => 'w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500'])
                     @error('isrc') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>

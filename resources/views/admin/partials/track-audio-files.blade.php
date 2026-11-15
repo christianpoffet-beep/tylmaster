@@ -110,7 +110,7 @@
                         </div>
                         <div>
                             <label for="audio-isrc-{{ $audioId }}" class="{{ $audioLabelClass }}">ISRC</label>
-                            <input type="text" id="audio-isrc-{{ $audioId }}" name="existing_audio_files[{{ $audioId }}][isrc]" value="{{ old("existing_audio_files.$audioId.isrc", $audioFile->isrc_formatted) }}" placeholder="CC-XXX-YY-NNNNN" class="{{ $audioInputClass }} font-mono">
+                            @include('admin.partials.isrc-input', ['inputAttributes' => 'id="audio-isrc-' . $audioId . '" name="existing_audio_files[' . $audioId . '][isrc]" value="' . e(old("existing_audio_files.$audioId.isrc", $audioFile->isrc_formatted)) . '"', 'trackId' => $track?->id, 'scope' => 'audio', 'inputClass' => $audioInputClass])
                             @error("existing_audio_files.$audioId.isrc") <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div class="sm:col-span-2">
@@ -147,7 +147,7 @@
                         </div>
                         <div>
                             <label :for="'audio-new-isrc-' + row.key" class="{{ $audioLabelClass }}">ISRC</label>
-                            <input type="text" :id="'audio-new-isrc-' + row.key" :name="'audio_files[' + row.key + '][isrc]'" x-model="row.isrc" placeholder="CC-XXX-YY-NNNNN" class="{{ $audioInputClass }} font-mono">
+                            @include('admin.partials.isrc-input', ['inputAttributes' => ':id="\'audio-new-isrc-\' + row.key" :name="\'audio_files[\' + row.key + \'][isrc]\'" x-model="row.isrc"', 'trackId' => $track?->id, 'scope' => 'audio', 'inputClass' => $audioInputClass])
                             <p x-show="error(row, 'isrc')" x-text="error(row, 'isrc')" class="text-red-500 text-xs mt-1"></p>
                         </div>
                         <div class="sm:col-span-2">
