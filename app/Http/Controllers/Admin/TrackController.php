@@ -185,7 +185,7 @@ class TrackController extends Controller
 
     public function show(Track $track)
     {
-        $track->load(['releases.artworks.images', 'releases.artworks.logos', 'releases.artworks.credits.creditable', 'contacts', 'projects', 'contracts', 'organizations', 'documents', 'audioFiles']);
+        $track->load(['releases.organizations', 'releases.artworks.images', 'releases.artworks.logos', 'releases.artworks.credits.creditable', 'contacts', 'projects', 'contracts', 'organizations', 'documents', 'audioFiles']);
 
         // The copy dialog: where to load from, and the filters of its "paste into other tracks" step.
         $copyModalConfig = [

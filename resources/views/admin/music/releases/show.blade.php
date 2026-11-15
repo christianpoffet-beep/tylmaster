@@ -46,10 +46,18 @@
                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100 uppercase">{{ $release->title_language }}</dd>
                 </div>
             @endif
-            @if($release->main_artist)
+            @php $mainArtists = $release->organizations->where('type', 'band'); @endphp
+            @if($mainArtists->count() || $release->main_artist)
                 <div>
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Hauptkünstler</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $release->main_artist }}</dd>
+                    <dd class="mt-1 flex flex-wrap gap-1.5 text-sm text-gray-900 dark:text-gray-100">
+                        @forelse($mainArtists as $band)
+                            <a href="{{ route('admin.organizations.show', $band) }}" class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900">{{ $band->primary_name }}</a>
+                        @empty
+                            {{-- typed before main artists were organizations --}}
+                            <span>{{ $release->main_artist }}</span>
+                        @endforelse
+                    </dd>
                 </div>
             @endif
             @php
@@ -74,8 +82,15 @@
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $release->catalog_number ?? '-' }}</dd>
             </div>
             <div>
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Label Name</dt>
-                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $release->label_name ?? '-' }}</dd>
+                @php $labels = $release->organizations->where('type', 'label'); @endphp
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Label</dt>
+                <dd class="mt-1 flex flex-wrap gap-1.5 text-sm text-gray-900 dark:text-gray-100">
+                    @forelse($labels as $labelOrg)
+                        <a href="{{ route('admin.organizations.show', $labelOrg) }}" class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900">{{ $labelOrg->primary_name }}</a>
+                    @empty
+                        <span>{{ $release->label_name ?: '-' }}</span>
+                    @endforelse
+                </dd>
             </div>
             <div>
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Release-Datum</dt>

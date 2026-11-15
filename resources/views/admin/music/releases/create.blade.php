@@ -97,16 +97,7 @@
             {{-- Musik-spezifische Felder --}}
             <div x-show="isMusic" x-transition x-cloak class="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Musik-Felder</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="main_artist" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hauptkünstler</label>
-                        <input type="text" name="main_artist" id="main_artist" value="{{ old('main_artist') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label for="label_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Label Name</label>
-                        <input type="text" name="label_name" id="label_name" value="{{ old('label_name') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
-                </div>
+                @include('admin.partials.release-artist-label', ['release' => null])
             </div>
 
             {{-- Release Info (immer sichtbar) --}}
@@ -213,22 +204,10 @@
         </div>
         </div>
 
-        {{-- Musik: Band --}}
-        <div x-show="isMusic" x-transition x-cloak class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Band</h3>
-            @include('admin.partials.organization-search', ['selected' => collect(), 'inputName' => 'band_ids[]', 'orgSearchLabel' => 'Band', 'orgTypeFilter' => 'band'])
-        </div>
-
         {{-- Musik: Credits --}}
         <div x-show="isMusic" x-transition x-cloak class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Credits</h3>
             @include('admin.partials.music-credits', ['selectedCredits' => collect()])
-        </div>
-
-        {{-- Musik: Label --}}
-        <div x-show="isMusic" x-transition x-cloak class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Label</h3>
-            @include('admin.partials.organization-search', ['selected' => collect(), 'inputName' => 'label_ids[]', 'orgSearchLabel' => 'Label', 'orgTypeFilter' => 'label'])
         </div>
 
         {{-- Musik: Publisher --}}

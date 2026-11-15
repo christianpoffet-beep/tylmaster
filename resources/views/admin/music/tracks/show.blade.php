@@ -328,7 +328,7 @@
                                 {{-- Metadaten --}}
                                 @php
                                     $meta = collect();
-                                    if ($release->label_name) $meta->push($release->label_name);
+                                    if ($release->label_display) $meta->push($release->label_display);
                                     if ($release->catalog_number) $meta->push($release->catalog_number);
                                     if ($release->release_date) $meta->push($release->release_date->format('d.m.Y'));
                                     if ($release->ean_upc) $meta->push($release->ean_upc);

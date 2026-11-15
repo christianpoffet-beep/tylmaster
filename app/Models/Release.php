@@ -138,18 +138,58 @@ class Release extends Model
     }
 
     /**
-     * Auto-fill label_name from linked tracks' label organizations.
+     * Main artist and label are linked organizations (band, label). The text
+     * columns main_artist and label_name only hold what was typed before that,
+     * for names that have no organization yet - shown until one is linked.
+     */
+    public function getMainArtistDisplayAttribute(): string
+    {
+        return $this->organizationNames('band') ?: (string) $this->main_artist;
+    }
+
+    public function getLabelDisplayAttribute(): string
+    {
+        return $this->organizationNames('label') ?: (string) $this->label_name;
+    }
+
+    private function organizationNames(string $type): string
+    {
+        return $this->organizations->where('type', $type)->map(fn ($org) => $org->primary_name)->filter()->join(', ');
+    }
+
+    /**
+     * A product without a label takes the labels of its tracks, as the label
+     * name text used to.
      */
     public function syncLabelFromTracks(): void
     {
-        $labels = collect();
-        foreach ($this->tracks as $track) {
-            $trackLabels = $track->organizations->where('type', 'label');
-            $labels = $labels->merge($trackLabels);
+        if ($this->organizations()->where('type', 'label')->exists()) {
+            return;
         }
-        $labelNames = $labels->unique('id')->pluck('primary_name')->filter()->implode(', ');
-        if ($labelNames) {
-            $this->update(['label_name' => $labelNames]);
+
+        $labelIds = $this->tracks
+            ->flatMap(fn ($track) => $track->organizations->where('type', 'label'))
+            ->pluck('id')
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($labelIds) {
+            $this->organizations()->syncWithoutDetaching($labelIds);
+        }
+    }
+
+    /** Old text gives way once an organization of its kind is linked. */
+    public function clearSupersededNames(): void
+    {
+        $types = $this->organizations()->pluck('type');
+        $changes = [];
+
+        if (filled($this->main_artist) && $types->contains('band')) $changes['main_artist'] = null;
+        if (filled($this->label_name) && $types->contains('label')) $changes['label_name'] = null;
+
+        if ($changes) {
+            $this->update($changes);
         }
     }
 }
