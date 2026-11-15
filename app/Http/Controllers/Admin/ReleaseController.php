@@ -17,9 +17,20 @@ class ReleaseController extends Controller
 {
     use SyncsFormRelations;
 
+    /**
+     * The product list. Band, label and type each take several values: within
+     * one filter any of them matches, across filters all have to - two bands
+     * and a label give the products of either band on that label. A band or
+     * label counts when it is linked to the product or to one of its tracks.
+     */
     public function index(Request $request)
     {
-        $query = Release::withCount('tracks')->with(['organizations' => fn ($q) => $q->whereIn('type', ['band', 'label'])]);
+        $query = Release::withCount('tracks')->with([
+            'organizations' => fn ($q) => $q->whereIn('type', ['band', 'label']),
+            // the album for the play button, the bands of the tracks, the main artwork
+            'tracks.mainAudioFile', 'tracks.organizations',
+            'artworks.images', 'artworks.logos',
+        ]);
 
         if ($search = $request->input('search')) {
             $needle = mb_strtolower(trim($search));
@@ -38,8 +49,30 @@ class ReleaseController extends Controller
             });
         }
 
-        if ($productType = $request->input('product_type')) {
-            $query->whereJsonContains('product_type', $productType);
+        $filters = [
+            'band' => $this->idList($request->input('band')),
+            'label' => $this->idList($request->input('label')),
+            // product_type: the single filter of before, still in old links
+            'type' => collect((array) $request->input('type', []))
+                ->push($request->input('product_type'))
+                ->filter(fn ($type) => is_string($type) && $type !== '')
+                ->unique()->values()->all(),
+        ];
+
+        foreach (['band', 'label'] as $kind) {
+            if ($ids = $filters[$kind]) {
+                $query->where(fn ($q) => $q
+                    ->whereHas('organizations', fn ($o) => $o->whereIn('organizations.id', $ids))
+                    ->orWhereHas('tracks.organizations', fn ($o) => $o->whereIn('organizations.id', $ids)));
+            }
+        }
+
+        if ($types = $filters['type']) {
+            $query->where(function ($q) use ($types) {
+                foreach ($types as $type) {
+                    $q->orWhereJsonContains('product_type', $type);
+                }
+            });
         }
 
         $sortField = $request->input('sort', 'release_date');
@@ -53,8 +86,60 @@ class ReleaseController extends Controller
         }
 
         $releases = $query->orderBy($sortField, $sortDir)->paginate(20)->withQueryString();
+        $filterOptions = $this->filterOptions();
+        $activeFilters = $this->activeFilters($request, $filters, $filterOptions);
 
-        return view('admin.music.releases.index', compact('releases'));
+        return view('admin.music.releases.index', compact('releases', 'filters', 'filterOptions', 'activeFilters'));
+    }
+
+    /** @return int[] */
+    private function idList(mixed $value): array
+    {
+        return collect((array) $value)->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
+    }
+
+    /** Only what occurs: bands and labels on a product or its tracks, types in use. */
+    private function filterOptions(): array
+    {
+        $organizations = Organization::whereIn('type', ['band', 'label'])
+            ->where(fn ($q) => $q->whereHas('releases')->orWhereHas('tracks', fn ($t) => $t->whereHas('releases')))
+            ->get()
+            ->sortBy(fn ($org) => mb_strtolower($org->primary_name));
+
+        $options = fn (string $type) => $organizations->where('type', $type)
+            ->map(fn ($org) => ['value' => (string) $org->id, 'label' => $org->primary_name])
+            ->values()->all();
+
+        $types = Release::pluck('product_type')->flatten()
+            ->filter(fn ($type) => is_string($type) && $type !== '')
+            ->unique()
+            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+            ->map(fn ($type) => ['value' => $type, 'label' => $type])
+            ->values()->all();
+
+        return ['band' => $options('band'), 'label' => $options('label'), 'type' => $types];
+    }
+
+    /** The chosen filters as chips, each with the link that drops it. */
+    private function activeFilters(Request $request, array $filters, array $options): array
+    {
+        $chips = [];
+        foreach (['band' => 'Band', 'label' => 'Label', 'type' => 'Typ'] as $key => $name) {
+            $labels = collect($options[$key])->pluck('label', 'value');
+
+            foreach ($filters[$key] as $value) {
+                $query = array_merge($request->except(['page', 'product_type', $key]), [
+                    $key => array_values(array_diff($filters[$key], [$value])),
+                ]);
+
+                $chips[] = [
+                    'label' => $name . ': ' . ($labels[(string) $value] ?? $value),
+                    'url' => route('admin.releases.index', array_filter($query, fn ($v) => $v !== [] && $v !== null && $v !== '')),
+                ];
+            }
+        }
+
+        return $chips;
     }
 
     public function create()
