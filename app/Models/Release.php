@@ -68,6 +68,27 @@ class Release extends Model
             ->all();
     }
 
+    /**
+     * The tracklist as a queue for the player: every track with a main audio
+     * file, in tracklist order. trackId lets the page find a track's place.
+     */
+    public function playerQueue(): array
+    {
+        $this->loadMissing(['tracks.mainAudioFile', 'tracks.organizations']);
+
+        $items = $this->tracks
+            ->sortBy(['pivot.disc_number', 'pivot.track_number'])
+            ->filter(fn (Track $track) => $track->mainAudioFile)
+            ->map(fn (Track $track) => $track->mainAudioFile->playerPayload() + [
+                'number' => $track->pivot->track_number,
+                'trackId' => $track->id,
+            ])
+            ->values()
+            ->all();
+
+        return ['id' => 'release-' . $this->id, 'title' => $this->title, 'items' => $items];
+    }
+
     public function tracks()
     {
         return $this->belongsToMany(Track::class, 'product_track')
