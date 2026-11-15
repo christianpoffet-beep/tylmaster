@@ -10,6 +10,7 @@ use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Contract;
 use App\Models\Organization;
+use App\Services\TrackMetadataTransfer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -156,6 +157,7 @@ class TrackController extends Controller
                 }
                 $displayName = ($matched && !empty($matched['name'])) ? $matched['name'] : $c->full_name;
                 return [
+                    'key' => TrackMetadataTransfer::creditKey($c),
                     'contact_id' => $c->id,
                     'name' => $displayName,
                     'contact_name' => $c->full_name,
@@ -184,7 +186,53 @@ class TrackController extends Controller
     public function show(Track $track)
     {
         $track->load(['releases.artworks.images', 'releases.artworks.logos', 'releases.artworks.credits.creditable', 'contacts', 'projects', 'contracts', 'organizations', 'documents', 'audioFiles']);
-        return view('admin.music.tracks.show', compact('track'));
+
+        // The copy dialog: where to load from, and the filters of its "paste into other tracks" step.
+        $copyModalConfig = [
+            'copyUrl' => route('admin.tracks.copyMetadata', $track),
+            'searchUrl' => route('admin.tracks.search'),
+            'trackId' => $track->id,
+            'bands' => Organization::where('type', 'band')->whereHas('tracks')->get()
+                ->map(fn ($band) => ['id' => $band->id, 'name' => $band->primary_name])
+                ->sortBy(fn ($band) => mb_strtolower($band['name']))->values(),
+            'releases' => Release::whereHas('tracks')->orderBy('title')->get(['id', 'title']),
+            'roleLabels' => collect(\App\Models\Setting::creditRoles())->flatMap(fn ($roles) => $roles)->all(),
+        ];
+
+        return view('admin.music.tracks.show', compact('track', 'copyModalConfig'));
+    }
+
+    /**
+     * Pastes the chosen metadata of this track into the selected other tracks.
+     * Which values are taken is read from this track, not from the request.
+     */
+    public function applyMetadata(Request $request, Track $track, TrackMetadataTransfer $transfer)
+    {
+        $selection = $request->validate([
+            'target_ids' => 'required|array|min:1',
+            'target_ids.*' => 'integer|exists:tracks,id',
+            'mode' => 'required|in:add,replace',
+            'fields' => 'nullable|array',
+            'fields.*' => 'string|in:' . implode(',', TrackMetadataTransfer::FIELDS),
+            'alternative_titles' => 'nullable|boolean',
+            'credits' => 'nullable|array',
+            'credits.*' => 'string|max:500',
+            ...collect(['bands', 'labels', 'publishers', 'releases', 'projects', 'contracts'])
+                ->flatMap(fn ($list) => [$list => 'nullable|array', "{$list}.*" => 'integer'])
+                ->all(),
+        ], [
+            'target_ids.required' => 'Bitte mindestens einen Track auswählen.',
+        ]);
+
+        if (!TrackMetadataTransfer::selectsSomething($selection)) {
+            return back()->with('error', 'Es sind keine Metadaten zum Einfügen ausgewählt.');
+        }
+
+        $targets = Track::whereIn('id', $selection['target_ids'])->whereKeyNot($track->id)->get();
+        $count = $transfer->apply($track, $selection, $targets, $selection['mode'] === 'replace');
+
+        return redirect()->route('admin.tracks.show', $track)
+            ->with('success', $count === 1 ? 'Metadaten in 1 Track eingefügt.' : "Metadaten in {$count} Tracks eingefügt.");
     }
 
     public function edit(Track $track)
@@ -654,7 +702,7 @@ class TrackController extends Controller
 
     public function search(Request $request)
     {
-        $query = Track::with('organizations');
+        $query = Track::with(['organizations', 'releases']);
 
         // The same search as the tracklist, so a track is found by its band or credits here too.
         if ($terms = Track::searchTerms($request->input('q'))) {
@@ -665,11 +713,25 @@ class TrackController extends Controller
             $query->where('status', $status);
         }
 
+        if ($bandId = $request->input('band')) {
+            $query->whereHas('organizations', fn ($q) => $q->whereKey((int) $bandId));
+        }
+
+        if ($releaseId = $request->input('release')) {
+            $query->whereHas('releases', fn ($q) => $q->whereKey((int) $releaseId));
+        }
+
+        // The copy dialog leaves out the track it copies from.
+        if ($exclude = $request->input('exclude')) {
+            $query->whereKeyNot((int) $exclude);
+        }
+
         $results = $query->orderBy('title')->limit(50)->get()->map(fn ($t) => [
             'id' => $t->id,
             'title' => $t->display_title,
             'alt' => $t->alternative_titles_list,
             'artist' => $t->organizations->where('type', 'band')->pluck('primary_name')->join(', '),
+            'products' => $t->releases->pluck('title')->join(', '),
             'isrc' => $t->isrc_formatted,
             'status' => $t->status,
         ]);
