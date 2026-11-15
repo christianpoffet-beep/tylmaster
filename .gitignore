@@ -22,3 +22,8 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Office documents in the project root never belong in the repository
+/*.xlsx
+/*.xls
+/*.docx
