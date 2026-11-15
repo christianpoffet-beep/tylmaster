@@ -9,6 +9,7 @@ use App\Models\Release;
 use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Contract;
+use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -20,24 +21,20 @@ class TrackController extends Controller
     {
         $query = Track::with(['releases', 'organizations', 'contacts', 'mainAudioFile']);
 
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('isrc', 'like', "%{$search}%")
-                  // The ISRC of any version finds its track, typed with or without dashes.
-                  ->when(Track::normalizeIsrc($search), fn ($q, $isrc) => $q->orWhereHas('audioFiles', fn ($a) => $a->where('isrc', 'like', "%{$isrc}%")))
-                  ->orWhere('version', 'like', "%{$search}%")
-                  ->orWhere('composers', 'like', "%{$search}%")
-                  ->orWhere('producers', 'like', "%{$search}%")
-                  // Alternative titles sit in a JSON column, so the LIKE runs over its raw text.
-                  ->orWhereRaw('LOWER(alternative_titles) LIKE ?', ['%' . mb_strtolower($search) . '%']);
-            });
+        // Every word has to turn up somewhere: title, band, person, product, ISRC, ...
+        if ($terms = Track::searchTerms($request->input('search'))) {
+            $query->whereIntegerInRaw('id', Track::idsMatchingSearch($terms));
         }
 
         if ($status = $request->input('status')) {
             $query->where('status', $status);
         }
 
+        if ($bandId = $request->input('band')) {
+            $query->whereHas('organizations', fn ($q) => $q->whereKey((int) $bandId));
+        }
+
+        // The genre is stored on the track as text, so the filter compares the name.
         if ($genre = $request->input('genre')) {
             $query->where('genre', $genre);
         }
@@ -62,12 +59,16 @@ class TrackController extends Controller
 
         $tracks = $query->orderBy($sortField, $sortDir)->paginate(20)->withQueryString();
         $releases = Release::orderBy('title')->get();
-        $genres = Genre::orderBy('name')->get();
+        // Only what is actually in use, so no choice leads to an empty list.
+        $genres = Track::query()->whereNotNull('genre')->where('genre', '!=', '')
+            ->distinct()->orderBy('genre')->pluck('genre');
+        $bands = Organization::where('type', 'band')->whereHas('tracks')->get()
+            ->sortBy(fn ($band) => mb_strtolower($band->primary_name))->values();
         $recordingYears = $this->recordingYearValues()
             ->flatMap(fn ($value) => Track::expandRecordingYears($value))
             ->unique()->sortDesc()->values();
 
-        return view('admin.music.tracks.index', compact('tracks', 'releases', 'genres', 'recordingYears'));
+        return view('admin.music.tracks.index', compact('tracks', 'releases', 'genres', 'bands', 'recordingYears'));
     }
 
     public function create()
@@ -655,14 +656,9 @@ class TrackController extends Controller
     {
         $query = Track::with('organizations');
 
-        if ($q = $request->input('q')) {
-            $query->where(function ($qb) use ($q) {
-                $qb->where('title', 'like', "%{$q}%")
-                   ->orWhere('isrc', 'like', "%{$q}%")
-                   ->when(Track::normalizeIsrc($q), fn ($qb, $isrc) => $qb->orWhereHas('audioFiles', fn ($a) => $a->where('isrc', 'like', "%{$isrc}%")))
-                   // Alternative titles sit in a JSON column, so the LIKE runs over its raw text.
-                   ->orWhereRaw('LOWER(alternative_titles) LIKE ?', ['%' . mb_strtolower($q) . '%']);
-            });
+        // The same search as the tracklist, so a track is found by its band or credits here too.
+        if ($terms = Track::searchTerms($request->input('q'))) {
+            $query->whereIntegerInRaw('id', Track::idsMatchingSearch($terms));
         }
 
         if ($status = $request->input('status')) {

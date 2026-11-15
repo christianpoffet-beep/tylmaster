@@ -183,22 +183,76 @@ class Track extends Model
         return $this->belongsToMany(Organization::class);
     }
 
+    /** What the haystack reads; load these up front when building it for many tracks. */
+    public const SEARCH_RELATIONS = ['organizations', 'contacts', 'releases', 'projects', 'audioFiles'];
+
     /**
-     * Everything the tracklist filter matches against: title, alternative
-     * titles and ISRC plus the linked organizations (band, label, publisher)
-     * and the credited people. Lowercased once here so the filter can compare
-     * directly.
+     * Everything a search matches against, lowercased once: titles and
+     * alternative titles, the ISRCs with and without dashes (also those of
+     * every audio version, with their titles and remarks), the linked bands,
+     * labels and publishers under all their names, the credited people,
+     * products and projects, and the descriptive fields.
+     *
+     * Built in PHP rather than matched in SQL: organization names sit in a JSON
+     * column that escapes Umlaute, so a LIKE would miss "Züri".
      */
     public function getSearchHaystackAttribute(): string
     {
         $parts = array_merge(
-            [$this->display_title, $this->title, $this->isrc, $this->isrc_formatted],
+            [
+                $this->display_title, $this->title, $this->isrc, $this->isrc_formatted,
+                $this->genre, $this->composers, $this->producers,
+                $this->recording_location, $this->recording_years, $this->description,
+            ],
             $this->alternative_titles ?? [],
-            $this->organizations->map(fn ($o) => $o->primary_name)->all(),
+            $this->organizations->flatMap(fn ($o) => $o->names ?? [])->all(),
             $this->contacts->map(fn ($c) => $c->full_name)->all(),
+            $this->releases->pluck('title')->all(),
+            $this->projects->pluck('name')->all(),
+            $this->audioFiles
+                ->flatMap(fn ($a) => [$a->title, $a->isrc, $a->isrc_formatted, $a->notes, $a->original_name])
+                ->all(),
         );
 
-        return mb_strtolower(implode(' ', array_filter($parts)));
+        $parts = array_filter($parts, fn ($part) => $part !== null && $part !== '');
+
+        // One field per line, so a quoted phrase does not match across two of them.
+        return mb_strtolower(implode("\n", $parts));
+    }
+
+    /**
+     * Splits a search into terms: words, or "several words" in quotes.
+     * Every term has to turn up somewhere in the track for it to match.
+     */
+    public static function searchTerms(?string $search): array
+    {
+        preg_match_all('/"([^"]+)"|(\S+)/u', (string) $search, $matches, PREG_SET_ORDER);
+
+        return collect($matches)
+            ->map(fn ($m) => ($m[1] ?? '') !== '' ? $m[1] : ($m[2] ?? ''))
+            ->map(fn ($term) => mb_strtolower(trim($term, " \t\""))) // a stray quote is not part of the word
+            ->filter(fn ($term) => $term !== '')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /** IDs of the tracks in which every term turns up somewhere. */
+    public static function idsMatchingSearch(array $terms): array
+    {
+        return static::with(static::SEARCH_RELATIONS)->get()
+            ->filter(function (Track $track) use ($terms) {
+                $haystack = $track->search_haystack;
+
+                foreach ($terms as $term) {
+                    if (!str_contains($haystack, $term)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            })
+            ->modelKeys();
     }
 
     /**

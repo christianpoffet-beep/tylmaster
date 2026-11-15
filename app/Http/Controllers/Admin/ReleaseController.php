@@ -60,7 +60,7 @@ class ReleaseController extends Controller
         $artworks = Artwork::orderBy('title')->get();
         $templates = ProductTemplate::orderBy('sort_order')->get();
         // organizations and contacts feed the tracklist filter
-        $allTracks = Track::with(['organizations', 'contacts'])->orderBy('title')->get();
+        $allTracks = Track::with(Track::SEARCH_RELATIONS)->orderBy('title')->get();
         $catalogs = Organization::where('type', 'label')->whereNotNull('catalogs')->get()
             ->flatMap(fn ($org) => collect($org->catalogs)->map(fn ($c) => ['prefix' => $c, 'label' => $org->primary_name]))
             ->unique('prefix')->sortBy('prefix')->values();
@@ -165,7 +165,7 @@ class ReleaseController extends Controller
         $artworks = Artwork::orderBy('title')->get();
         $templates = ProductTemplate::orderBy('sort_order')->get();
         // organizations and contacts feed the tracklist filter
-        $allTracks = Track::with(['organizations', 'contacts'])->orderBy('title')->get();
+        $allTracks = Track::with(Track::SEARCH_RELATIONS)->orderBy('title')->get();
         $catalogs = Organization::where('type', 'label')->whereNotNull('catalogs')->get()
             ->flatMap(fn ($org) => collect($org->catalogs)->map(fn ($c) => ['prefix' => $c, 'label' => $org->primary_name]))
             ->unique('prefix')->sortBy('prefix')->values();
