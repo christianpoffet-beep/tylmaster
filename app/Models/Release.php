@@ -173,6 +173,23 @@ class Release extends Model
         return $this->organizationNames('label') ?: (string) $this->label_name;
     }
 
+    /** Bands of the tracks - for lists, where a product has no main artist of its own. */
+    public function getTrackBandNamesAttribute(): string
+    {
+        return $this->tracks
+            ->flatMap(fn ($track) => $track->organizations->where('type', 'band'))
+            ->unique('id')
+            ->map(fn ($org) => $org->primary_name)
+            ->filter()
+            ->join(', ');
+    }
+
+    /** The artwork marked as main artwork, else the first one linked. */
+    public function getMainArtworkAttribute(): ?Artwork
+    {
+        return $this->artworks->firstWhere('pivot.is_primary', true) ?? $this->artworks->first();
+    }
+
     private function organizationNames(string $type): string
     {
         return $this->organizations->where('type', $type)->map(fn ($org) => $org->primary_name)->filter()->join(', ');
