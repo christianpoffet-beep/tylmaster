@@ -54,7 +54,7 @@ class ReleaseAlbumPlaybackTest extends TestCase
         $this->assertSame([$first->id, $second->id], array_column($queue['items'], 'trackId'), 'In order, without the track that has no audio.');
         $this->assertSame([1, 2], array_column($queue['items'], 'number'));
         $this->assertSame('S.G.A.T.V', $queue['items'][0]['artist']);
-        $this->assertStringEndsWith('tracks/Now To Ruin.wav', $queue['items'][0]['url']);
+        $this->assertSame(route('admin.tracks.audioFiles.stream', [$first, $first->mainAudioFile]), $queue['items'][0]['url'], 'Played through the protected route.');
     }
 
     public function test_the_product_page_offers_the_album_and_starts_each_track_at_its_place(): void

@@ -49,6 +49,16 @@ return [
             'report' => false,
         ],
 
+        // Audio of tracks and submissions: outside the web root, without a URL.
+        // Only logged-in users get it, through the admin (App\Services\AudioStorage).
+        'audio' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/audio'),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

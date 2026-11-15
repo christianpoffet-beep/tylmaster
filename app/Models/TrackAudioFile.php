@@ -4,13 +4,15 @@ namespace App\Models;
 
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
  * One version of a track's audio (master, radio edit, instrumental, ...).
  * Each version can carry its own ISRC; exactly one per track is the main
  * version, which the list views play and download.
+ *
+ * The file lies on the private "audio" disk (App\Services\AudioStorage);
+ * its URL is an admin route, so only logged-in users can play or fetch it.
  */
 class TrackAudioFile extends Model
 {
@@ -38,9 +40,10 @@ class TrackAudioFile extends Model
         return $this->belongsTo(Track::class);
     }
 
+    /** For the player: streamed by the admin, logged-in users only. */
     public function getUrlAttribute(): string
     {
-        return Storage::disk('public')->url($this->file_path);
+        return route('admin.tracks.audioFiles.stream', [$this->track_id, $this->id]);
     }
 
     /** What the version is called in lists: its title, else the uploaded file name. */

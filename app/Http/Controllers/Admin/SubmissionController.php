@@ -47,6 +47,14 @@ class SubmissionController extends Controller
         return view('admin.submissions.show', compact('submission'));
     }
 
+    /** The submitted audio, for logged-in users only (it lies on the private audio disk). */
+    public function file(MusicSubmission $submission)
+    {
+        $path = \App\Services\AudioStorage::path($submission->file_path) ?? abort(404, 'Datei nicht gefunden.');
+
+        return \App\Services\AudioStorage::privately(response()->download($path, basename($submission->file_path)));
+    }
+
     public function updateStatus(Request $request, MusicSubmission $submission)
     {
         $request->validate([
