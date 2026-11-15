@@ -3,8 +3,10 @@
     $tracklist: ReleaseController::tracklistConfig() - the chosen rows and
     every track with what the picker filters by.
 
-    Above: the tracks on the product in order, with their number. Below: the
-    picker, filtered by search, band and product. The inputs are built by
+    Above: the tracks on the product in order, with their number - sorted by
+    drag and drop (grip, or the title with the mouse) or the arrows; the
+    order then gives the numbers 1 to n. Below: the picker, filtered by
+    search, band and product. The inputs are built by
     Alpine, so the section reports in with a marker; without it the controller
     leaves the tracklist alone.
 --}}
@@ -24,14 +26,20 @@
     @endif
 
     {{-- The tracks on this product --}}
-    <ol x-show="rows.length" x-cloak class="border border-gray-200 dark:border-gray-600 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
+    <ol x-show="rows.length" x-cloak x-ref="rows" class="border border-gray-200 dark:border-gray-600 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
         <template x-for="(row, index) in rows" :key="row.id">
-            <li class="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2">
+            <li :data-row-id="row.id" @pointerdown="startDrag($event, index)"
+                class="flex items-center gap-2 sm:gap-3 pl-1 pr-2 sm:pr-3 py-2 transition-colors"
+                :class="dragging === row.id ? 'bg-blue-50 dark:bg-blue-900/30 shadow-md relative z-10 rounded-lg ring-1 ring-blue-300 dark:ring-blue-600' : ''">
+                <span data-drag-handle="grip" class="flex-shrink-0 p-1 text-gray-300 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-300 touch-none"
+                      :class="dragging === row.id ? 'cursor-grabbing' : 'cursor-grab'" title="Ziehen zum Verschieben">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><circle cx="7" cy="4" r="1.5"/><circle cx="13" cy="4" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="16" r="1.5"/><circle cx="13" cy="16" r="1.5"/></svg>
+                </span>
                 <input type="hidden" name="track_ids[]" :value="row.id">
                 <input type="number" :name="'track_numbers[' + row.id + ']'" x-model="row.number" @change="sortByNumber()"
                        min="1" placeholder="#" :aria-label="'Tracknummer von ' + track(row.id).title"
                        class="w-14 flex-shrink-0 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm text-center focus:border-blue-500 focus:ring-blue-500">
-                <div class="min-w-0 flex-1">
+                <div class="min-w-0 flex-1 select-none" data-drag-handle="row" :class="dragging === row.id ? 'cursor-grabbing' : 'sm:cursor-grab'">
                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate" x-text="track(row.id).title"></p>
                     <p class="text-xs text-gray-500 dark:text-gray-400 truncate" x-show="track(row.id).bands || track(row.id).isrc">
                         <span x-text="track(row.id).bands"></span><span x-show="track(row.id).bands && track(row.id).isrc"> · </span><span class="font-mono" x-text="track(row.id).isrc"></span>
@@ -52,8 +60,9 @@
             </li>
         </template>
     </ol>
-    <div x-show="rows.length > 1 && !numberedInOrder" x-cloak class="mt-2">
-        <button type="button" @click="renumber()" class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">Nummern 1 bis <span x-text="rows.length"></span> in dieser Reihenfolge vergeben</button>
+    <div x-show="rows.length > 1" x-cloak class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+        <span class="text-gray-400 dark:text-gray-500">Zum Umsortieren ziehen – die Nummern folgen der Reihenfolge.</span>
+        <button type="button" x-show="!numberedInOrder" @click="renumber()" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">Nummern 1 bis <span x-text="rows.length"></span> in dieser Reihenfolge vergeben</button>
     </div>
     <p x-show="!rows.length" class="text-sm text-gray-400">Noch keine Tracks auf diesem Produkt.</p>
 
@@ -148,6 +157,7 @@ function releaseTracklist(config) {
         release: '',
         pickerOpen: config.rows.length === 0,
         limit: 60,
+        dragging: null,
 
         track(id) { return byId[id] ?? { title: 'Track #' + id, bands: '', isrc: null, duration: null, seconds: 0 }; },
 
@@ -196,13 +206,56 @@ function releaseTracklist(config) {
         addAll() { this.addable.forEach(track => this.add(track.id)); },
         toggle(id) { this.isAdded(id) ? this.remove(this.rows.findIndex(row => row.id === id)) : this.add(id); },
         remove(index) { if (index > -1) this.rows.splice(index, 1); },
-        // Moving swaps the numbers too, so number and position stay together
+        // Moving - arrows or drag and drop - makes the order the numbering
         move(index, step) {
             const other = index + step;
             if (other < 0 || other >= this.rows.length) return;
-            const a = this.rows[index], b = this.rows[other];
-            [a.number, b.number] = [b.number, a.number];
-            this.rows.splice(Math.min(index, other), 2, ...(step > 0 ? [b, a] : [a, b]));
+            this.moveTo(index, other);
+            this.renumber();
+        },
+        moveTo(from, to) {
+            if (from === to) return;
+            const [row] = this.rows.splice(from, 1);
+            this.rows.splice(to, 0, row);
+        },
+
+        /*
+         * Drag and drop with pointer events, so it works with mouse, pen and
+         * touch. The row moves along live as the pointer passes the middle
+         * of its neighbours. Touch only drags by the grip, the title would
+         * otherwise block scrolling the page.
+         */
+        startDrag(event, index) {
+            const handle = event.target.closest('[data-drag-handle]');
+            if (event.button !== 0 || !handle || (handle.dataset.dragHandle === 'row' && event.pointerType !== 'mouse')) return;
+            event.preventDefault();
+
+            const list = this.$refs.rows;
+            const before = this.rows.map(row => row.id).join();
+            this.dragging = this.rows[index].id;
+
+            const onMove = (e) => {
+                const items = [...list.children].filter(el => el.dataset && el.dataset.rowId);
+                const from = this.rows.findIndex(row => row.id === this.dragging);
+                let target = items.findIndex(el => { const box = el.getBoundingClientRect(); return e.clientY < box.top + box.height / 2; });
+                if (target === -1) target = items.length;
+                if (target > from) target--;
+                this.moveTo(from, target);
+
+                // Long lists: scroll along at the edges of the window
+                if (e.clientY < 60) window.scrollBy(0, -12);
+                else if (e.clientY > window.innerHeight - 60) window.scrollBy(0, 12);
+            };
+            const onEnd = () => {
+                window.removeEventListener('pointermove', onMove);
+                window.removeEventListener('pointerup', onEnd);
+                window.removeEventListener('pointercancel', onEnd);
+                this.dragging = null;
+                if (this.rows.map(row => row.id).join() !== before) this.renumber();
+            };
+            window.addEventListener('pointermove', onMove);
+            window.addEventListener('pointerup', onEnd);
+            window.addEventListener('pointercancel', onEnd);
         },
         renumber() { this.rows.forEach((row, index) => { row.number = index + 1; }); },
         // A typed number moves the row to its place; rows without a number go last
