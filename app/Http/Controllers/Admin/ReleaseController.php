@@ -148,7 +148,7 @@ class ReleaseController extends Controller
     public function show(Release $release)
     {
         $release->load([
-            'tracks.organizations', 'tracks.contacts',
+            'tracks.organizations', 'tracks.contacts', 'tracks.mainAudioFile',
             'contacts', 'organizations', 'projects', 'contracts',
             'artworks.images', 'artworks.logos', 'artworks.credits.creditable',
         ]);

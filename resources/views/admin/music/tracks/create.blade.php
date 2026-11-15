@@ -85,22 +85,8 @@
             </div>
         </div>
 
-        {{-- Audio --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mt-6" x-data="{ open: true }">
-            <button type="button" @click="open = !open" class="w-full p-6 flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Audio</h3>
-                <svg class="w-5 h-5 text-gray-400 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div x-show="open" x-collapse>
-                <div class="px-6 pb-6 space-y-6">
-                    <div>
-                        <label for="audio_file" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Audio-Datei</label>
-                        <input type="file" name="audio_file" id="audio_file" accept="audio/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
-                        @error('audio_file') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-            </div>
-        </div>
+        {{-- Audio: eine oder mehrere Versionen --}}
+        @include('admin.partials.track-audio-files', ['track' => null])
 
         {{-- Band --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mt-6" x-data="{ open: true }">

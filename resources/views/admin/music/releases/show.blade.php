@@ -201,9 +201,9 @@
                                 </td>
                                 <td class="py-2 px-3 text-sm">
                                     <div class="flex items-center gap-2">
-                                        @if($track->audio_file_path)
+                                        @if($track->mainAudioFile)
                                             <button type="button"
-                                                    @click="$dispatch('play-track', { title: '{{ addslashes($track->display_title) }}', artist: '{{ addslashes($track->organizations->where("type", "band")->pluck("primary_name")->join(", ")) }}', url: '{{ Storage::disk('public')->url($track->audio_file_path) }}' })"
+                                                    @click="$dispatch('play-track', @js($track->mainAudioFile->playerPayload()))"
                                                     class="w-6 h-6 flex items-center justify-center rounded-full bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white transition flex-shrink-0">
                                                 <svg class="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                                             </button>

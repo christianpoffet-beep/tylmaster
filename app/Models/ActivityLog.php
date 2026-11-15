@@ -34,6 +34,7 @@ class ActivityLog extends Model
             Expense::class => 'Ausgabe',
             Task::class => 'Aufgabe',
             Track::class => 'Track',
+            TrackAudioFile::class => 'Audiodatei',
             Release::class => 'Release',
             Project::class => 'Projekt',
             MusicSubmission::class => 'Submission',
@@ -130,6 +131,13 @@ class ActivityLog extends Model
         'label' => 'Label',
         'publisher' => 'Verlag',
         'audio_file' => 'Audiodatei',
+        'is_main' => 'Main Version',
+        'track_id' => 'Track',
+        'audio_format' => 'Audioformat',
+        'bitrate' => 'Bitrate',
+        'sample_rate' => 'Samplerate',
+        'channels' => 'Kanäle',
+        'original_name' => 'Originaler Dateiname',
         'cover_image' => 'Cover',
 
         // IPI / Verwertung

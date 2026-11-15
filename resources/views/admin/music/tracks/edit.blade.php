@@ -86,29 +86,8 @@
             </div>
         </div>
 
-        {{-- Audio --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mt-6" x-data="{ open: {{ $track->audio_file_path ? 'true' : 'false' }} }">
-            <button type="button" @click="open = !open" class="w-full flex items-center justify-between p-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Audio</h3>
-                <svg class="w-5 h-5 text-gray-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div x-show="open" x-collapse>
-                <div class="px-6 pb-6">
-                    @if($track->audio_file_path)
-                        <div class="flex items-center gap-3 mb-3">
-                            <button type="button"
-                                    @click="$dispatch('play-track', { title: '{{ addslashes($track->display_title) }}', artist: '{{ addslashes($track->organizations->where("type", "band")->pluck("primary_name")->join(", ")) }}', url: '{{ Storage::disk('public')->url($track->audio_file_path) }}' })"
-                                    class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white transition flex-shrink-0">
-                                <svg class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                            </button>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ basename($track->audio_file_path) }}</p>
-                        </div>
-                    @endif
-                    <input type="file" name="audio_file" id="audio_file" accept="audio/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
-                    @error('audio_file') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
-            </div>
-        </div>
+        {{-- Audio: eine oder mehrere Versionen --}}
+        @include('admin.partials.track-audio-files', ['track' => $track])
 
         {{-- Band --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mt-6" x-data="{ open: {{ $track->organizations->where('type', 'band')->count() ? 'true' : 'false' }} }">
