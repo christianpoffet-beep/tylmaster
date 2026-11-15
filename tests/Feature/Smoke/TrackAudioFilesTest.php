@@ -25,6 +25,7 @@ class TrackAudioFilesTest extends TestCase
         parent::setUp();
 
         Storage::fake('public');
+        Storage::fake('audio');
         $this->actingAs(User::factory()->create());
     }
 
@@ -36,7 +37,7 @@ class TrackAudioFilesTest extends TestCase
     private function addVersion(Track $track, array $attributes = []): TrackAudioFile
     {
         $path = 'tracks/' . uniqid('', true) . '.wav';
-        Storage::disk('public')->put($path, 'RIFF');
+        Storage::disk('audio')->put($path, 'RIFF');
 
         return $track->audioFiles()->create(array_merge([
             'file_path' => $path,
@@ -69,7 +70,7 @@ class TrackAudioFilesTest extends TestCase
         $this->assertSame('Finaler Mix', $versions[0]->notes);
         $this->assertSame('radio.mp3', $versions[1]->original_name);
         $this->assertSame([false, true], $versions->pluck('is_main')->all());
-        Storage::disk('public')->assertExists($versions->pluck('file_path')->all());
+        Storage::disk('audio')->assertExists($versions->pluck('file_path')->all());
     }
 
     public function test_without_a_choice_the_first_upload_becomes_main(): void
@@ -134,7 +135,7 @@ class TrackAudioFilesTest extends TestCase
         $this->assertTrue($radio->is_main);
 
         $this->assertNull($demo->fresh());
-        Storage::disk('public')->assertMissing($demo->file_path);
+        Storage::disk('audio')->assertMissing($demo->file_path);
     }
 
     public function test_removing_the_main_version_hands_the_role_on(): void
@@ -168,7 +169,7 @@ class TrackAudioFilesTest extends TestCase
         $this->assertSame('CHTYL2600001', $master->isrc);
         $this->assertSame('Final', $master->notes);
         $this->assertTrue($master->is_main);
-        Storage::disk('public')->assertExists($master->file_path);
+        Storage::disk('audio')->assertExists($master->file_path);
     }
 
     public function test_an_invalid_version_isrc_is_rejected(): void
@@ -228,11 +229,13 @@ class TrackAudioFilesTest extends TestCase
         $release = \App\Models\Release::create(['title' => 'Sammlung 2026']);
         $track->releases()->attach($release->id, ['track_number' => 1, 'disc_number' => 1, 'role' => 'main']);
 
+        // The player URLs sit in JSON with escaped slashes
+        $streamOf = fn ($version) => "audio-files/{$version->id}/stream";
         foreach (['/admin/tracks', "/admin/releases/{$release->id}"] as $page) {
-            $html = $this->get($page)->assertOk()->getContent();
+            $html = str_replace(['\\\\\\/', '\\/'], '/', $this->get($page)->assertOk()->getContent());
 
-            $this->assertStringContainsString(basename($main->file_path), $html, "{$page} does not play the main version.");
-            $this->assertStringNotContainsString(basename($demo->file_path), $html, "{$page} plays a version that is not the main one.");
+            $this->assertStringContainsString($streamOf($main), $html, "{$page} does not play the main version.");
+            $this->assertStringNotContainsString($streamOf($demo), $html, "{$page} plays a version that is not the main one.");
         }
     }
 

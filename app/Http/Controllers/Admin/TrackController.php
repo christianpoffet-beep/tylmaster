@@ -10,6 +10,7 @@ use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Contract;
 use App\Models\Organization;
+use App\Services\AudioStorage;
 use App\Services\IsrcRegistry;
 use App\Services\TrackMetadataTransfer;
 use Illuminate\Http\RedirectResponse;
@@ -309,17 +310,38 @@ class TrackController extends Controller
         return $this->sendAudioFile($audioFile);
     }
 
-    private function sendAudioFile(TrackAudioFile $audioFile)
+    /**
+     * For the player: the file inline, with byte ranges so seeking works.
+     * Behind the login like every admin route; the files themselves are not
+     * reachable from the web.
+     */
+    public function streamAudioFile(Track $track, TrackAudioFile $audioFile)
     {
-        if (!Storage::disk('public')->exists($audioFile->file_path)) {
-            abort(404, 'Audiodatei nicht gefunden.');
+        if ((int) $audioFile->track_id !== (int) $track->id) {
+            abort(404);
         }
 
-        return Storage::disk('public')->download($audioFile->file_path, $audioFile->download_name);
+        $path = AudioStorage::path($audioFile->file_path) ?? abort(404, 'Audiodatei nicht gefunden.');
+
+        // File responses are "public" by default - shared caches must never keep a copy
+        $response = response()->file($path, ['X-Content-Type-Options' => 'nosniff']);
+        $response->setPrivate();
+        $response->setMaxAge(3600);
+
+        return $response;
+    }
+
+    private function sendAudioFile(TrackAudioFile $audioFile)
+    {
+        $path = AudioStorage::path($audioFile->file_path) ?? abort(404, 'Audiodatei nicht gefunden.');
+
+        return AudioStorage::privately(response()->download($path, $audioFile->download_name));
     }
 
     public function destroy(Track $track)
     {
+        // The rows go with the track; their files would stay behind on the disk
+        $track->audioFiles()->get()->each(fn (TrackAudioFile $audioFile) => $this->deleteAudioFile($audioFile));
         $track->delete();
         return redirect()->route('admin.tracks.index')->with('success', 'Track gelöscht.');
     }
@@ -539,7 +561,7 @@ class TrackController extends Controller
     {
         $ext = strtolower($upload->getClientOriginalExtension());
         $meta = $this->extractAudioMetadata($upload->getRealPath());
-        $path = $upload->storeAs('tracks', bin2hex(random_bytes(10)) . '.' . $ext, 'public');
+        $path = $upload->storeAs('tracks', bin2hex(random_bytes(10)) . '.' . $ext, AudioStorage::DISK);
 
         return $track->audioFiles()->create(array_merge([
             'file_path' => $path,
@@ -595,7 +617,7 @@ class TrackController extends Controller
         $audioFile->delete();
 
         if (str_starts_with($path, 'tracks/') && !TrackAudioFile::where('file_path', $path)->exists()) {
-            Storage::disk('public')->delete($path);
+            AudioStorage::delete($path);
         }
     }
 

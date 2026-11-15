@@ -86,6 +86,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('tracks/{track}/apply-metadata', [TrackController::class, 'applyMetadata'])->name('tracks.applyMetadata');
     Route::get('tracks/{track}/download', [TrackController::class, 'download'])->name('tracks.download');
     Route::get('tracks/{track}/audio-files/{audioFile}/download', [TrackController::class, 'downloadAudioFile'])->name('tracks.audioFiles.download');
+    Route::get('tracks/{track}/audio-files/{audioFile}/stream', [TrackController::class, 'streamAudioFile'])->name('tracks.audioFiles.stream');
     Route::post('tracks/bulk-update', [TrackController::class, 'bulkUpdate'])->name('tracks.bulkUpdate');
     Route::resource('releases', ReleaseController::class);
 
@@ -136,6 +137,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::resource('expenses', ExpenseController::class)->except('show');
     Route::get('submissions', [SubmissionController::class, 'index'])->name('submissions.index');
     Route::get('submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
+    Route::get('submissions/{submission}/file', [SubmissionController::class, 'file'])->name('submissions.file');
     Route::patch('submissions/{submission}/status', [SubmissionController::class, 'updateStatus'])->name('submissions.updateStatus');
     Route::post('submissions/{submission}/import', [SubmissionController::class, 'import'])->name('submissions.import');
     Route::delete('submissions/{submission}', [SubmissionController::class, 'destroy'])->name('submissions.destroy');
