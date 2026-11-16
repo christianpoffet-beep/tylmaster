@@ -256,6 +256,37 @@
     </div>
     @endif
 
+    {{-- Only a draft can be deleted; everything else stays on record. --}}
+    @php
+        $statusLabels = ['draft' => 'Entwurf', 'active' => 'Aktiv', 'expired' => 'Ausgelaufen', 'terminated' => 'Gekündigt'];
+        $documentCount = $contract->documents->count();
+        $archivedPdfCount = $contract->documents->where('is_archived', true)->count();
+        $deleteQuestion = 'Entwurf «' . $contract->title . '» endgültig löschen?';
+        if ($documentCount > 0) {
+            $deleteQuestion .= "\n\nMitgelöscht " . ($documentCount === 1 ? 'wird 1 Dokument' : "werden {$documentCount} Dokumente")
+                . ($archivedPdfCount > 0 ? ', darunter ' . ($archivedPdfCount === 1 ? '1 archiviertes PDF' : "{$archivedPdfCount} archivierte PDFs") : '')
+                . '.';
+        }
+    @endphp
+    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <h3 class="text-sm font-semibold text-red-600 mb-2">Gefahrenzone</h3>
+        @if($contract->status === 'draft')
+            <form method="POST" action="{{ route('admin.contracts.destroy', $contract) }}" onsubmit="return confirm(@js($deleteQuestion))">
+                @csrf
+                @method('DELETE')
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                    Der Entwurf wird unwiderruflich gelöscht{{ $documentCount === 0 ? '' : ($documentCount === 1 ? ', mit seinem Dokument' : ', mit seinen ' . $documentCount . ' Dokumenten') }}.
+                    Verknüpfte Aufgaben bleiben bestehen.
+                </p>
+                <button type="submit" class="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700">Entwurf löschen</button>
+            </form>
+        @else
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                Löschen geht nur im Status «Entwurf». Dieser Vertrag ist «{{ $statusLabels[$contract->status] ?? $contract->status }}» und bleibt erhalten.
+            </p>
+        @endif
+    </div>
+
 </div>
 
 @include('admin.partials.contract-party-picker-script', ['organizations' => $organizations, 'contacts' => $contacts])
