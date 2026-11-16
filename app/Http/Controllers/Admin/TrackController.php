@@ -461,7 +461,7 @@ class TrackController extends Controller
 
         return [
             'audio_files' => 'nullable|array',
-            'audio_files.*.file' => 'nullable|file|mimes:mp3,wav,flac,aac,m4a,ogg|max:307200',
+            'audio_files.*.file' => 'nullable|file|mimes:mp3,wav,flac,aac,m4a,ogg|max:' . TrackAudioFile::MAX_UPLOAD_MB * 1024,
             'audio_files.*.title' => 'nullable|string|max:255',
             'audio_files.*.isrc' => $isrc,
             'audio_files.*.notes' => 'nullable|string|max:2000',
