@@ -200,6 +200,11 @@
                 'closingValue' => old('default_closing_note', ''),
             ])
 
+            @include('admin.partials.contract-placeholders', [
+                'field' => 'default_placeholder_values',
+                'rows' => old('default_placeholder_values', []),
+            ])
+
             {{-- Standard-Verknüpfungen --}}
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-6">
                 <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Standard-Verknüpfungen</p>

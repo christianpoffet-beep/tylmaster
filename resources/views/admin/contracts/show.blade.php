@@ -29,6 +29,24 @@
                 <div><span class="text-gray-500 dark:text-gray-400">Laufzeit:</span> <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $contract->start_date?->format('d.m.Y') ?? '-' }} — {{ $contract->end_date?->format('d.m.Y') ?? '-' }}</span></div>
             </div>
 
+            {{-- Placeholders are filled here as in the PDF; what is still missing is marked. --}}
+            @php
+                $markClass = 'bg-amber-200 dark:bg-amber-700/60 text-gray-900 dark:text-gray-100 rounded px-0.5';
+                $marked = fn (?string $text) => \App\Services\ContractPlaceholders::markMissing($text, $markClass);
+                $placeholderProblems = $contract->placeholders()->problems();
+            @endphp
+            @if($placeholderProblems)
+            <div class="mt-4 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3">
+                <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Platzhalter ohne Wert</p>
+                <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5">Diese Platzhalter stünden so im PDF. Ergänze sie unter «Bearbeiten» als Vertragswert, oder trage die fehlenden Vertragsdaten ein.</p>
+                <ul class="mt-2 space-y-0.5 text-xs text-amber-800 dark:text-amber-300">
+                    @foreach($placeholderProblems as $name => $reason)
+                        <li><code class="font-mono">{{ '{' . $name . '}' }}</code>: {{ $reason }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
             @if($contract->parties->count())
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Vertragsparteien</h3>
@@ -72,8 +90,8 @@
 
             @if($contract->subject)
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{{ $contract->subject_heading ?: 'Vertragsgegenstand' }}</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $contract->subject }}</p>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{!! $contract->subject_heading ? $marked($contract->fillPlaceholders($contract->subject_heading)) : 'Vertragsgegenstand' !!}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{!! $marked($contract->fillPlaceholders($contract->subject)) !!}</p>
             </div>
             @endif
 
@@ -88,7 +106,7 @@
                         </span>
                     </div>
                     @if($contract->zession_notes)
-                        <p class="text-xs text-amber-700 dark:text-amber-400 mt-1.5">{{ $contract->zession_notes }}</p>
+                        <p class="text-xs text-amber-700 dark:text-amber-400 mt-1.5">{!! $marked($contract->fillPlaceholders($contract->zession_notes)) !!}</p>
                     @endif
                 </div>
             </div>
@@ -125,7 +143,7 @@
                                 @php $sv = $contract->rightSplitValues($right); @endphp
                                 <span class="text-gray-600 dark:text-gray-400">@foreach($rLabels as $li => $lname)@if(!$loop->first) / @endif{{ $sv[$li] ?? 0 }}% {{ $lname }}@endforeach</span>
                             @else
-                                <span class="text-gray-600 dark:text-gray-400">{{ $right['custom_text'] ?? '' }}</span>
+                                <span class="text-gray-600 dark:text-gray-400">{!! $marked($contract->fillPlaceholders($right['custom_text'] ?? '')) !!}</span>
                             @endif
                         </div>
                     @endforeach
@@ -138,8 +156,8 @@
                 $roleLabels = collect(\App\Models\Setting::creditRoles())->flatMap(fn($roles) => $roles)->toArray();
             @endphp
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{{ $contract->relations_heading ?: 'Verknüpfungen' }}</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line mb-3">{{ $contract->relations_note ?: 'Folgende Songs sind Bestandteil dieses Vertrages.' }}</p>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{!! $contract->relations_heading ? $marked($contract->fillPlaceholders($contract->relations_heading)) : 'Verknüpfungen' !!}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line mb-3">{!! $contract->relations_note ? $marked($contract->fillPlaceholders($contract->relations_note)) : 'Folgende Songs sind Bestandteil dieses Vertrages.' !!}</p>
 
                 @foreach($contract->tracks as $track)
                     <div class="mb-3 last:mb-0">
@@ -182,9 +200,9 @@
                     @php if (($contract->auto_number_sections ?? true) && $section['numbered']) { $sectionNo++; } @endphp
                     <div>
                         @if($section['title'])
-                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">@if(($contract->auto_number_sections ?? true) && $section['numbered'])<span class="text-gray-400">{{ $sectionNo }}.</span> @endif{{ $section['title'] }}</h3>
+                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">@if(($contract->auto_number_sections ?? true) && $section['numbered'])<span class="text-gray-400">{{ $sectionNo }}.</span> @endif{!! $marked($section['title']) !!}</h3>
                         @endif
-                        <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $section['body'] }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{!! $marked($section['body']) !!}</p>
                     </div>
                 @endforeach
             </div>
@@ -192,7 +210,7 @@
 
             @if($contract->closing_note)
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{{ $contract->closing_note }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{!! $marked($contract->fillPlaceholders($contract->closing_note)) !!}</p>
             </div>
             @endif
         </div>

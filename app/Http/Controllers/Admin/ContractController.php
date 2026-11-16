@@ -18,6 +18,7 @@ use App\Models\Track;
 use App\Models\Release;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use App\Services\ContractPlaceholders;
 use App\Services\DocumentStorage;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -141,7 +142,7 @@ class ContractController extends Controller
             'track_ids.*' => 'exists:tracks,id',
             'release_ids' => 'nullable|array',
             'release_ids.*' => 'exists:releases,id',
-        ]);
+        ] + ContractPlaceholders::validationRules('placeholder_values'), ContractPlaceholders::validationMessages('placeholder_values'));
 
         // Validate shares sum to 100
         $totalShare = collect($validated['parties'])->sum('share');
@@ -150,6 +151,7 @@ class ContractController extends Controller
         }
 
         $this->applySections($request, $validated);
+        $this->applyPlaceholderValues($request, $validated);
 
         // Process rights
         $rights = $request->input('rights', []);
@@ -322,7 +324,7 @@ class ContractController extends Controller
             'track_ids.*' => 'exists:tracks,id',
             'release_ids' => 'nullable|array',
             'release_ids.*' => 'exists:releases,id',
-        ]);
+        ] + ContractPlaceholders::validationRules('placeholder_values'), ContractPlaceholders::validationMessages('placeholder_values'));
 
         // Validate shares sum to 100
         $totalShare = collect($validated['parties'])->sum('share');
@@ -331,6 +333,7 @@ class ContractController extends Controller
         }
 
         $this->applySections($request, $validated);
+        $this->applyPlaceholderValues($request, $validated);
 
         // Process rights
         $rights = $request->input('rights', []);
@@ -558,6 +561,20 @@ class ContractController extends Controller
         $dompdf->render();
 
         return $dompdf->getCanvas()->get_page_count();
+    }
+
+    /**
+     * The «Vertragswerte» for the placeholders. The editor builds its rows in
+     * the browser, so a submit that never carried it leaves the stored ones
+     * alone.
+     */
+    private function applyPlaceholderValues(Request $request, array &$validated): void
+    {
+        unset($validated['placeholder_values']);
+
+        if ($request->filled('placeholder_values_submitted')) {
+            $validated['placeholder_values'] = ContractPlaceholders::storedRows($request->input('placeholder_values', []));
+        }
     }
 
     /**

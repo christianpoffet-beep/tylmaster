@@ -511,7 +511,7 @@
     @php
         $preambleBlocks = $contract->preambleBlocks($t);
         $showPartiesTable = $contract->show_parties_table ?? true;
-        $customPreamble = ($contract->preamble_mode ?? 'auto') === 'custom' ? trim((string) $contract->preamble_text) : '';
+        $customPreamble = ($contract->preamble_mode ?? 'auto') === 'custom' ? trim($contract->fillPlaceholders($contract->preamble_text)) : '';
     @endphp
     @if($contract->parties->count() && ($showPartiesTable || $preambleBlocks || $customPreamble !== ''))
     <div class="section">
@@ -601,10 +601,10 @@
             @php if ($autoNumber) { $clauseNo++; } @endphp
             <div class="clause">
                 @include('admin.contracts.partials.clause', [
-                    'title' => $contract->subject_heading ?: $t['subject_title'],
+                    'title' => $contract->fillPlaceholders($contract->subject_heading) ?: $t['subject_title'],
                     'number' => $autoNumber ? $clauseNo : null,
                     'titleClass' => 'clause-title',
-                    'body' => $contract->subject,
+                    'body' => $contract->fillPlaceholders($contract->subject),
                 ])
             </div>
         @endif
@@ -625,7 +625,7 @@
     {{-- Schlussbestimmungen --}}
     @if($contract->closing_note)
     <div class="section section-compact">
-        @include('admin.contracts.partials.text-block', ['text' => $contract->closing_note])
+        @include('admin.contracts.partials.text-block', ['text' => $contract->fillPlaceholders($contract->closing_note)])
     </div>
     @endif
 
@@ -648,7 +648,7 @@
     @php
         $roleLabels = collect(\App\Models\Setting::creditRoles())->flatMap(fn($roles) => $roles)->toArray();
         // The annex already says "Anhang" - "Anhang: Aufnahmen" would say it twice.
-        $relationsTitle = $contract->relations_heading ?: $t['relations_title'];
+        $relationsTitle = $contract->fillPlaceholders($contract->relations_heading) ?: $t['relations_title'];
         $relationsTitle = preg_replace('/^' . preg_quote($t['annex_title'], '/') . '\s*[:–-]\s*/iu', '', $relationsTitle) ?: $relationsTitle;
     @endphp
     <div class="annex-block">
@@ -658,7 +658,7 @@
                 @php $annexHeadingPending = false; @endphp
             @endif
             <div class="clause-title">{{ $relationsTitle }}</div>
-            <div class="relations-note">{{ $contract->relations_note ?: $t['relations_intro_default'] }}</div>
+            <div class="relations-note">{{ $contract->fillPlaceholders($contract->relations_note) ?: $t['relations_intro_default'] }}</div>
         </div>
 
         @if($contract->projects->count())
@@ -750,7 +750,7 @@
                             @php $sv = $contract->rightSplitValues($right); @endphp
                             @foreach($rLabels as $li => $lname)@if(!$loop->first) / @endif{{ \App\Models\Contract::formatPercent($sv[$li] ?? 0) }} {{ $lname }}@endforeach
                         @else
-                            {{ $right['custom_text'] ?? '' }}
+                            {{ $contract->fillPlaceholders($right['custom_text'] ?? '') }}
                         @endif
                     </td>
                 </tr>
@@ -772,7 +772,7 @@
             <div class="amount">{{ $contract->zession_currency }} {{ number_format($contract->zession_amount, 2, '.', "'") }}</div>
             <div class="note">{{ $t['zession_note'] }}</div>
             @if($contract->zession_notes)
-                <div class="note" style="margin-top: 6px;">{{ $contract->zession_notes }}</div>
+                <div class="note" style="margin-top: 6px;">{{ $contract->fillPlaceholders($contract->zession_notes) }}</div>
             @endif
         </div>
     </div>

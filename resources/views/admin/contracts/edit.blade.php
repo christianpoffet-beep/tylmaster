@@ -222,6 +222,12 @@
                 'closingValue' => old('closing_note', $contract->closing_note ?? ''),
             ])
 
+            @include('admin.partials.contract-placeholders', [
+                'field' => 'placeholder_values',
+                'rows' => old('placeholder_values', $contract->placeholder_values ?? []),
+                'current' => $contract->placeholders()->values(),
+            ])
+
             @include('admin.partials.contract-logo', ['model' => $contract])
 
             <div>
