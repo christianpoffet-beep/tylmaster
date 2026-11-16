@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\ContractTypeController;
 use App\Http\Controllers\Admin\InvoiceTemplateController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AddressCircleController;
+use App\Http\Controllers\Admin\CatalogImportController;
 use App\Http\Controllers\Admin\DeployController;
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CampaignTemplateController;
@@ -197,6 +198,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // Deploy helper: runs migrations and clears caches (no SSH on this hosting)
     Route::post('deploy-refresh', [DeployController::class, 'refresh'])->name('deploy-refresh');
+
+    // One-time catalogue import from the SWISSPERFORM list (no SSH on this hosting); goes again afterwards
+    Route::get('catalog-import', [CatalogImportController::class, 'show'])->name('catalog-import.show');
+    Route::post('catalog-import', [CatalogImportController::class, 'upload'])->name('catalog-import.upload');
+    Route::post('catalog-import/run', [CatalogImportController::class, 'run'])->name('catalog-import.run');
+    Route::delete('catalog-import', [CatalogImportController::class, 'discard'])->name('catalog-import.discard');
 
     // Musik-Settings
     Route::get('settings/credit-roles', [MusicSettingsController::class, 'creditRoles'])->name('settings.credit-roles');
