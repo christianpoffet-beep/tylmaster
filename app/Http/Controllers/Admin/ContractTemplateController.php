@@ -11,6 +11,7 @@ use App\Models\ContractType;
 use App\Models\Document;
 use App\Models\Organization;
 use Illuminate\Http\Request;
+use App\Services\ContractPlaceholders;
 use App\Services\DocumentStorage;
 use Illuminate\Support\Facades\Storage;
 
@@ -114,7 +115,7 @@ class ContractTemplateController extends Controller
             'rights_labels' => 'nullable|array',
             'rights_labels.*' => 'nullable|string|max:50',
             'sort_order' => 'nullable|integer|min:0',
-        ]);
+        ] + ContractPlaceholders::validationRules('default_placeholder_values'), ContractPlaceholders::validationMessages('default_placeholder_values'));
 
         $parties = $request->input('parties', []);
         $parties = array_values(array_filter($parties, fn ($p) => !empty($p['organization_id']) || !empty($p['contact_id'])));
@@ -233,7 +234,7 @@ class ContractTemplateController extends Controller
             'rights_labels' => 'nullable|array',
             'rights_labels.*' => 'nullable|string|max:50',
             'sort_order' => 'nullable|integer|min:0',
-        ]);
+        ] + ContractPlaceholders::validationRules('default_placeholder_values'), ContractPlaceholders::validationMessages('default_placeholder_values'));
 
         $parties = $request->input('parties', []);
         $parties = array_values(array_filter($parties, fn ($p) => !empty($p['organization_id']) || !empty($p['contact_id'])));
@@ -312,6 +313,11 @@ class ContractTemplateController extends Controller
         $defaults['default_territory'] = $request->boolean('default_territory_worldwide')
             ? ['ALL']
             : ($request->input('default_territory') ?: null);
+
+        // The Vertragswerte editor builds its rows in the browser as well.
+        if ($request->filled('default_placeholder_values_submitted')) {
+            $defaults['default_placeholder_values'] = ContractPlaceholders::storedRows($request->input('default_placeholder_values', []));
+        }
 
         // The search fields build their inputs in the browser; a section that
         // never reported in must not wipe what is stored.
@@ -395,6 +401,7 @@ class ContractTemplateController extends Controller
             'default_relations_heading' => $contractTemplate->default_relations_heading,
             'default_closing_note' => $contractTemplate->default_closing_note,
             'default_sections' => $contractTemplate->default_sections,
+            'default_placeholder_values' => $contractTemplate->default_placeholder_values ?? [],
             'default_auto_number_sections' => (bool) $contractTemplate->default_auto_number_sections,
             'default_has_zession' => (bool) $contractTemplate->default_has_zession,
             'default_zession_amount' => $contractTemplate->default_zession_amount,

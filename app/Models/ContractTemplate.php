@@ -13,7 +13,7 @@ class ContractTemplate extends Model
     protected $fillable = [
         'name', 'slug', 'contract_type_slug', 'language', 'default_terms', 'default_status',
         'default_subject', 'default_subject_heading', 'default_relations_note', 'default_relations_heading',
-        'default_sections', 'default_closing_note',
+        'default_sections', 'default_closing_note', 'default_placeholder_values',
         'default_parties', 'sort_order', 'rights', 'rights_label_a', 'rights_label_b', 'rights_labels',
         'default_has_zession', 'default_zession_amount', 'default_zession_currency', 'default_zession_notes',
         'default_territory',
@@ -25,6 +25,7 @@ class ContractTemplate extends Model
     protected $casts = [
         'default_parties' => 'array',
         'default_sections' => 'array',
+        'default_placeholder_values' => 'array',
         'rights' => 'array',
         'rights_labels' => 'array',
         'default_has_zession' => 'boolean',

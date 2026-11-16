@@ -242,6 +242,11 @@
                 'closingValue' => old('closing_note', $blankContract->closing_note ?? ''),
             ])
 
+            @include('admin.partials.contract-placeholders', [
+                'field' => 'placeholder_values',
+                'rows' => old('placeholder_values', []),
+            ])
+
             @include('admin.partials.contract-logo', ['model' => null, 'offerTemplateLogo' => true])
 
             <div>
@@ -335,6 +340,9 @@ function contractForm() {
                     const el = document.querySelector(`[name="${field}"]`);
                     if (value && el) el.value = value;
                 });
+                if (data.default_placeholder_values && data.default_placeholder_values.length > 0) {
+                    window.dispatchEvent(new CustomEvent('placeholder-values-set', { detail: data.default_placeholder_values }));
+                }
                 if (data.default_sections && data.default_sections.length > 0) {
                     window.dispatchEvent(new CustomEvent('contract-sections-set', {
                         detail: { editorId: 'terms', sections: data.default_sections }

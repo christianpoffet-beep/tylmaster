@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ContractPlaceholders;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,7 +14,7 @@ class Contract extends Model
         'contract_number', 'title', 'type', 'status', 'language', 'start_date', 'end_date', 'terms',
         'subject', 'subject_heading', 'relations_note', 'relations_heading',
         'preamble_mode', 'preamble_text', 'show_parties_table',
-        'sections', 'auto_number_sections', 'closing_note',
+        'sections', 'auto_number_sections', 'closing_note', 'placeholder_values',
         'has_zession', 'zession_amount', 'zession_currency', 'zession_notes',
         'territory', 'rights', 'rights_label_a', 'rights_label_b', 'rights_labels',
         'logo_path', 'logo_in_header', 'logo_as_watermark',
@@ -28,6 +29,7 @@ class Contract extends Model
         'rights' => 'array',
         'rights_labels' => 'array',
         'sections' => 'array',
+        'placeholder_values' => 'array',
         'show_parties_table' => 'boolean',
         'auto_number_sections' => 'boolean',
         'logo_in_header' => 'boolean',
@@ -227,9 +229,60 @@ class Contract extends Model
         return $lines;
     }
 
+    protected ?ContractPlaceholders $placeholderFiller = null;
+
     /**
-     * The contract clauses in printing order. Falls back to the legacy single
-     * terms textarea so contracts written before the section editor still print.
+     * The placeholders ({label_name}, [[MEHRERE: …]] …) of this contract.
+     */
+    public function placeholders(): ContractPlaceholders
+    {
+        return $this->placeholderFiller ??= new ContractPlaceholders($this);
+    }
+
+    /**
+     * A contract text with its placeholders filled in.
+     */
+    public function fillPlaceholders(?string $text): string
+    {
+        return $this->placeholders()->fill($text);
+    }
+
+    /**
+     * Every text the contract prints that may carry placeholders.
+     *
+     * @return string[]
+     */
+    public function placeholderTexts(): array
+    {
+        $texts = [$this->subject_heading, $this->subject, $this->closing_note, $this->relations_heading, $this->relations_note];
+
+        $sections = is_array($this->sections) ? $this->sections : [];
+        foreach ($sections as $section) {
+            $texts[] = $section['title'] ?? null;
+            $texts[] = $section['body'] ?? null;
+        }
+        if ($sections === []) {
+            $texts[] = $this->terms;
+        }
+        if (($this->preamble_mode ?? 'auto') === 'custom') {
+            $texts[] = $this->preamble_text;
+        }
+        if ($this->has_zession) {
+            $texts[] = $this->zession_notes;
+        }
+        foreach ((array) ($this->rights ?? []) as $right) {
+            if (($right['mode'] ?? 'split') !== 'split') {
+                $texts[] = $right['custom_text'] ?? null;
+            }
+        }
+
+        return array_values(array_filter($texts, fn ($t) => is_string($t) && $t !== ''));
+    }
+
+    /**
+     * The contract clauses in printing order, placeholders filled in. Falls
+     * back to the legacy single terms textarea so contracts written before the
+     * section editor still print.
      *
      * @return array<int, array{title: string, body: string, page_break: bool}>
      */
@@ -244,15 +297,15 @@ class Contract extends Model
         if ($sections === [] && trim((string) $this->terms) !== '') {
             return [[
                 'title' => $t['terms_title'],
-                'body' => $this->terms,
+                'body' => $this->fillPlaceholders($this->terms),
                 'page_break' => false,
                 'numbered' => false,
             ]];
         }
 
         return array_map(fn ($s) => [
-            'title' => trim((string) ($s['title'] ?? '')),
-            'body' => (string) ($s['body'] ?? ''),
+            'title' => $this->fillPlaceholders(trim((string) ($s['title'] ?? ''))),
+            'body' => $this->fillPlaceholders((string) ($s['body'] ?? '')),
             'page_break' => !empty($s['page_break']),
             'numbered' => !isset($s['numbered']) || !empty($s['numbered']),
         ], $sections);
