@@ -149,6 +149,66 @@ class ContractPlaceholdersTest extends TestCase
         $this->assertSame('shop.example.ch', $contract->fillPlaceholders('{webshop_url}'));
     }
 
+    /** A publisher and one or two authors, the publisher not necessarily first. */
+    protected function publishingContract(array $authors): Contract
+    {
+        $contract = Contract::create([
+            'title' => 'Publishing Deal',
+            'type' => 'publishing',
+            'status' => 'draft',
+            'language' => 'de',
+        ]);
+
+        foreach ($authors as $i => [$first, $last, $gender]) {
+            $author = Contact::create(['first_name' => $first, 'last_name' => $last, 'gender' => $gender]);
+            ContractParty::create(['contract_id' => $contract->id, 'contact_id' => $author->id, 'share' => 60 / count($authors), 'role_label' => 'Urheberin oder Urheber', 'sort_order' => $i]);
+        }
+        $publisher = Organization::create(['type' => 'publishing', 'names' => ['The yelling light']]);
+        ContractParty::create(['contract_id' => $contract->id, 'organization_id' => $publisher->id, 'share' => 40, 'role_label' => 'Verlag', 'sort_order' => 9]);
+
+        return $contract->fresh()->load(['parties.organization', 'parties.contact']);
+    }
+
+    public function test_a_publishing_deal_fills_publisher_authors_and_verbs(): void
+    {
+        $contract = $this->publishingContract([['Anna', 'Muster', 'female'], ['Zoë', 'Müller', null]]);
+
+        $this->assertSame(
+            'Anna Muster und Zoë Müller übertragen The yelling light die Rechte und erhalten 60 %, der Verlag 40 %.',
+            $contract->fillPlaceholders('{author_names} {überträgt_übertragen} {publisher_name} die Rechte und {erhält_erhalten} {author_share} %, der Verlag {publisher_share} %.')
+        );
+        $this->assertSame(
+            'Sie stellen, garantieren, sind und haben.',
+            $contract->fillPlaceholders('Sie {stellt_stellen}, {garantiert_garantieren}, {ist_sind} und {hat_haben}.')
+        );
+
+        $solo = $this->publishingContract([['Anna', 'Muster', 'female']]);
+        $this->assertSame(
+            'Anna Muster überträgt The yelling light die Rechte, erhält 60 % und garantiert.',
+            $solo->fillPlaceholders('{author_names} {überträgt_übertragen} {publisher_name} die Rechte, {erhält_erhalten} {author_share} % und {garantiert_garantieren}.')
+        );
+        $this->assertSame('Anna Muster', $solo->fillPlaceholders('{author_name}'));
+    }
+
+    /**
+     * Only something that looks like one verb in two forms is read as a
+     * pair. A missing value must stay visible, never become half its name.
+     */
+    public function test_a_missing_value_is_never_taken_for_a_verb_pair(): void
+    {
+        foreach (['notice_period', 'billing_date', 'billing_period_end', 'payout_threshold', 'jurisdiction', 'label_names'] as $name) {
+            $this->assertNull(ContractPlaceholders::verbPair($name), $name);
+        }
+        $this->assertSame(['überträgt', 'übertragen'], ContractPlaceholders::verbPair('überträgt_übertragen'));
+        $this->assertSame(['kann', 'können'], ContractPlaceholders::verbPair('kann_können'));
+
+        $contract = $this->publishingContract([['Anna', 'Muster', 'female']]);
+        $contract->update(['subject' => 'Kündigungsfrist {notice_period}, {erhält_erhalten}.']);
+
+        $this->assertSame('Kündigungsfrist {notice_period}, erhält.', $contract->fillPlaceholders($contract->subject));
+        $this->assertSame(['notice_period' => 'unbekannt, als Vertragswert erfassen'], $contract->fresh()->placeholders()->problems());
+    }
+
     public function test_the_help_lists_every_automatic_placeholder(): void
     {
         $this->assertSame(
