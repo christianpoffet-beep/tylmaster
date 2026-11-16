@@ -15,9 +15,13 @@ use App\Models\ContractParty;
  * Vertragswert also replaces an automatic value of the same name.
  *
  *   {name}            a value
- *   {teilt|teilen}    singular | plural, by the persons on the artist's side
- *   [[MEHRERE: …]]    printed only when several persons sign for the artist
- *   [[EINE: …]]       printed only when one person signs for the artist
+ *   {teilt|teilen}    singular | plural, by the persons on the other side
+ *   {teilt_teilen}    the same for a verb, when no value goes by that name
+ *   [[MEHRERE: …]]    printed only when several persons sign on the other side
+ *   [[EINE: …]]       printed only when one person signs on the other side
+ *
+ * The two sides: the label or publisher (the party whose role says «Label»
+ * or «Verlag», otherwise the first one) and the artist or author facing it.
  *
  * A placeholder without a value stays in the text exactly as typed, so a gap
  * shows instead of silently vanishing. The texts are stored with their
@@ -31,7 +35,7 @@ class ContractPlaceholders
 
     /** The placeholders every contract fills by itself, for the help panel. */
     public const AUTOMATIC = [
-        'label_name' => 'Name des Labels: die Partei mit der Rolle «Label», sonst die erste Partei',
+        'label_name' => 'Name des Labels: die Partei mit der Rolle «Label» oder «Verlag», sonst die erste Partei',
         'artist_name' => 'Name der Künstlerseite, z. B. die Band',
         'artist_members' => 'Personen der Künstlerseite, z. B. «Tobias Kalt und Lukas Oberholzer»',
         'artist_interpreten' => '«der Mitglieder von <Band>» bzw. «von <Person>»',
@@ -39,6 +43,11 @@ class ContractPlaceholders
         'label_share' => 'Anteil des Labels in %, aus derselben Zeile',
         'sync_artist_share' => 'Anteil der Künstlerseite in %, aus der Vergütungszeile mit «Sync» im Namen',
         'sync_label_share' => 'Anteil des Labels in %, aus der Vergütungszeile mit «Sync» im Namen',
+        'publisher_name' => 'Name des Verlags, gleich wie {label_name}',
+        'author_name' => 'Name der Urheberseite, gleich wie {artist_name}',
+        'author_names' => 'Personen der Urheberseite, gleich wie {artist_members}',
+        'author_share' => 'Anteil der Urheberseite in %, aus dem generellen Anteil der Parteien',
+        'publisher_share' => 'Anteil des Verlags in %, aus dem generellen Anteil der Parteien',
         'webshop_url' => 'Erste Website der Label-Organisation',
         'start_date' => 'Vertragsbeginn',
         'end_date' => 'Vertragsende',
@@ -46,6 +55,12 @@ class ContractPlaceholders
         'teilt_teilen' => '«teilt» bzw. «teilen»',
         'meldet_melden' => '«meldet» bzw. «melden»',
         'je_ihre' => '«je ihre» bzw. «ihre» oder «seine» (nach dem Geschlecht im Kontakt)',
+    ];
+
+    /** Verb pairs whose two forms share no common start. */
+    protected const IRREGULAR_VERB_PAIRS = [
+        'ist_sind', 'hat_haben', 'wird_werden', 'kann_können', 'darf_dürfen',
+        'will_wollen', 'gibt_geben', 'nimmt_nehmen', 'weiss_wissen',
     ];
 
     protected ?array $values = null;
@@ -84,13 +99,52 @@ class ContractPlaceholders
 
         return preg_replace_callback(
             '/\{(' . self::NAME . ')\}/u',
-            function ($m) use ($values) {
-                $value = $values[mb_strtolower($m[1])] ?? null;
+            function ($m) use ($values, $plural) {
+                $key = mb_strtolower($m[1]);
+                $value = $values[$key] ?? null;
+                if ($value !== null && $value !== '') {
+                    return $value;
+                }
+                if ($pair = self::verbPair($key)) {
+                    return $plural ? $pair[1] : $pair[0];
+                }
 
-                return $value !== null && $value !== '' ? $value : $m[0];
+                return $m[0];
             },
             $text
         ) ?? $text;
+    }
+
+    /**
+     * "überträgt_übertragen" → ["überträgt", "übertragen"]: the singular and
+     * the plural of one verb. Recognised only when both halves look like the
+     * same verb (a common start, a plural ending in -n) or the pair is a
+     * known irregular one, so a missing value such as {notice_period} is
+     * never mistaken for a pair and quietly printed as "notice".
+     */
+    public static function verbPair(string $name): ?array
+    {
+        if (!preg_match('/^(\p{L}+)_(\p{L}+)$/u', $name, $m)) {
+            return null;
+        }
+        [, $one, $many] = $m;
+
+        if (in_array($name, self::IRREGULAR_VERB_PAIRS, true)) {
+            return [$one, $many];
+        }
+        if (!str_ends_with($many, 'n')) {
+            return null;
+        }
+
+        $fold = fn (string $word) => mb_str_split(strtr($word, ['ä' => 'a', 'ö' => 'o', 'ü' => 'u']));
+        $a = $fold($one);
+        $b = $fold($many);
+        $common = 0;
+        while ($common < min(count($a), count($b)) && $a[$common] === $b[$common]) {
+            $common++;
+        }
+
+        return $common >= 3 ? [$one, $many] : null;
     }
 
     /**
@@ -192,7 +246,7 @@ class ContractPlaceholders
 
         $labelIndex = 0;
         foreach ($groups as $i => $group) {
-            if ($group['role'] !== null && preg_match('/label/iu', $group['role'])) {
+            if ($group['role'] !== null && preg_match('/label|verlag|publish/iu', $group['role'])) {
                 $labelIndex = $i;
                 break;
             }
@@ -306,6 +360,11 @@ class ContractPlaceholders
             'label_share' => $this->share($main, $label, true),
             'sync_artist_share' => $sync ? $this->share($sync, $artist) : null,
             'sync_label_share' => $sync ? $this->share($sync, $label) : null,
+            'publisher_name' => $this->sideName($label),
+            'author_name' => $this->sideName($artist),
+            'author_names' => $members !== [] ? $this->joinList($members) : null,
+            'author_share' => $this->share(null, $artist, true),
+            'publisher_share' => $this->share(null, $label, true),
             'webshop_url' => $this->website($label),
             'start_date' => $contract->start_date?->format('d.m.Y'),
             'end_date' => $contract->end_date?->format('d.m.Y'),

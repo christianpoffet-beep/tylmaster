@@ -88,9 +88,10 @@
             </table>
 
             <div class="space-y-1">
-                <p class="text-gray-400">Eine oder mehrere Personen auf der Künstlerseite</p>
+                <p class="text-gray-400">Eine oder mehrere Personen auf der Künstler- bzw. Urheberseite</p>
                 <p><code class="font-mono text-gray-800 dark:text-gray-100">[[MEHRERE: …]]</code> erscheint nur, wenn mehrere Personen unterschreiben, <code class="font-mono text-gray-800 dark:text-gray-100">[[EINE: …]]</code> nur bei einer Person.</p>
                 <p><code class="font-mono text-gray-800 dark:text-gray-100">{haftet|haften}</code> wählt das linke Wort bei einer Person und das rechte bei mehreren, für jedes beliebige Wortpaar.</p>
+                <p>Für Verben geht auch <code class="font-mono text-gray-800 dark:text-gray-100">{überträgt_übertragen}</code>, <code class="font-mono text-gray-800 dark:text-gray-100">{erhält_erhalten}</code> usw.: Einzahl, Unterstrich, Mehrzahl.</p>
             </div>
         </div>
     </div>
