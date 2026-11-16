@@ -14,6 +14,7 @@ use App\Models\Task;
 use App\Models\Photo;
 use App\Models\Track;
 use Illuminate\Http\Request;
+use App\Services\DocumentStorage;
 use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
@@ -85,7 +86,7 @@ class DocumentController extends Controller
         ]);
 
         $file = $request->file('file');
-        $path = $file->store('documents', 'public');
+        $path = $file->store('documents', DocumentStorage::DISK);
 
         Document::create([
             'title' => $request->input('title'),
@@ -105,23 +106,20 @@ class DocumentController extends Controller
         return view('admin.documents.show', compact('document'));
     }
 
+    /** Shown in the page (PDF, image, audio). Logged-in users only, like every admin route. */
     public function preview(Document $document)
     {
-        $path = $document->file_path;
-        $mime = $document->mime_type ?? Storage::disk('public')->mimeType($path);
+        $path = $document->absolutePath() ?? abort(404, 'Datei nicht gefunden.');
+        $headers = $document->mime_type ? ['Content-Type' => $document->mime_type] : [];
 
-        if (!Storage::disk('public')->exists($path)) {
-            abort(404, 'Datei nicht gefunden.');
-        }
-
-        return Storage::disk('public')->response($path, $document->title, [
-            'Content-Type' => $mime,
-        ]);
+        return DocumentStorage::privately(response()->download($path, $document->download_name, $headers, 'inline'));
     }
 
     public function download(Document $document)
     {
-        return Storage::disk('public')->download($document->file_path, $document->title);
+        $path = $document->absolutePath() ?? abort(404, 'Datei nicht gefunden.');
+
+        return DocumentStorage::privately(response()->download($path, $document->download_name));
     }
 
     public function destroy(Document $document)
@@ -131,7 +129,7 @@ class DocumentController extends Controller
                 ->with('error', 'Vertragsdokumente können nicht gelöscht werden.');
         }
 
-        Storage::disk('public')->delete($document->file_path);
+        $document->deleteFile();
         $document->delete();
         return redirect()->route('admin.documents.index')->with('success', 'Dokument gelöscht.');
     }

@@ -16,6 +16,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Illuminate\Http\Request;
+use App\Services\DocumentStorage;
 use Illuminate\Support\Facades\Storage;
 
 class InvoiceController extends Controller
@@ -137,7 +138,7 @@ class InvoiceController extends Controller
 
         // QR code upload
         if ($request->hasFile('qr_code')) {
-            $validated['qr_code_path'] = $request->file('qr_code')->store('invoices/qr', 'public');
+            $validated['qr_code_path'] = $request->file('qr_code')->store('invoices/qr', DocumentStorage::DISK);
         }
         unset($validated['qr_code']);
 
@@ -264,15 +265,11 @@ class InvoiceController extends Controller
 
         // QR code handling
         if ($request->input('remove_qr_code')) {
-            if ($invoice->qr_code_path) {
-                Storage::disk('public')->delete($invoice->qr_code_path);
-            }
+            DocumentStorage::delete($invoice->qr_code_path);
             $validated['qr_code_path'] = null;
         } elseif ($request->hasFile('qr_code')) {
-            if ($invoice->qr_code_path) {
-                Storage::disk('public')->delete($invoice->qr_code_path);
-            }
-            $validated['qr_code_path'] = $request->file('qr_code')->store('invoices/qr', 'public');
+            DocumentStorage::delete($invoice->qr_code_path);
+            $validated['qr_code_path'] = $request->file('qr_code')->store('invoices/qr', DocumentStorage::DISK);
         }
         unset($validated['qr_code'], $validated['remove_qr_code']);
 
@@ -310,9 +307,10 @@ class InvoiceController extends Controller
     {
         // Delete linked PDF document(s) from storage and DB
         foreach ($invoice->documents as $doc) {
-            Storage::disk('public')->delete($doc->file_path);
+            $doc->deleteFile();
             $doc->forceDelete();
         }
+        DocumentStorage::delete($invoice->qr_code_path);
 
         $invoice->items()->delete();
         $invoice->delete();
@@ -323,17 +321,22 @@ class InvoiceController extends Controller
     {
         $document = $invoice->documents()->where('category', 'invoice')->first();
 
-        if (!$document || !Storage::disk('public')->exists($document->file_path)) {
+        if (!$document || !$document->absolutePath()) {
             $this->generateAndStorePdf($invoice);
             $document = $invoice->documents()->where('category', 'invoice')->first();
         }
 
-        if (!$document) {
-            abort(404, 'PDF konnte nicht generiert werden.');
-        }
+        $path = $document?->absolutePath() ?? abort(404, 'PDF konnte nicht generiert werden.');
 
-        $filename = "Rechnung-{$invoice->invoice_number}.pdf";
-        return Storage::disk('public')->download($document->file_path, $filename);
+        return DocumentStorage::privately(response()->download($path, "Rechnung-{$invoice->invoice_number}.pdf"));
+    }
+
+    /** The uploaded QR code (IBAN and amount) - only for logged-in users. */
+    public function qrCode(Invoice $invoice)
+    {
+        $path = DocumentStorage::path($invoice->qr_code_path) ?? abort(404);
+
+        return DocumentStorage::privately(response()->file($path));
     }
 
     public function markPaid(Request $request, Invoice $invoice)
@@ -451,11 +454,8 @@ class InvoiceController extends Controller
         $qrReference = null;
 
         // Check for uploaded QR code image: invoice-level first, then template
-        if ($invoice->qr_code_path && Storage::disk('public')->exists($invoice->qr_code_path)) {
-            $qrImagePath = Storage::disk('public')->path($invoice->qr_code_path);
-        } elseif ($invoice->template && $invoice->template->qr_code_path && Storage::disk('public')->exists($invoice->template->qr_code_path)) {
-            $qrImagePath = Storage::disk('public')->path($invoice->template->qr_code_path);
-        }
+        $qrImagePath = DocumentStorage::path($invoice->qr_code_path)
+            ?? ($invoice->template ? DocumentStorage::path($invoice->template->qr_code_path) : null);
 
         // Fallback: generate QR code if no image uploaded
         if (!$qrImagePath && $invoice->currency === 'CHF') {
@@ -489,9 +489,9 @@ class InvoiceController extends Controller
 
         $pdf->setPaper('A4');
 
-        // Store PDF in public documents storage
+        // Stored with the confidential documents - the file name is easy to guess
         $storagePath = "documents/invoices/Rechnung-{$invoice->invoice_number}.pdf";
-        $fullPath = storage_path("app/public/{$storagePath}");
+        $fullPath = DocumentStorage::disk()->path($storagePath);
         $directory = dirname($fullPath);
         if (!is_dir($directory)) {
             mkdir($directory, 0755, true);
@@ -505,7 +505,7 @@ class InvoiceController extends Controller
         if ($document) {
             // Delete old file if path changed
             if ($document->file_path !== $storagePath) {
-                Storage::disk('public')->delete($document->file_path);
+                DocumentStorage::delete($document->file_path);
             }
             $document->update([
                 'title' => "Rechnung-{$invoice->invoice_number}.pdf",

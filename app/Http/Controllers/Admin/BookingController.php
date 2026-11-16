@@ -10,6 +10,7 @@ use App\Models\Document;
 use App\Models\Organization;
 use App\Models\Project;
 use Illuminate\Http\Request;
+use App\Services\DocumentStorage;
 use Illuminate\Support\Facades\Storage;
 
 class BookingController extends Controller
@@ -57,7 +58,7 @@ class BookingController extends Controller
 
         if ($request->hasFile('documents')) {
             foreach ($request->file('documents') as $file) {
-                $path = $file->store('bookings', 'public');
+                $path = $file->store('bookings', DocumentStorage::DISK);
                 $booking->documents()->create([
                     'title' => $file->getClientOriginalName(),
                     'category' => 'invoice',
@@ -117,7 +118,7 @@ class BookingController extends Controller
 
         if ($request->hasFile('documents')) {
             foreach ($request->file('documents') as $file) {
-                $path = $file->store('bookings', 'public');
+                $path = $file->store('bookings', DocumentStorage::DISK);
                 $booking->documents()->create([
                     'title' => $file->getClientOriginalName(),
                     'category' => 'invoice',
@@ -140,7 +141,7 @@ class BookingController extends Controller
         }
 
         foreach ($booking->documents as $doc) {
-            Storage::disk('public')->delete($doc->file_path);
+            $doc->deleteFile();
             $doc->forceDelete();
         }
 
@@ -155,7 +156,7 @@ class BookingController extends Controller
             abort(403);
         }
 
-        Storage::disk('public')->delete($document->file_path);
+        $document->deleteFile();
         $document->forceDelete();
 
         return back()->with('success', 'Beleg gelöscht.');

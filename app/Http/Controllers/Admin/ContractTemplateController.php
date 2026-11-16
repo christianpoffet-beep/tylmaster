@@ -11,6 +11,7 @@ use App\Models\ContractType;
 use App\Models\Document;
 use App\Models\Organization;
 use Illuminate\Http\Request;
+use App\Services\DocumentStorage;
 use Illuminate\Support\Facades\Storage;
 
 class ContractTemplateController extends Controller
@@ -334,7 +335,7 @@ class ContractTemplateController extends Controller
         }
 
         $file = $request->file('document');
-        $path = $file->store('contract-templates', 'public');
+        $path = $file->store('contract-templates', DocumentStorage::DISK);
 
         $template->documents()->create([
             'title' => $file->getClientOriginalName(),

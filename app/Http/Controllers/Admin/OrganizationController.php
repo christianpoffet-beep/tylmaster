@@ -13,6 +13,7 @@ use App\Models\Project;
 use App\Models\Track;
 use App\Models\Release;
 use Illuminate\Http\Request;
+use App\Services\DocumentStorage;
 use Illuminate\Support\Facades\Storage;
 
 class OrganizationController extends Controller
@@ -188,7 +189,7 @@ class OrganizationController extends Controller
 
         if ($request->hasFile('document')) {
             $file = $request->file('document');
-            $path = $file->store('organizations', 'public');
+            $path = $file->store('organizations', DocumentStorage::DISK);
             $organization->documents()->create([
                 'title' => $file->getClientOriginalName(),
                 'category' => 'organization',
@@ -287,7 +288,7 @@ class OrganizationController extends Controller
 
         if ($request->hasFile('document')) {
             $file = $request->file('document');
-            $path = $file->store('organizations', 'public');
+            $path = $file->store('organizations', DocumentStorage::DISK);
             $organization->documents()->create([
                 'title' => $file->getClientOriginalName(),
                 'category' => 'organization',

@@ -59,6 +59,16 @@ return [
             'report' => false,
         ],
 
+        // Confidential documents (contracts, invoices, QR codes, receipts, ...):
+        // outside the web root, without a URL (App\Services\DocumentStorage).
+        'documents' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/documents'),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

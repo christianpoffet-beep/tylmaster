@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Services\DocumentStorage;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class Document extends Model
 {
@@ -22,6 +24,44 @@ class Document extends Model
     public function documentable()
     {
         return $this->morphTo();
+    }
+
+    /**
+     * Confidential documents lie on the private disk (DocumentStorage). Rows
+     * that only mirror a public image - artworks, logos, photos - point at
+     * that image on the public disk and stay with it.
+     */
+    public function isConfidential(): bool
+    {
+        return !in_array($this->documentable_type, DocumentStorage::PUBLIC_MIRRORS, true);
+    }
+
+    /** Absolute path of the file, or null when it is gone. */
+    public function absolutePath(): ?string
+    {
+        if ($this->isConfidential()) {
+            return DocumentStorage::path($this->file_path);
+        }
+
+        $public = Storage::disk('public');
+
+        return $this->file_path && $public->exists($this->file_path) ? $public->path($this->file_path) : null;
+    }
+
+    public function deleteFile(): void
+    {
+        $this->isConfidential()
+            ? DocumentStorage::delete($this->file_path)
+            : Storage::disk('public')->delete($this->file_path);
+    }
+
+    /** The title as file name, with the file's extension when the title has none. */
+    public function getDownloadNameAttribute(): string
+    {
+        $extension = strtolower(pathinfo((string) $this->file_path, PATHINFO_EXTENSION));
+        $title = trim((string) $this->title) ?: 'Dokument';
+
+        return $extension && !str_ends_with(strtolower($title), '.' . $extension) ? "{$title}.{$extension}" : $title;
     }
 
     public function tasks()

@@ -35,6 +35,7 @@ class ContractTemplateDefaultsTest extends TestCase
     public function test_a_template_stores_every_contract_default(): void
     {
         Storage::fake('public');
+        Storage::fake('documents');
 
         $project = Project::create(['name' => 'Album 2027']);
         $track = Track::create(['title' => 'Air of the Night', 'status' => 'released']);
@@ -114,6 +115,7 @@ class ContractTemplateDefaultsTest extends TestCase
     public function test_a_new_contract_inherits_the_logo_and_the_documents(): void
     {
         Storage::fake('public');
+        Storage::fake('documents');
 
         $template = ContractTemplate::create([
             'name' => 'Labeldeal',
@@ -124,7 +126,8 @@ class ContractTemplateDefaultsTest extends TestCase
             'logo_as_watermark' => true,
         ]);
         Storage::disk('public')->put('contracts/logos/tyl.png', 'png-bytes');
-        Storage::disk('public')->put('contract-templates/anhang.pdf', 'pdf-bytes');
+        // The logo is public, the attachment confidential
+        Storage::disk('documents')->put('contract-templates/anhang.pdf', 'pdf-bytes');
         $template->documents()->create([
             'title' => 'anhang.pdf',
             'category' => 'contract',
@@ -160,8 +163,9 @@ class ContractTemplateDefaultsTest extends TestCase
 
         $copy = $contract->documents()->first();
         $this->assertNotSame('contract-templates/anhang.pdf', $copy->file_path, 'The contract must own its own file.');
-        $this->assertTrue(Storage::disk('public')->exists($copy->file_path));
-        $this->assertTrue(Storage::disk('public')->exists('contract-templates/anhang.pdf'), 'The template keeps its original.');
+        $this->assertSame('pdf-bytes', Storage::disk('documents')->get($copy->file_path));
+        $this->assertTrue(Storage::disk('documents')->exists('contract-templates/anhang.pdf'), 'The template keeps its original.');
+        $this->assertFalse(Storage::disk('public')->exists($copy->file_path), 'The copy is not public.');
     }
 
     /**
