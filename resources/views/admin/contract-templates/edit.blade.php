@@ -98,43 +98,7 @@
                         <input type="hidden" :name="'parties['+index+'][organization_id]'" :value="party.type === 'organization' ? party.organization_id : ''">
                         <input type="hidden" :name="'parties['+index+'][contact_id]'" :value="party.contact_id">
 
-                        <div class="flex gap-4 mb-3">
-                            <label class="inline-flex items-center">
-                                <input type="radio" :checked="party.type === 'organization'" @click="party.type = 'organization'; party.contact_id = ''" class="text-blue-600 focus:ring-blue-500">
-                                <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">Organisation</span>
-                            </label>
-                            <label class="inline-flex items-center">
-                                <input type="radio" :checked="party.type === 'contact'" @click="party.type = 'contact'; party.organization_id = ''; party.contact_id = ''" class="text-blue-600 focus:ring-blue-500">
-                                <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">Kontakt</span>
-                            </label>
-                        </div>
-
-                        <div x-show="party.type === 'organization'" class="space-y-2">
-                            <select x-model="party.organization_id" @change="onPartyOrgChange(index)" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">— Organisation wählen —</option>
-                                @foreach($organizations as $org)
-                                    <option value="{{ $org->id }}">{{ $org->primary_name }}</option>
-                                @endforeach
-                            </select>
-                            <div x-show="getOrgContacts(party.organization_id).length > 0">
-                                <label class="block text-xs text-gray-500 mb-1">Ansprechperson (optional)</label>
-                                <select x-model="party.contact_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <option value="">— Keine Person —</option>
-                                    <template x-for="c in getOrgContacts(party.organization_id)" :key="c.id">
-                                        <option :value="c.id" x-text="c.name"></option>
-                                    </template>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div x-show="party.type === 'contact'">
-                            <select x-model="party.contact_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">— Kontakt wählen —</option>
-                                @foreach($contacts as $contact)
-                                    <option value="{{ $contact->id }}">{{ $contact->full_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        @include('admin.partials.contract-party-picker')
 
                         <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
@@ -283,6 +247,8 @@
     </div>
 </div>
 
+@include('admin.partials.contract-party-picker-script', ['organizations' => $organizations, 'contacts' => $contacts])
+
 <script>
 function templateForm() {
     return {
@@ -328,14 +294,6 @@ function templateForm() {
         },
         getOrgContacts(orgId) {
             return (orgId && this.orgContactsMap[orgId]) ? this.orgContactsMap[orgId] : [];
-        },
-        onPartyOrgChange(index) {
-            const orgId = this.parties[index].organization_id;
-            const contacts = this.getOrgContacts(orgId);
-            const ids = contacts.map(c => String(c.id));
-            if (!ids.includes(String(this.parties[index].contact_id))) {
-                this.parties[index].contact_id = '';
-            }
         },
         balanceShare(changedIndex) {
             if (this.parties.length === 2) {
