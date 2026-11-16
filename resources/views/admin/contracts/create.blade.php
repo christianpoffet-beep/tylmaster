@@ -192,7 +192,7 @@
             </div>
 
             <div>
-                @include('admin.partials.track-search', ['selected' => collect()])
+                @include('admin.partials.contract-track-picker', ['selected' => collect()])
             </div>
 
             <div>

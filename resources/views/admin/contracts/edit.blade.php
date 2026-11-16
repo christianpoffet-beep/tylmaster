@@ -172,7 +172,7 @@
             </div>
 
             <div>
-                @include('admin.partials.track-search', ['selected' => $contract->tracks])
+                @include('admin.partials.contract-track-picker', ['selected' => $contract->tracks])
             </div>
 
             <div>
