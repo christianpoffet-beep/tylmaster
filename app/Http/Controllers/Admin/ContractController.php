@@ -18,6 +18,7 @@ use App\Models\Track;
 use App\Models\Release;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use App\Services\DocumentStorage;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -207,7 +208,7 @@ class ContractController extends Controller
 
         if ($request->hasFile('document')) {
             $file = $request->file('document');
-            $path = $file->store('contracts', 'public');
+            $path = $file->store('contracts', DocumentStorage::DISK);
             $contract->documents()->create([
                 'title' => $file->getClientOriginalName(),
                 'category' => 'contract',
@@ -381,7 +382,7 @@ class ContractController extends Controller
 
         if ($request->hasFile('document')) {
             $file = $request->file('document');
-            $path = $file->store('contracts', 'public');
+            $path = $file->store('contracts', DocumentStorage::DISK);
             $contract->documents()->create([
                 'title' => $file->getClientOriginalName(),
                 'category' => 'contract',
@@ -444,13 +445,13 @@ class ContractController extends Controller
 
         if ($archiveMode >= 1) {
             $path = 'contracts/archived/' . $filename;
-            Storage::disk('public')->put($path, $pdf->output());
+            DocumentStorage::disk()->put($path, $pdf->output());
 
             $contract->documents()->create([
                 'title' => $filename,
                 'category' => 'contract',
                 'file_path' => $path,
-                'file_size' => Storage::disk('public')->size($path),
+                'file_size' => DocumentStorage::disk()->size($path),
                 'mime_type' => 'application/pdf',
                 'notes' => 'Archiviertes Vertrags-PDF (generiert am ' . now()->format('d.m.Y H:i') . ')',
                 'is_archived' => true,
@@ -529,8 +530,8 @@ class ContractController extends Controller
         foreach ($template->documents as $document) {
             $copy = 'contracts/' . Str::random(40) . '.' . pathinfo($document->file_path, PATHINFO_EXTENSION);
 
-            if (!Storage::disk('public')->exists($document->file_path)
-                || !Storage::disk('public')->copy($document->file_path, $copy)) {
+            $source = $document->absolutePath();
+            if (!$source || !DocumentStorage::disk()->put($copy, fopen($source, 'r'))) {
                 continue;
             }
 

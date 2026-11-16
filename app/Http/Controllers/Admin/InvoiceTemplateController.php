@@ -7,6 +7,7 @@ use App\Models\Contact;
 use App\Models\InvoiceTemplate;
 use App\Models\Organization;
 use Illuminate\Http\Request;
+use App\Services\DocumentStorage;
 use Illuminate\Support\Facades\Storage;
 
 class InvoiceTemplateController extends Controller
@@ -91,7 +92,7 @@ class InvoiceTemplateController extends Controller
         }
 
         if ($request->hasFile('qr_code')) {
-            $validated['qr_code_path'] = $request->file('qr_code')->store('invoice-templates', 'public');
+            $validated['qr_code_path'] = $request->file('qr_code')->store('invoice-templates', DocumentStorage::DISK);
         }
 
         $templateItems = $validated['template_items'] ?? [];
@@ -202,15 +203,11 @@ class InvoiceTemplateController extends Controller
 
         // QR Code handling
         if ($request->input('remove_qr_code')) {
-            if ($invoiceTemplate->qr_code_path) {
-                Storage::disk('public')->delete($invoiceTemplate->qr_code_path);
-            }
+            DocumentStorage::delete($invoiceTemplate->qr_code_path);
             $validated['qr_code_path'] = null;
         } elseif ($request->hasFile('qr_code')) {
-            if ($invoiceTemplate->qr_code_path) {
-                Storage::disk('public')->delete($invoiceTemplate->qr_code_path);
-            }
-            $validated['qr_code_path'] = $request->file('qr_code')->store('invoice-templates', 'public');
+            DocumentStorage::delete($invoiceTemplate->qr_code_path);
+            $validated['qr_code_path'] = $request->file('qr_code')->store('invoice-templates', DocumentStorage::DISK);
         }
 
         $templateItems = $validated['template_items'] ?? [];
@@ -231,6 +228,14 @@ class InvoiceTemplateController extends Controller
         return redirect()->route('admin.invoice-templates.index')->with('success', 'Rechnungsvorlage aktualisiert.');
     }
 
+    /** The uploaded QR code (IBAN) - only for logged-in users. */
+    public function qrCode(InvoiceTemplate $invoiceTemplate)
+    {
+        $path = DocumentStorage::path($invoiceTemplate->qr_code_path) ?? abort(404);
+
+        return DocumentStorage::privately(response()->file($path));
+    }
+
     public function destroy(InvoiceTemplate $invoiceTemplate)
     {
         if ($invoiceTemplate->invoices()->exists()) {
@@ -240,6 +245,7 @@ class InvoiceTemplateController extends Controller
         if ($invoiceTemplate->logo_path) {
             Storage::disk('public')->delete($invoiceTemplate->logo_path);
         }
+        DocumentStorage::delete($invoiceTemplate->qr_code_path);
 
         $invoiceTemplate->delete();
 

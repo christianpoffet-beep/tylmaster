@@ -12,6 +12,7 @@ use App\Models\Project;
 use App\Models\Track;
 use App\Models\MusicSubmission;
 use Illuminate\Http\Request;
+use App\Services\DocumentStorage;
 use Illuminate\Support\Facades\Storage;
 
 class TaskController extends Controller
@@ -121,7 +122,7 @@ class TaskController extends Controller
     public function destroy(Task $task)
     {
         foreach ($task->uploadedDocuments as $doc) {
-            Storage::disk('public')->delete($doc->file_path);
+            $doc->deleteFile();
         }
         $task->delete();
         return redirect()->route('admin.tasks.index')->with('success', 'Aufgabe gelöscht.');
@@ -136,7 +137,7 @@ class TaskController extends Controller
     public function destroyDocument(Task $task, Document $document)
     {
         if ((int) $document->documentable_id === (int) $task->id && $document->documentable_type === Task::class) {
-            Storage::disk('public')->delete($document->file_path);
+            $document->deleteFile();
             $document->delete();
             return back()->with('success', 'Dokument gelöscht.');
         }
@@ -163,7 +164,7 @@ class TaskController extends Controller
                 continue;
             }
 
-            $path = $file->store('documents/tasks', 'public');
+            $path = $file->store('documents/tasks', DocumentStorage::DISK);
 
             $task->uploadedDocuments()->create([
                 'title' => $file->getClientOriginalName(),

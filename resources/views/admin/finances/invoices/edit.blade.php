@@ -307,7 +307,7 @@
                 <p class="text-xs text-gray-400 mb-2">Optional: QR-Code-Bild für den Zahlteil hochladen (z.B. aus dem E-Banking).</p>
                 @if($invoice->qr_code_path)
                     <div class="flex items-center gap-3 mb-2">
-                        <img src="/storage/{{ $invoice->qr_code_path }}" alt="QR-Code" class="h-20 w-auto border rounded bg-white p-1">
+                        <img src="{{ route('admin.invoices.qrCode', $invoice) }}" alt="QR-Code" class="h-20 w-auto border rounded bg-white p-1">
                         <label class="inline-flex items-center">
                             <input type="checkbox" name="remove_qr_code" value="1" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
                             <span class="ml-2 text-xs text-red-600 dark:text-red-400">QR-Code entfernen</span>

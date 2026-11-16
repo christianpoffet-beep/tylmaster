@@ -206,7 +206,7 @@
                 <p class="text-xs text-gray-400 mb-2">Lade ein QR-Code-Bild hoch (z.B. aus dem E-Banking exportiert). Wird automatisch auf CHF-Rechnungen gedruckt.</p>
                 @if($template->qr_code_path)
                     <div class="flex items-center gap-3 mb-2">
-                        <img src="/storage/{{ $template->qr_code_path }}" alt="QR-Code" class="h-20 w-auto border rounded bg-white p-1">
+                        <img src="{{ route('admin.invoice-templates.qrCode', $template) }}" alt="QR-Code" class="h-20 w-auto border rounded bg-white p-1">
                         <label class="inline-flex items-center">
                             <input type="checkbox" name="remove_qr_code" value="1" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
                             <span class="ml-2 text-xs text-red-600 dark:text-red-400">QR-Code entfernen</span>

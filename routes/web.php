@@ -130,6 +130,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::delete('tasks/{task}/documents/{document}', [TaskController::class, 'destroyDocument'])->name('tasks.documents.destroy');
     Route::resource('invoices', InvoiceController::class);
     Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.pdf');
+    Route::get('invoices/{invoice}/qr-code', [InvoiceController::class, 'qrCode'])->name('invoices.qrCode');
+    Route::get('invoice-templates/{invoiceTemplate}/qr-code', [InvoiceTemplateController::class, 'qrCode'])->name('invoice-templates.qrCode');
     Route::patch('invoices/{invoice}/paid', [InvoiceController::class, 'markPaid'])->name('invoices.markPaid');
     Route::get('invoice-templates/{invoiceTemplate}/data', [InvoiceController::class, 'templateData'])->name('invoice-templates.data');
     Route::get('organizations/{organization}/contacts', [InvoiceController::class, 'organizationContacts'])->name('organizations.contacts');
