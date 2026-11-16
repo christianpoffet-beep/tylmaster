@@ -12,12 +12,14 @@ use App\Models\ContractParty;
 use App\Models\ContractTemplate;
 use App\Models\ContractType;
 use App\Models\Document;
+use App\Models\MusicSubmission;
 use App\Models\Organization;
 use App\Models\Project;
 use App\Models\Track;
 use App\Models\Release;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Services\ContractPlaceholders;
 use App\Services\DocumentStorage;
 use Illuminate\Support\Facades\Storage;
@@ -397,6 +399,46 @@ class ContractController extends Controller
         }
 
         return redirect()->route('admin.contracts.show', $contract)->with('success', 'Vertrag aktualisiert.');
+    }
+
+    /**
+     * Only a draft can be deleted: an active, expired or terminated contract
+     * stays on record. The draft takes its documents with it, files included,
+     * and leaves its tasks and submissions behind without the link.
+     */
+    public function destroy(Contract $contract)
+    {
+        if ($contract->status !== 'draft') {
+            return redirect()->route('admin.contracts.show', $contract)
+                ->with('error', 'Nur Verträge im Status «Entwurf» können gelöscht werden.');
+        }
+
+        $documents = $contract->documents()->withTrashed()->get();
+
+        DB::transaction(function () use ($contract, $documents) {
+            foreach ($documents as $document) {
+                $document->tasks()->detach();
+                $document->forceDelete();
+            }
+
+            $contract->tasks()->detach();
+            MusicSubmission::where('contract_id', $contract->id)->update(['contract_id' => null]);
+
+            $contract->parties()->delete();
+            $contract->contacts()->detach();
+            $contract->projects()->detach();
+            $contract->tracks()->detach();
+            $contract->releases()->detach();
+            $contract->organizations()->detach();
+
+            $contract->delete();
+        });
+
+        // Files go only once the rows are gone for good.
+        $documents->each(fn (Document $document) => $document->deleteFile());
+
+        return redirect()->route('admin.contracts.index')
+            ->with('success', 'Entwurf «' . $contract->title . '» gelöscht.');
     }
 
     public function archiveDocument(Contract $contract, Document $document)

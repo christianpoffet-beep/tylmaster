@@ -110,6 +110,38 @@ class ContractFormRendersTest extends TestCase
         $this->assertSame(['Label', 'Künstler'], $contract->parties->pluck('role_label')->all());
     }
 
+    /**
+     * The parties are found by typing instead of scrolling two long selects.
+     * A band member is offered as the band with that person in one pick.
+     */
+    public function test_the_party_search_offers_organizations_people_and_members(): void
+    {
+        $band = Organization::create(['type' => 'band', 'names' => ['Red Tape Redemption'], 'city' => 'Winterthur']);
+        $tobias = Contact::create(['first_name' => 'Tobias', 'last_name' => 'Kalt', 'city' => 'Zürich']);
+        $band->contacts()->attach($tobias->id);
+        $solo = Contact::create(['first_name' => 'Max', 'last_name' => 'Muster']);
+
+        $options = ContractParty::pickerOptions(Organization::with('contacts')->get(), Contact::all());
+        $entries = collect($options['entries'])->keyBy('key');
+
+        $this->assertSame('organization', $entries['o' . $band->id]['type']);
+        $this->assertSame('contact', $entries['c' . $solo->id]['type']);
+
+        $member = $entries['o' . $band->id . 'c' . $tobias->id];
+        $this->assertSame(['organization', $band->id, $tobias->id], [$member['type'], $member['organization_id'], $member['contact_id']]);
+        $this->assertSame('Red Tape Redemption · Tobias Kalt', $member['name']);
+        $this->assertStringContainsString('Red Tape Redemption', $entries['c' . $tobias->id]['detail']);
+        $this->assertSame('Red Tape Redemption', $options['organizations']->{$band->id}['name']);
+
+        $user = User::factory()->create();
+        foreach (['/admin/contracts/create', '/admin/contract-templates/create'] as $url) {
+            $html = $this->actingAs($user)->get($url)->assertOk()->getContent();
+            $this->assertStringContainsString('x-data="contractPartyPicker()"', $html, $url);
+            $this->assertStringContainsString('const CONTRACT_PARTY_OPTIONS', $html, $url);
+            $this->assertStringNotContainsString('— Organisation wählen —', $html, $url);
+        }
+    }
+
     public function test_the_template_forms_render(): void
     {
         $user = User::factory()->create();
