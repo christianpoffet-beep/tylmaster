@@ -18,6 +18,13 @@ class TrackAudioFile extends Model
 {
     use LogsActivity;
 
+    /**
+     * Largest audio file an upload takes, in MB. PHP on the server has to let
+     * it through as well: upload_max_filesize in public/.user.ini matches it,
+     * post_max_size there is a little higher for the rest of the form.
+     */
+    public const MAX_UPLOAD_MB = 420;
+
     protected $fillable = [
         'track_id', 'file_path', 'original_name', 'file_size',
         'title', 'isrc', 'notes', 'is_main',

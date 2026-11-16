@@ -188,6 +188,26 @@ class TrackAudioFilesTest extends TestCase
         $this->assertNull($master->fresh()->isrc);
     }
 
+    /** WAV masters of long pieces run past 300 MB; up to 420 MB a file goes up. */
+    public function test_audio_files_up_to_420_mb_are_taken(): void
+    {
+        $this->post('/admin/tracks', [
+            'title' => 'Side A',
+            'status' => 'draft',
+            'audio_files' => ['n0' => ['file' => UploadedFile::fake()->create('side-a.wav', 370 * 1024, 'audio/wav')]],
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame(1, Track::where('title', 'Side A')->firstOrFail()->audioFiles()->count());
+
+        $this->post('/admin/tracks', [
+            'title' => 'Zu gross',
+            'status' => 'draft',
+            'audio_files' => ['n0' => ['file' => UploadedFile::fake()->create('gross.wav', 421 * 1024, 'audio/wav')]],
+        ])->assertSessionHasErrors('audio_files.n0.file');
+
+        $this->assertFalse(Track::where('title', 'Zu gross')->exists());
+    }
+
     public function test_every_version_downloads_under_a_readable_name_and_only_from_its_own_track(): void
     {
         $track = Track::create(['title' => 'Nachtblau', 'status' => 'draft']);

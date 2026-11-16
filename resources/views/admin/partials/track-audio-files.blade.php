@@ -165,7 +165,7 @@
                     Audiodatei hinzufügen
                 </button>
                 <span class="text-xs text-gray-400">
-                    MP3, WAV, FLAC, AAC, M4A oder OGG, max. 300 MB pro Datei
+                    MP3, WAV, FLAC, AAC, M4A oder OGG, max. {{ \App\Models\TrackAudioFile::MAX_UPLOAD_MB }} MB pro Datei
                     @if($maxPostBytes > 0)· zusammen max. {{ floor($maxPostBytes / 1024 / 1024) }} MB pro Speichern @endif
                 </span>
             </div>
