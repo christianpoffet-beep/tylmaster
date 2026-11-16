@@ -179,6 +179,17 @@
             </div>
         @endif
     </div>
+
+    {{-- One-time catalogue import, goes again afterwards --}}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">Katalog-Import</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Einmaliger Import der Produkte und Tracks aus der SWISSPERFORM-Liste, mit Vorschau vor dem Speichern.
+        </p>
+        <a href="{{ route('admin.catalog-import.show') }}" class="inline-block px-4 py-2 text-sm bg-gray-800 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-500">
+            Zum Katalog-Import
+        </a>
+    </div>
     @endif
 
 </div>
