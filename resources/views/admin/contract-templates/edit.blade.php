@@ -176,7 +176,7 @@
                 <p class="text-xs text-gray-500 dark:text-gray-400 -mt-4">Projekte, Tracks und Produkte, mit denen ein neuer Vertrag aus dieser Vorlage startet.</p>
 
                 @include('admin.partials.project-search', ['selected' => $contractTemplate->defaultProjects(), 'projectInputName' => 'default_project_ids[]'])
-                @include('admin.partials.track-search', ['selected' => $contractTemplate->defaultTracks(), 'trackInputName' => 'default_track_ids[]'])
+                @include('admin.partials.contract-track-picker', ['selected' => $contractTemplate->defaultTracks(), 'field' => 'default_track_ids'])
                 @include('admin.partials.release-search', ['selected' => $contractTemplate->defaultReleases(), 'releaseInputName' => 'default_release_ids[]'])
             </div>
 
