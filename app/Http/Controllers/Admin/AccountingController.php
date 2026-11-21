@@ -174,7 +174,8 @@ class AccountingController extends Controller
     public function journal(Request $request, Accounting $accounting)
     {
         $accounting->load('accountable');
-        $query = $accounting->bookings()->with(['debitAccount', 'creditAccount', 'project', 'contact', 'organization', 'documents']);
+        $query = $accounting->bookings()->with(['debitAccount', 'creditAccount', 'project', 'contact', 'organization', 'documents',
+            'expense' => fn ($q) => $q->withCount('documents')]);
 
         if ($from = $request->input('from')) {
             $query->where('booking_date', '>=', $from);

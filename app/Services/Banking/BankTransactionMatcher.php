@@ -6,6 +6,7 @@ use App\Models\Accounting;
 use App\Models\BankTransaction;
 use App\Models\Booking;
 use App\Models\BookingRule;
+use App\Models\Expense;
 use App\Models\Invoice;
 use Illuminate\Support\Collection;
 
@@ -18,10 +19,14 @@ use Illuminate\Support\Collection;
  *    landing in the books twice.
  * 2. An open invoice of this accounting with the same amount; the invoice
  *    number in the payment text decides between several.
- * 3. A rule of the owner ("text contains X -> account Y").
+ * 3. An open expense (recorded with its receipt, waiting for the bank) with
+ *    the same amount, the closest in time.
+ * 4. A rule of the owner ("text contains X -> account Y").
  *
- * One matcher serves a whole page: a booking or invoice suggested for one
- * movement is not offered for the next one as well.
+ * One matcher serves a whole page: a booking, invoice or expense suggested
+ * for one movement is not offered for the next one as well.
+ *
+ * @phpstan-type Suggestion array{type: string, account_id: ?int, invoice_id: ?int, booking_id: ?int, expense_id: ?int, description: string, label: string}
  */
 class BankTransactionMatcher
 {
@@ -29,7 +34,8 @@ class BankTransactionMatcher
     private Collection $rules;
     private Collection $invoices;
     private Collection $bookings;
-    private array $taken = ['booking' => [], 'invoice' => []];
+    private Collection $expenses;
+    private array $taken = ['booking' => [], 'invoice' => [], 'expense' => []];
 
     public function __construct(private Accounting $accounting)
     {
@@ -41,15 +47,22 @@ class BankTransactionMatcher
             ->where('status', '!=', 'paid')->orderBy('invoice_date')->get();
         $this->bookings = $accounting->bookings()->whereNull('bank_transaction_id')
             ->with('invoice')->get();
+        $this->expenses = self::openExpenses($accounting);
     }
 
-    /**
-     * @return array{type: string, account_id: ?int, invoice_id: ?int, booking_id: ?int, description: string, label: string}|null
-     */
+    /** Expenses of this accounting that wait for their payment. */
+    public static function openExpenses(Accounting $accounting): Collection
+    {
+        return Expense::awaitingBank()->where('accounting_id', $accounting->id)
+            ->with('account')->orderBy('expense_date')->get();
+    }
+
+    /** @return Suggestion|null */
     public function suggest(BankTransaction $transaction): ?array
     {
         return $this->existingBooking($transaction)
             ?? $this->openInvoice($transaction)
+            ?? $this->openExpense($transaction)
             ?? $this->rule($transaction);
     }
 
@@ -79,14 +92,12 @@ class BankTransactionMatcher
         $booking = $best['booking'];
         $this->taken['booking'][$booking->id] = true;
 
-        return [
-            'type' => 'booking',
-            'account_id' => null,
+        return self::suggestion('booking', [
             'invoice_id' => $booking->invoice_id,
             'booking_id' => $booking->id,
             'description' => $booking->description,
             'label' => 'Schon gebucht: «' . $booking->description . '» vom ' . $booking->booking_date->format('d.m.Y'),
-        ];
+        ]);
     }
 
     private function openInvoice(BankTransaction $transaction): ?array
@@ -106,14 +117,39 @@ class BankTransactionMatcher
 
         $this->taken['invoice'][$invoice->id] = true;
 
-        return [
-            'type' => 'invoice',
+        return self::suggestion('invoice', [
             'account_id' => $counter,
             'invoice_id' => $invoice->id,
-            'booking_id' => null,
             'description' => self::invoicePaymentText($invoice),
             'label' => "Rechnung {$invoice->invoice_number} über " . number_format((float) $invoice->amount, 2, '.', "'"),
-        ];
+        ]);
+    }
+
+    private function openExpense(BankTransaction $transaction): ?array
+    {
+        if ($transaction->is_incoming) return null;
+
+        $expense = $this->expenses
+            ->filter(function (Expense $e) use ($transaction) {
+                if (isset($this->taken['expense'][$e->id]) || $e->currency !== $this->accounting->currency) return false;
+                if (abs((float) $e->amount - $transaction->abs_amount) >= 0.005) return false;
+                // Paid up to 30 days before the receipt's date or 120 days after it
+                $days = (int) round($e->expense_date->diffInDays($transaction->booking_date, false));
+
+                return $days >= -30 && $days <= 120;
+            })
+            ->sortBy(fn (Expense $e) => abs($e->expense_date->diffInDays($transaction->booking_date, false)))
+            ->first();
+        if (!$expense) return null;
+
+        $this->taken['expense'][$expense->id] = true;
+
+        return self::suggestion('expense', [
+            'account_id' => $expense->account_id,
+            'expense_id' => $expense->id,
+            'description' => $expense->description,
+            'label' => 'Ausgabe «' . $expense->description . '» vom ' . $expense->expense_date->format('d.m.Y'),
+        ]);
     }
 
     private function rule(BankTransaction $transaction): ?array
@@ -123,16 +159,18 @@ class BankTransactionMatcher
 
         $account = $this->accountsByNumber->get($rule->account_number);
 
-        return [
-            'type' => 'rule',
+        return self::suggestion('rule', [
             'account_id' => $account?->id,
-            'invoice_id' => null,
-            'booking_id' => null,
             'description' => $rule->description ?: $transaction->text,
             'label' => $account
                 ? "Regel «{$rule->pattern}»"
                 : "Regel «{$rule->pattern}»: Konto {$rule->account_number} fehlt in diesem Kontenplan",
-        ];
+        ]);
+    }
+
+    private static function suggestion(string $type, array $values): array
+    {
+        return $values + ['type' => $type, 'account_id' => null, 'invoice_id' => null, 'booking_id' => null, 'expense_id' => null];
     }
 
     /** What the booker needs to follow a suggestion; null when it does not say where to book. */
@@ -143,6 +181,7 @@ class BankTransactionMatcher
         $match = match ($suggestion['type']) {
             'booking' => 'booking:' . $suggestion['booking_id'],
             'invoice' => 'invoice:' . $suggestion['invoice_id'],
+            'expense' => 'expense:' . $suggestion['expense_id'],
             default => '',
         };
         if ($match === '' && !$suggestion['account_id']) return null;

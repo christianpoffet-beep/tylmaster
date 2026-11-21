@@ -42,7 +42,7 @@ class BankImportController extends Controller
                 $suggestions[$transaction->id] = $matcher->suggest($transaction);
             }
         } else {
-            $transactions = $query->with('bookings.debitAccount', 'bookings.creditAccount')->paginate(50)->withQueryString();
+            $transactions = $query->with('bookings.debitAccount', 'bookings.creditAccount', 'bookings.expense')->paginate(50)->withQueryString();
         }
 
         $counts = $accounting->bankTransactions()->selectRaw('status, count(*) as n')->groupBy('status')->pluck('n', 'status');
@@ -63,6 +63,7 @@ class BankImportController extends Controller
             'imports' => $imports,
             'rules' => $rules,
             'reconciliation' => $this->reconciliation($accounting),
+            'openExpenses' => $status === BankTransaction::OPEN ? BankTransactionMatcher::openExpenses($accounting) : collect(),
         ]);
     }
 

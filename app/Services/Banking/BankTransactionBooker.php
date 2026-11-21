@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\BankTransaction;
 use App\Models\Booking;
 use App\Models\BookingRule;
+use App\Models\Expense;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -20,8 +21,9 @@ class BankTransactionBooker
 {
     /**
      * @param array{match?: ?string, account_id?: mixed, description?: ?string, splits?: array, remember?: mixed, pattern?: ?string} $input
-     *   match: "booking:ID" links a booking that is already there, "invoice:ID" books the payment of an invoice;
-     *   otherwise account_id - or splits [[account_id, amount], ...] - is the counter account.
+     *   match: "booking:ID" links a booking that is already there, "invoice:ID" books the payment of an invoice,
+     *   "expense:ID" the payment of a recorded expense; otherwise account_id - or splits
+     *   [[account_id, amount], ...] - is the counter account.
      */
     public function book(BankTransaction $transaction, array $input): void
     {
@@ -33,6 +35,7 @@ class BankTransactionBooker
             match ($kind) {
                 'booking' => $this->linkBooking($transaction, (int) $id),
                 'invoice' => $this->bookInvoicePayment($transaction, (int) $id, $input),
+                'expense' => $this->bookExpense($transaction, (int) $id, $input),
                 default => $this->bookOnAccounts($transaction, $input),
             };
 
@@ -112,6 +115,36 @@ class BankTransactionBooker
         $invoice->update(['status' => 'paid']);
     }
 
+    /** A recorded expense is paid: "expense account an bank", and the expense knows its booking. */
+    private function bookExpense(BankTransaction $transaction, int $expenseId, array $input): void
+    {
+        $expense = Expense::awaitingBank()->where('accounting_id', $transaction->accounting_id)->find($expenseId);
+        if (!$expense || $transaction->is_incoming) {
+            throw new BankStatementException('Die Ausgabe ist schon bezahlt oder gehört nicht zu dieser Bewegung.');
+        }
+
+        // In a foreign currency the bank's amount differs anyway; in the same one it must match
+        if ($expense->currency === $transaction->accounting->currency
+            && abs((float) $expense->amount - $transaction->abs_amount) >= 0.005) {
+            throw new BankStatementException(sprintf(
+                'Die Ausgabe lautet auf %s, die Bewegung auf %s.',
+                number_format((float) $expense->amount, 2, '.', "'"),
+                number_format($transaction->abs_amount, 2, '.', "'")
+            ));
+        }
+
+        $account = Account::where('accounting_id', $transaction->accounting_id)->where('is_header', false)->find($expense->account_id);
+        if (!$account || (int) $account->id === (int) $transaction->account_id) {
+            throw new BankStatementException('Die Ausgabe hat kein gültiges Aufwandkonto.');
+        }
+
+        $booking = $this->createBooking($transaction, $account->id, $transaction->abs_amount, [
+            'description' => trim((string) ($input['description'] ?? '')) ?: $expense->description,
+            'contact_id' => $expense->contact_id,
+        ]);
+        $expense->update(['booking_id' => $booking->id]);
+    }
+
     private function bookOnAccounts(BankTransaction $transaction, array $input): void
     {
         $lines = collect($input['splits'] ?? [])
@@ -148,7 +181,23 @@ class BankTransactionBooker
 
         $description = trim((string) ($input['description'] ?? '')) ?: $transaction->text;
         foreach ($lines as $line) {
-            $this->createBooking($transaction, $line['account_id'], $line['amount'], ['description' => $description]);
+            $booking = $this->createBooking($transaction, $line['account_id'], $line['amount'], ['description' => $description]);
+
+            // A payment onto an expense account is an expense: it shows up under
+            // "Ausgaben", where its receipt can be added later
+            if (!$transaction->is_incoming && $accounts->get($line['account_id'])->type === 'expense') {
+                Expense::create([
+                    'description' => $booking->description,
+                    'amount' => $line['amount'],
+                    'currency' => $transaction->accounting->currency,
+                    'expense_date' => $transaction->booking_date->toDateString(),
+                    'accounting_id' => $transaction->accounting_id,
+                    'account_id' => $line['account_id'],
+                    'booking_id' => $booking->id,
+                    'created_from_bank' => true,
+                    'notes' => $transaction->details,
+                ]);
+            }
         }
 
         $pattern = trim((string) ($input['pattern'] ?? ''));

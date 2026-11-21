@@ -139,6 +139,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('organizations/{organization}/contacts', [InvoiceController::class, 'organizationContacts'])->name('organizations.contacts');
     Route::get('accountings/{accounting}/accounts', [InvoiceController::class, 'accountingAccounts'])->name('accountings.accounts');
     Route::resource('expenses', ExpenseController::class)->except('show');
+    Route::delete('expenses/{expense}/documents/{document}', [ExpenseController::class, 'destroyDocument'])->name('expenses.documents.destroy');
     Route::get('submissions', [SubmissionController::class, 'index'])->name('submissions.index');
     Route::get('submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
     Route::get('submissions/{submission}/file', [SubmissionController::class, 'file'])->name('submissions.file');

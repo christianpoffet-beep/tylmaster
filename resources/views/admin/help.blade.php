@@ -651,6 +651,16 @@
                         <li>Fehler korrigieren: im Reiter «Gebucht» auf <strong>«Wieder öffnen»</strong> &ndash; oder die Buchung im Journal löschen; die Bewegung landet dann wieder in der Inbox.</li>
                     </ul>
                 </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Ausgaben &amp; Belege</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Unter <strong>Finanzen → Ausgaben</strong> erfasst du Kosten mit Beleg (Quittung, Rechnung, Foto), Buchhaltung und <strong>Aufwandkonto</strong>. Das Feld «Bezahlt mit» entscheidet, wie gebucht wird:</p>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1 mt-2">
+                        <li><strong>Bank</strong> (Standard): Die Ausgabe bleibt «offen», bis die Zahlung im Bankauszug auftaucht. Der Bankabgleich schlägt sie dann vor (gleicher Betrag) oder du ordnest sie von Hand zu &ndash; auch bei Fremdwährung.</li>
+                        <li><strong>Bar / privat</strong> (z.B. Kasse oder Eigenkapital): Die Ausgabe bucht sich sofort selbst, am Datum des Belegs.</li>
+                        <li>Buchst du im Bankabgleich eine Belastung auf ein Aufwandkonto, entsteht automatisch eine Ausgabe &ndash; dort kannst du den Beleg nachträglich anhängen.</li>
+                    </ul>
+                </div>
             </div>
         </div>
 

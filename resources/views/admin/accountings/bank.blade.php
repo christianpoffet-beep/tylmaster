@@ -5,6 +5,11 @@
 @php
     $chf = fn ($value) => number_format((float) $value, 2, '.', "'");
     $accountsById = $accounts->keyBy('id');
+    // Open expenses that can be picked for a payment - and what booking one means
+    $expenseTexts = $openExpenses->mapWithKeys(fn ($e) => ['expense:' . $e->id => [
+        'option' => $e->expense_date->format('d.m.Y') . ' · ' . \Illuminate\Support\Str::limit($e->description, 40) . ' · ' . $e->currency . ' ' . number_format((float) $e->amount, 2, '.', "'"),
+        'text' => 'Wird als Ausgabe «' . $e->description . '» auf ' . $e->account?->number . ' ' . $e->account?->name . ' gebucht, die Ausgabe gilt danach als bezahlt.',
+    ]])->all();
     $suggestionCount = collect($suggestions)->filter(fn ($s) => \App\Services\Banking\BankTransactionMatcher::bookingInput($s))->count();
     $card = 'bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700';
     $input = 'rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500';
@@ -127,17 +132,25 @@
         @forelse($transactions as $tx)
             @php
                 $s = $suggestions[$tx->id] ?? null;
+                $counter = ($s['account_id'] ?? null) ? $accountsById->get($s['account_id']) : null;
+                $counterName = $counter ? "{$counter->number} {$counter->name}" : '';
                 $row = [
                     'amount' => $tx->abs_amount,
                     'bankAccountId' => $tx->account_id,
+                    'incoming' => $tx->is_incoming,
                     'match' => \App\Services\Banking\BankTransactionMatcher::bookingInput($s)['match'] ?? '',
+                    'matchText' => match ($s['type'] ?? null) {
+                        'booking' => 'Die Buchung ist schon im Journal – sie wird nur mit dieser Bewegung verknüpft (keine Doppelbuchung).',
+                        'invoice' => 'Zahlung wird gebucht ' . ($tx->is_incoming ? 'auf ' : 'gegen ') . $counterName . ', die Rechnung gilt danach als bezahlt.',
+                        'expense' => $expenseTexts['expense:' . $s['expense_id']]['text'] ?? '',
+                        default => '',
+                    },
                     'accountId' => $s['account_id'] ?? null,
                     'description' => $s['description'] ?? $tx->text,
                     'fromRule' => ($s['type'] ?? null) === 'rule',
                     'remember' => !$s,
                     'pattern' => $tx->counterparty,
                 ];
-                $counter = ($s['account_id'] ?? null) ? $accountsById->get($s['account_id']) : null;
             @endphp
             <form method="POST" action="{{ route('admin.accountings.bank.book', $accounting) }}"
                   x-data="bankRow(@js($row))" class="{{ $card }} p-4">
@@ -162,7 +175,11 @@
                     @if($s)
                         <p class="text-xs">
                             <span class="inline-flex items-center px-2 py-0.5 rounded font-medium
-                                {{ $s['type'] === 'rule' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300' : 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300' }}">
+                                {{ match ($s['type']) {
+                                    'rule' => 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300',
+                                    'expense' => 'bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300',
+                                    default => 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300',
+                                } }}">
                                 Vorschlag
                             </span>
                             <span class="text-gray-600 dark:text-gray-300 ml-1">{{ $s['label'] }}</span>
@@ -171,14 +188,10 @@
 
                     <input type="hidden" name="match" :value="match">
 
-                    {{-- Vorschlag Rechnung / bestehende Buchung --}}
+                    {{-- Bestehende Buchung / Rechnung / Ausgabe --}}
                     <template x-if="match">
                         <div class="text-sm text-gray-700 dark:text-gray-300">
-                            @if(($s['type'] ?? null) === 'booking')
-                                Die Buchung ist schon im Journal &ndash; sie wird nur mit dieser Bewegung verknüpft (keine Doppelbuchung).
-                            @elseif(($s['type'] ?? null) === 'invoice')
-                                Zahlung wird gebucht {{ $tx->is_incoming ? 'auf' : 'gegen' }} <strong>{{ $counter?->number }} {{ $counter?->name }}</strong>, die Rechnung gilt danach als bezahlt.
-                            @endif
+                            <span x-text="matchText()"></span>
                             <button type="button" @click="match = ''" class="ml-1 text-xs text-blue-600 dark:text-blue-400 hover:underline">Stattdessen Konto wählen</button>
                         </div>
                     </template>
@@ -209,6 +222,17 @@
                                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Buchungstext</label>
                                 <input type="text" name="description" x-model="description" maxlength="250" class="w-full {{ $input }}">
                             </div>
+                            @if(!$tx->is_incoming && count($expenseTexts))
+                                <div class="md:col-span-2 flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <span>oder offene Ausgabe zuordnen:</span>
+                                    <select x-model="match" class="{{ $input }} py-1 max-w-full">
+                                        <option value="">—</option>
+                                        @foreach($expenseTexts as $key => $expenseText)
+                                            <option value="{{ $key }}">{{ $expenseText['option'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
                             <div class="md:col-span-2 flex flex-wrap items-center gap-2">
                                 <label class="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                                     <input type="checkbox" name="remember" value="1" x-model="remember" class="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-600 focus:ring-blue-500">
@@ -221,6 +245,9 @@
                                     </div>
                                 </template>
                             </div>
+                            @unless($tx->is_incoming)
+                                <p x-show="isExpenseAccount(accountId)" class="md:col-span-2 text-xs text-gray-400 dark:text-gray-500">Auf einem Aufwandkonto entsteht dabei automatisch eine Ausgabe &ndash; dort kannst du den Beleg anhängen.</p>
+                            @endunless
                         </div>
                     </template>
 
@@ -308,6 +335,9 @@
                                             {{ $booking->debitAccount->number }} an {{ $booking->creditAccount->number }} · {{ $chf($booking->amount) }}
                                             <span class="text-gray-400 dark:text-gray-500">{{ $booking->description }}</span>
                                             @unless($booking->from_bank_import)<span class="text-indigo-600 dark:text-indigo-400">(verknüpft)</span>@endunless
+                                            @if($booking->expense)
+                                                <a href="{{ route('admin.expenses.edit', $booking->expense) }}" class="text-teal-600 dark:text-teal-400 hover:underline">Ausgabe / Beleg</a>
+                                            @endif
                                         </div>
                                     @endforeach
                                 </td>
@@ -437,12 +467,24 @@
 @endphp
 <script>
 window.bankAccounts = @json($accountsJson);
+window.bankExpenses = @json($expenseTexts);
 
 function bankRow(cfg) {
     return {
         amount: Number(cfg.amount),
         bankAccountId: cfg.bankAccountId,
         match: cfg.match || '',
+        suggestedMatch: cfg.match || '',
+        suggestedText: cfg.matchText || '',
+
+        matchText() {
+            if (this.match === this.suggestedMatch) return this.suggestedText;
+            return (window.bankExpenses[this.match] || {}).text || '';
+        },
+        isExpenseAccount(id) {
+            const acc = window.bankAccounts.find(a => a.id == id);
+            return !!acc && acc.type === 'expense';
+        },
         accountId: cfg.accountId || '',
         description: cfg.description || '',
         fromRule: !!cfg.fromRule,

@@ -30,6 +30,18 @@ class Booking extends Model
 
     protected static function booted(): void
     {
+        // An expense the bank inbox made for this booking goes with it - unless
+        // a receipt was added meanwhile; then it stays, open again.
+        static::deleting(function (Booking $booking) {
+            foreach (Expense::where('booking_id', $booking->id)->get() as $expense) {
+                if ($expense->created_from_bank && !$expense->documents()->exists()) {
+                    $expense->delete();
+                } else {
+                    $expense->update(['booking_id' => null, 'paid_from_account_id' => null]);
+                }
+            }
+        });
+
         // A booking that goes away hands its bank movement back to the inbox,
         // and a payment that goes away leaves its invoice unpaid again.
         static::deleted(function (Booking $booking) {
@@ -95,5 +107,10 @@ class Booking extends Model
     public function bankTransaction()
     {
         return $this->belongsTo(BankTransaction::class);
+    }
+
+    public function expense()
+    {
+        return $this->hasOne(Expense::class);
     }
 }
