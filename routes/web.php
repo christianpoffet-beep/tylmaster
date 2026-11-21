@@ -151,6 +151,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::resource('accountings', AccountingController::class);
     Route::patch('accountings/{accounting}/close', [AccountingController::class, 'close'])->name('accountings.close');
     Route::patch('accountings/{accounting}/reopen', [AccountingController::class, 'reopen'])->name('accountings.reopen');
+    Route::post('accountings/{accounting}/refresh-openings', [AccountingController::class, 'refreshOpenings'])->name('accountings.refreshOpenings');
     Route::get('accountings/{accounting}/journal', [AccountingController::class, 'journal'])->name('accountings.journal');
     Route::get('accountings/{accounting}/ledger/{account}', [AccountingController::class, 'ledger'])->name('accountings.ledger');
     Route::get('accountings/{accounting}/trial-balance', [AccountingController::class, 'trialBalance'])->name('accountings.trialBalance');

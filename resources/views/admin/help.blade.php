@@ -615,9 +615,16 @@
                 </div>
 
                 <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Eröffnungssaldi</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Wenn du eine neue Buchhaltung für ein neues Jahr erstellst, solltest du die <strong>Endsaldi des Vorjahres</strong> als Anfangswerte übertragen (z.B. Bankstand, offene Forderungen). Dies geschieht über das Feld «Eröffnungssaldo» beim Hinzufügen eines Kontos.</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 italic">Nur Aktiv- und Passivkonten haben Eröffnungssaldi. Ertrags- und Aufwandskonten starten immer bei 0.</p>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Neues Geschäftsjahr (Saldovortrag)</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Jedes Jahr bekommt eine eigene Buchhaltung. Auf der Seite des alten Jahres klickst du <strong>«Folgejahr eröffnen»</strong> (oder bei «Neue Buchhaltung» die Option «Folgejahr eröffnen»). Dabei wird übernommen:</p>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1 mt-2">
+                        <li>der ganze <strong>Kontenplan</strong> samt IBAN, auch Konten, die du im Lauf des Jahres ergänzt hast</li>
+                        <li>die <strong>Schlusssalden</strong> der Aktiv- und Passivkonten als Eröffnungssaldi (Bank, Kasse, offene Forderungen …)</li>
+                        <li>der <strong>Gewinn oder Verlust</strong> des Vorjahres auf das gewählte Eigenkapitalkonto (vorgeschlagen: 2801), damit die Eröffnungsbilanz aufgeht</li>
+                    </ul>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">Ertrags- und Aufwandkonten starten bei 0, die Regeln für den Bankabgleich gelten weiter. Bevor du eröffnest, siehst du die Eröffnungsbilanz als Vorschau.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2"><strong>Nachträge im alten Jahr:</strong> Buchst du dort nach der Eröffnung noch etwas, zeigt die neue Buchhaltung einen Hinweis. Mit <strong>«Schlusssalden übernehmen»</strong> passt du die Eröffnungssaldi an.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2"><strong>Offene Posten:</strong> Rechnungen und Ausgaben, die Ende Jahr noch offen sind, findet der Bankabgleich auch im neuen Jahr. Die Zahlung wird im Jahr gebucht, in dem das Geld fliesst (z.B. Bank an Debitoren 2026). Eine Rechnung von 2025 mit Zahldatum 2026 bucht «Bezahlt» ebenfalls ins neue Jahr.</p>
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Periode abschliessen</h4>

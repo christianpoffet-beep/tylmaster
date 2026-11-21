@@ -354,7 +354,8 @@ class InvoiceController extends Controller
         $invoice->update(['status' => 'paid']);
 
         if ($invoice->accounting_id && $invoice->accounting) {
-            $accounting = $invoice->accounting;
+            // Paid after the end of the invoice's year: the payment goes into the next one
+            $accounting = $invoice->accounting->forDate($paidAt);
             if (!$accounting->is_closed) {
                 $existingPayment = Booking::where('invoice_id', $invoice->id)
                     ->where('invoice_role', Booking::ROLE_PAYMENT)
@@ -367,14 +368,12 @@ class InvoiceController extends Controller
                     if ($invoice->type === 'outgoing') {
                         // Bank an Debitoren (use invoice's debit account as counter)
                         $debitAccount = $bankAccount;
-                        $creditAccount = $invoice->debit_account_id
-                            ? Account::find($invoice->debit_account_id)
-                            : $this->findAccount($accounts, ['1100']);
+                        $creditAccount = $accounting->sameAccount($invoice->debit_account_id ? Account::find($invoice->debit_account_id) : null)
+                            ?? $this->findAccount($accounts, ['1100']);
                     } else {
                         // Kreditoren an Bank (use invoice's credit account as counter)
-                        $debitAccount = $invoice->credit_account_id
-                            ? Account::find($invoice->credit_account_id)
-                            : $this->findAccount($accounts, ['2001']);
+                        $debitAccount = $accounting->sameAccount($invoice->credit_account_id ? Account::find($invoice->credit_account_id) : null)
+                            ?? $this->findAccount($accounts, ['2001']);
                         $creditAccount = $bankAccount;
                     }
 

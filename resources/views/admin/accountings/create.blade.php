@@ -22,7 +22,101 @@
         <div x-show="step === 1">
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
 
-                <div>
+                @if($sources->isNotEmpty())
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <label class="flex items-start gap-2 p-3 rounded-lg border cursor-pointer transition-colors" :class="mode === 'new' ? 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/50' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'">
+                                <input type="radio" value="new" x-model="mode" class="mt-0.5 text-blue-600 focus:ring-blue-500">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Neue Buchhaltung</span>
+                                    <p class="text-xs text-gray-500 mt-0.5">Mit einer Vorlage oder einem eigenen Kontenplan.</p>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-2 p-3 rounded-lg border cursor-pointer transition-colors" :class="mode === 'carry' ? 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/50' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'">
+                                <input type="radio" value="carry" x-model="mode" @change="if (!sourceId && sources.length) { sourceId = String(sources[0].id); applySource(); }" class="mt-0.5 text-blue-600 focus:ring-blue-500">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Folgejahr eröffnen</span>
+                                    <p class="text-xs text-gray-500 mt-0.5">Kontenplan und Schlusssalden einer bestehenden Buchhaltung übernehmen (Saldovortrag).</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    {{-- Folgejahr: Vorjahr, Eigenkapitalkonto, Vorschau der Eröffnungsbilanz --}}
+                    <fieldset x-show="mode === 'carry'" x-cloak :disabled="mode !== 'carry'" class="space-y-4">
+                        <div>
+                            <label for="source_accounting_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Schlusssalden übernehmen aus *</label>
+                            <select name="source_accounting_id" id="source_accounting_id" x-model="sourceId" @change="applySource()" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                @foreach($sources as $source)
+                                    <option value="{{ $source->id }}">{{ $source->name }} · {{ $source->accountable_name }} ({{ $source->period_start->format('d.m.Y') }} – {{ $source->period_end->format('d.m.Y') }}){{ $source->is_closed ? ' · abgeschlossen' : '' }}</option>
+                                @endforeach
+                            </select>
+                            @error('source_accounting_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-show="source" x-text="source ? 'Inhaber ' + source.owner + ' · ' + source.currency + ' · wie im Vorjahr' : ''"></p>
+                            <p class="text-xs text-amber-700 dark:text-amber-300 mt-1" x-show="source && source.next.length" x-text="source && source.next.length ? 'Aus dieser Buchhaltung wurde schon «' + source.next.join('», «') + '» eröffnet.' : ''"></p>
+                        </div>
+
+                        <div>
+                            <label for="profit_account_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gewinn / Verlust des Vorjahres auf *</label>
+                            <select name="profit_account_id" id="profit_account_id" x-model="profitAccountId" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">— Eigenkapitalkonto wählen —</option>
+                                <template x-for="account in liabilityAccounts" :key="account.id">
+                                    <option :value="account.id" :selected="account.id == profitAccountId" x-text="account.number + ' ' + account.name"></option>
+                                </template>
+                            </select>
+                            @error('profit_account_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div x-show="preview" class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Eröffnungsbilanz <span class="font-normal text-gray-500 dark:text-gray-400" x-text="'per ' + dateLabel(periodStart)"></span></p>
+                            <template x-if="preview">
+                                <div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 text-sm">
+                                        <div>
+                                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Aktiven</p>
+                                            <template x-for="line in preview.assets" :key="line.id">
+                                                <div class="flex justify-between gap-3 text-gray-700 dark:text-gray-300">
+                                                    <span class="truncate" x-text="line.number + ' ' + line.name"></span>
+                                                    <span class="font-mono" x-text="fmt(line.opening)"></span>
+                                                </div>
+                                            </template>
+                                            <p x-show="!preview.assets.length" class="text-xs text-gray-400">Keine Saldi</p>
+                                            <div class="flex justify-between gap-3 mt-1 pt-1 border-t border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-gray-100">
+                                                <span>Total</span><span class="font-mono" x-text="fmt(preview.totalAssets)"></span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Passiven</p>
+                                            <template x-for="line in preview.liabilities" :key="line.id">
+                                                <div class="flex justify-between gap-3 text-gray-700 dark:text-gray-300">
+                                                    <span class="truncate"><span x-text="line.number + ' ' + line.name"></span><span x-show="line.id == profitAccountId && preview.profit !== 0" class="text-xs text-gray-400" x-text="preview.profit > 0 ? ' inkl. Gewinn' : ' inkl. Verlust'"></span></span>
+                                                    <span class="font-mono" x-text="fmt(line.opening)"></span>
+                                                </div>
+                                            </template>
+                                            <p x-show="!preview.liabilities.length" class="text-xs text-gray-400">Keine Saldi</p>
+                                            <div class="flex justify-between gap-3 mt-1 pt-1 border-t border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-gray-100">
+                                                <span>Total</span><span class="font-mono" x-text="fmt(preview.totalLiabilities)"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-600 dark:text-gray-300 mt-3" x-text="profitText()"></p>
+                                    <p x-show="preview.difference !== 0" class="text-xs text-red-600 dark:text-red-400 mt-1" x-text="'Die Eröffnungsbilanz geht um ' + fmt(preview.difference) + ' nicht auf – schon die Eröffnungssaldi von «' + source.name + '» waren nicht ausgeglichen.'"></p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="'Übernommen werden alle ' + source.accounts.length + ' Konten samt IBAN. Ertrags- und Aufwandkonten starten bei 0, Regeln für den Bankabgleich gelten weiter.'"></p>
+                                </div>
+                            </template>
+                        </div>
+
+                        <label x-show="source && !source.is_closed" class="flex items-start gap-2">
+                            <input type="checkbox" name="close_source" value="1" @checked(old('close_source')) class="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm text-gray-700 dark:text-gray-300"><span x-text="source ? '«' + source.name + '» abschliessen' : ''"></span>
+                                <span class="block text-xs text-gray-500 dark:text-gray-400">Dann lässt sich dort nichts mehr buchen. Kommt doch noch etwas dazu: wieder öffnen, buchen und hier die Schlusssalden neu übernehmen.</span>
+                            </span>
+                        </label>
+                    </fieldset>
+                @endif
+
+                <fieldset x-show="mode === 'new'" :disabled="mode !== 'new'">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Zuordnung *</label>
                     <div class="flex gap-4 mb-3">
                         <label class="inline-flex items-center">
@@ -52,25 +146,30 @@
                         </select>
                     </div>
                     @error('accountable_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
+                </fieldset>
 
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
-                    <input type="text" name="name" id="name" value="{{ old('name', 'Buchhaltung ' . $year) }}" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <input type="text" name="name" id="name" x-model="name" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="period_start" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Periode von *</label>
-                        <input type="date" name="period_start" id="period_start" value="{{ old('period_start', $year . '-01-01') }}" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="period_start" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Periode von *</label>
+                            <input type="date" name="period_start" id="period_start" x-model="periodStart" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="period_end" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Periode bis *</label>
+                            <input type="date" name="period_end" id="period_end" x-model="periodEnd" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
                     </div>
-                    <div>
-                        <label for="period_end" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Periode bis *</label>
-                        <input type="date" name="period_end" id="period_end" value="{{ old('period_end', $year . '-12-31') }}" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
+                    @error('period_start') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    @error('period_end') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
+                <fieldset x-show="mode === 'new'" :disabled="mode !== 'new'" class="space-y-6">
                 <div>
                     <label for="currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Währung *</label>
                     <select name="currency" id="currency" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
@@ -111,6 +210,7 @@
                         </label>
                     </div>
                 </div>
+                </fieldset>
 
                 <div>
                     <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notizen</label>
@@ -119,11 +219,11 @@
             </div>
 
             <div class="mt-4 flex items-center gap-3">
-                <template x-if="templateId && openingMode === 'manual'">
+                <template x-if="mode === 'new' && templateId && openingMode === 'manual'">
                     <button type="button" @click="goToStep2()" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Weiter &rarr;</button>
                 </template>
-                <template x-if="!templateId || openingMode === 'zero'">
-                    <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Buchhaltung erstellen</button>
+                <template x-if="mode === 'carry' || !templateId || openingMode === 'zero'">
+                    <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700" x-text="mode === 'carry' ? 'Folgejahr eröffnen' : 'Buchhaltung erstellen'">Buchhaltung erstellen</button>
                 </template>
                 <a href="{{ route('admin.accountings.index') }}" class="px-5 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Abbrechen</a>
             </div>
@@ -238,9 +338,92 @@
 function accountingWizard() {
     return {
         step: 1,
+        mode: @js(old('source_accounting_id') || $fromId ? 'carry' : 'new'),
+        sources: @json($sourcesJson),
+        sourceId: @js((string) old('source_accounting_id', $fromId ?? '')),
+        profitAccountId: @js((string) old('profit_account_id', '')),
+        name: @js(old('name', 'Buchhaltung ' . $year)),
+        periodStart: @js(old('period_start', $year . '-01-01')),
+        periodEnd: @js(old('period_end', $year . '-12-31')),
         entityType: '{{ old('accountable_type', 'organization') }}',
         templateId: '{{ old('chart_template_id', '') }}',
         openingMode: 'zero',
+
+        init() {
+            // Coming from "Folgejahr eröffnen": fill in the next year right away
+            if (this.mode === 'carry' && @js(!old('source_accounting_id'))) this.applySource();
+        },
+
+        get source() {
+            return this.sources.find(s => String(s.id) === String(this.sourceId)) || null;
+        },
+
+        get liabilityAccounts() {
+            return this.source ? this.source.accounts.filter(a => a.type === 'liability') : [];
+        },
+
+        /** The next year's name, period and equity account, from the chosen year. */
+        applySource() {
+            const s = this.source;
+            if (!s) return;
+            const shift = (iso, years, days) => {
+                const [y, m, d] = iso.split('-').map(Number);
+                return new Date(Date.UTC(y + years, m - 1, d + days)).toISOString().slice(0, 10);
+            };
+            this.periodStart = shift(s.period_end, 0, 1);
+            this.periodEnd = shift(s.period_end, 1, 0);
+            // "Buchhaltung 2025" -> "Buchhaltung 2026", "Saison 2025/2026" -> "Saison 2026/2027"
+            this.name = /\b(19|20)\d{2}\b/.test(s.name)
+                ? s.name.replace(/\b(19|20)\d{2}\b/g, y => String(Number(y) + 1))
+                : s.name + ' ' + this.periodEnd.slice(0, 4);
+            this.profitAccountId = s.profit_account_id ? String(s.profit_account_id) : '';
+        },
+
+        /** Closing balances of the chosen year as opening balances, its profit on the equity account. */
+        get preview() {
+            const s = this.source;
+            if (!s) return null;
+            const round = v => Math.round(v * 100) / 100;
+            let profit = 0;
+            s.accounts.forEach(a => {
+                if (a.type === 'income') profit += a.balance;
+                if (a.type === 'expense') profit -= a.balance;
+            });
+            profit = round(profit);
+            const lines = s.accounts.filter(a => a.type === 'asset' || a.type === 'liability')
+                .map(a => Object.assign({}, a, { opening: round(a.balance + (String(a.id) === String(this.profitAccountId) ? profit : 0)) }));
+            const total = type => round(lines.filter(l => l.type === type).reduce((sum, l) => sum + l.opening, 0));
+
+            return {
+                profit,
+                assets: lines.filter(l => l.type === 'asset' && l.opening !== 0),
+                liabilities: lines.filter(l => l.type === 'liability' && l.opening !== 0),
+                totalAssets: total('asset'),
+                totalLiabilities: total('liability'),
+                difference: round(total('asset') - total('liability')),
+            };
+        },
+
+        profitText() {
+            const p = this.preview;
+            if (!p) return '';
+            if (p.profit === 0) return 'Das Vorjahr schliesst ohne Gewinn oder Verlust.';
+            const account = this.liabilityAccounts.find(a => String(a.id) === String(this.profitAccountId));
+            return (p.profit > 0 ? 'Gewinn' : 'Verlust') + ' von «' + this.source.name + '»: ' + this.fmt(Math.abs(p.profit)) + ' ' + this.source.currency
+                + (account ? ' → ' + account.number + ' ' + account.name : ' – bitte ein Eigenkapitalkonto wählen');
+        },
+
+        fmt(value) {
+            const n = Math.round(value * 100) / 100;
+            const [int, dec] = Math.abs(n).toFixed(2).split('.');
+            return (n < 0 ? '-' : '') + int.replace(/\B(?=(\d{3})+(?!\d))/g, "'") + '.' + dec;
+        },
+
+        dateLabel(iso) {
+            if (!iso) return '';
+            const [y, m, d] = iso.split('-');
+            return d + '.' + m + '.' + y;
+        },
         accounts: [],
         templates: @json($templatesJson),
         typeLabels: { asset: 'Aktiven', liability: 'Passiven', income: 'Ertrag', expense: 'Aufwand' },

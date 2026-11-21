@@ -6,9 +6,12 @@
     $chf = fn ($value) => number_format((float) $value, 2, '.', "'");
     $accountsById = $accounts->keyBy('id');
     // Open expenses that can be picked for a payment - and what booking one means
+    // (last year's ones too: they are booked - and move - into this year)
     $expenseTexts = $openExpenses->mapWithKeys(fn ($e) => ['expense:' . $e->id => [
-        'option' => $e->expense_date->format('d.m.Y') . ' · ' . \Illuminate\Support\Str::limit($e->description, 40) . ' · ' . $e->currency . ' ' . number_format((float) $e->amount, 2, '.', "'"),
-        'text' => 'Wird als Ausgabe «' . $e->description . '» auf ' . $e->account?->number . ' ' . $e->account?->name . ' gebucht, die Ausgabe gilt danach als bezahlt.',
+        'option' => $e->expense_date->format('d.m.Y') . ' · ' . \Illuminate\Support\Str::limit($e->description, 40) . ' · ' . $e->currency . ' ' . number_format((float) $e->amount, 2, '.', "'")
+            . ((int) $e->accounting_id !== (int) $accounting->id ? ' · aus ' . $e->accounting?->name : ''),
+        'text' => 'Wird als Ausgabe «' . $e->description . '» auf ' . $e->account?->number . ' ' . $e->account?->name . ' gebucht, die Ausgabe gilt danach als bezahlt'
+            . ((int) $e->accounting_id !== (int) $accounting->id ? ' und wechselt aus «' . $e->accounting?->name . '» in diese Buchhaltung.' : '.'),
     ]])->all();
     $suggestionCount = collect($suggestions)->filter(fn ($s) => \App\Services\Banking\BankTransactionMatcher::bookingInput($s))->count();
     $card = 'bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700';

@@ -92,7 +92,8 @@ class BankTransactionBooker
 
     private function bookInvoicePayment(BankTransaction $transaction, int $invoiceId, array $input): void
     {
-        $invoice = Invoice::where('accounting_id', $transaction->accounting_id)->where('status', '!=', 'paid')->find($invoiceId);
+        $invoice = Invoice::whereIn('accounting_id', $transaction->accounting->openItemAccountingIds())
+            ->where('status', '!=', 'paid')->find($invoiceId);
         if (!$invoice || abs((float) $invoice->amount - $transaction->abs_amount) >= 0.005) {
             throw new BankStatementException('Die vorgeschlagene Rechnung ist schon bezahlt oder hat einen anderen Betrag.');
         }
@@ -115,10 +116,15 @@ class BankTransactionBooker
         $invoice->update(['status' => 'paid']);
     }
 
-    /** A recorded expense is paid: "expense account an bank", and the expense knows its booking. */
+    /**
+     * A recorded expense is paid: "expense account an bank", and the expense
+     * knows its booking. One left over from last year is booked in the year
+     * it is paid and moves there, onto the same expense account.
+     */
     private function bookExpense(BankTransaction $transaction, int $expenseId, array $input): void
     {
-        $expense = Expense::awaitingBank()->where('accounting_id', $transaction->accounting_id)->find($expenseId);
+        $accounting = $transaction->accounting;
+        $expense = Expense::awaitingBank()->whereIn('accounting_id', $accounting->openItemAccountingIds())->find($expenseId);
         if (!$expense || $transaction->is_incoming) {
             throw new BankStatementException('Die Ausgabe ist schon bezahlt oder gehört nicht zu dieser Bewegung.');
         }
@@ -133,16 +139,18 @@ class BankTransactionBooker
             ));
         }
 
-        $account = Account::where('accounting_id', $transaction->accounting_id)->where('is_header', false)->find($expense->account_id);
+        $account = $accounting->sameAccount($expense->account);
         if (!$account || (int) $account->id === (int) $transaction->account_id) {
-            throw new BankStatementException('Die Ausgabe hat kein gültiges Aufwandkonto.');
+            throw new BankStatementException($expense->account && (int) $expense->accounting_id !== (int) $accounting->id
+                ? "Konto {$expense->account->number} der Ausgabe fehlt im Kontenplan von «{$accounting->name}»."
+                : 'Die Ausgabe hat kein gültiges Aufwandkonto.');
         }
 
         $booking = $this->createBooking($transaction, $account->id, $transaction->abs_amount, [
             'description' => trim((string) ($input['description'] ?? '')) ?: $expense->description,
             'contact_id' => $expense->contact_id,
         ]);
-        $expense->update(['booking_id' => $booking->id]);
+        $expense->update(['booking_id' => $booking->id, 'accounting_id' => $accounting->id, 'account_id' => $account->id]);
     }
 
     private function bookOnAccounts(BankTransaction $transaction, array $input): void

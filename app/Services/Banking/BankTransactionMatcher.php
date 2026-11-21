@@ -2,6 +2,7 @@
 
 namespace App\Services\Banking;
 
+use App\Models\Account;
 use App\Models\Accounting;
 use App\Models\BankTransaction;
 use App\Models\Booking;
@@ -17,10 +18,11 @@ use Illuminate\Support\Collection;
  *    time (an invoice booked straight onto the bank waits up to 120 days).
  *    Linking it - instead of booking again - is what keeps a movement from
  *    landing in the books twice.
- * 2. An open invoice of this accounting with the same amount; the invoice
- *    number in the payment text decides between several.
+ * 2. An open invoice of this accounting (or left open in the previous year)
+ *    with the same amount; the invoice number in the payment text decides
+ *    between several.
  * 3. An open expense (recorded with its receipt, waiting for the bank) with
- *    the same amount, the closest in time.
+ *    the same amount, the closest in time - last year's ones included.
  * 4. A rule of the owner ("text contains X -> account Y").
  *
  * One matcher serves a whole page: a booking, invoice or expense suggested
@@ -43,18 +45,28 @@ class BankTransactionMatcher
         // Longest pattern first: "METANET AG Hosting" beats "METANET"
         $this->rules = $accounting->bookingRules()->get()
             ->sortByDesc(fn (BookingRule $rule) => mb_strlen($rule->pattern))->values();
-        $this->invoices = Invoice::where('accounting_id', $accounting->id)
+        // Last year's open invoices are paid this year (its Debitoren were carried over)
+        $this->invoices = Invoice::whereIn('accounting_id', $accounting->openItemAccountingIds())
             ->where('status', '!=', 'paid')->orderBy('invoice_date')->get();
         $this->bookings = $accounting->bookings()->whereNull('bank_transaction_id')
             ->with('invoice')->get();
         $this->expenses = self::openExpenses($accounting);
     }
 
-    /** Expenses of this accounting that wait for their payment. */
+    /** Expenses that wait for their payment - this year's and the ones left over from last year. */
     public static function openExpenses(Accounting $accounting): Collection
     {
-        return Expense::awaitingBank()->where('accounting_id', $accounting->id)
-            ->with('account')->orderBy('expense_date')->get();
+        return Expense::awaitingBank()->whereIn('accounting_id', $accounting->openItemAccountingIds())
+            ->with('account', 'accounting')->orderBy('expense_date')->get();
+    }
+
+    /** An account of this or last year's chart, as it is in this one (by number). */
+    private function accountHere(?int $accountId, ?string $number = null): ?int
+    {
+        if ($accountId && $this->accountsByNumber->contains('id', $accountId)) return $accountId;
+        $number ??= $accountId ? Account::find($accountId)?->number : null;
+
+        return $number !== null ? $this->accountsByNumber->get($number)?->id : null;
     }
 
     /** @return Suggestion|null */
@@ -145,7 +157,7 @@ class BankTransactionMatcher
         $this->taken['expense'][$expense->id] = true;
 
         return self::suggestion('expense', [
-            'account_id' => $expense->account_id,
+            'account_id' => $this->accountHere($expense->account_id, $expense->account?->number),
             'expense_id' => $expense->id,
             'description' => $expense->description,
             'label' => 'Ausgabe «' . $expense->description . '» vom ' . $expense->expense_date->format('d.m.Y'),
@@ -192,10 +204,11 @@ class BankTransactionMatcher
     /**
      * The account the payment clears: the receivable of an outgoing invoice,
      * the payable of an incoming one (1100 / 2001 when the invoice names none).
+     * An invoice of last year clears the same account carried into this year.
      */
     public function invoiceCounterAccount(Invoice $invoice, BankTransaction $transaction): ?int
     {
-        $id = $invoice->type === 'outgoing' ? $invoice->debit_account_id : $invoice->credit_account_id;
+        $id = $this->accountHere($invoice->type === 'outgoing' ? $invoice->debit_account_id : $invoice->credit_account_id);
         if (!$id) {
             $id = $this->accountsByNumber->get($invoice->type === 'outgoing' ? '1100' : '2001')?->id;
         }
