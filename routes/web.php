@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ReleaseController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\ExpenseController;
+use App\Http\Controllers\Admin\AnnualReportController;
 use App\Http\Controllers\Admin\SubmissionController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\OrganizationController;
@@ -152,6 +153,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::patch('accountings/{accounting}/close', [AccountingController::class, 'close'])->name('accountings.close');
     Route::patch('accountings/{accounting}/reopen', [AccountingController::class, 'reopen'])->name('accountings.reopen');
     Route::post('accountings/{accounting}/refresh-openings', [AccountingController::class, 'refreshOpenings'])->name('accountings.refreshOpenings');
+    Route::get('accountings/{accounting}/export', [AnnualReportController::class, 'show'])->name('accountings.export');
+    Route::get('accountings/{accounting}/export/download', [AnnualReportController::class, 'download'])->name('accountings.export.download');
     Route::get('accountings/{accounting}/journal', [AccountingController::class, 'journal'])->name('accountings.journal');
     Route::get('accountings/{accounting}/ledger/{account}', [AccountingController::class, 'ledger'])->name('accountings.ledger');
     Route::get('accountings/{accounting}/trial-balance', [AccountingController::class, 'trialBalance'])->name('accountings.trialBalance');

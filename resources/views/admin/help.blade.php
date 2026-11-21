@@ -668,6 +668,17 @@
                         <li>Buchst du im Bankabgleich eine Belastung auf ein Aufwandkonto, entsteht automatisch eine Ausgabe &ndash; dort kannst du den Beleg nachträglich anhängen.</li>
                     </ul>
                 </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Export für die Steuererklärung</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Auf der Buchhaltungs-Seite führt <strong>«Export Steuererklärung»</strong> zur Jahresrechnung. Oben rechts prüft die Seite, ob noch Bankbewegungen offen sind, ob die Bilanz aufgeht und wie viele Belege vorhanden sind.</p>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1 mt-2">
+                        <li><strong>PDF:</strong> Bilanz (mit Vorjahr), Erfolgsrechnung (mit Vorjahr, wenn das Jahr aus einem Vorjahr eröffnet wurde), «Angaben für die Steuererklärung» (Jahresergebnis, Eigenkapital, Fremdkapital) und auf Wunsch Unterschriftenzeilen</li>
+                        <li><strong>Excel:</strong> zusätzlich Journal mit Belegnummern, Kontoblätter mit laufendem Saldo und Belegverzeichnis</li>
+                        <li><strong>ZIP:</strong> PDF, Excel, alle Belege (von Buchungen, Ausgaben und Rechnungen) und die eingelesenen Bankauszüge. Die Belege heissen nach Belegnummer und Datum, z.B. «Belege/0007_2025-03-14_Quittung.pdf» &ndash; gleiche Nummer wie im Journal.</li>
+                    </ul>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">Logo (aus der Rechnungsvorlage oder dem Profilbild), Adresse und Unterschriftenzeilen sind wählbar. Die Einstellungen werden pro Verein bzw. Person gespeichert und nächstes Jahr wieder vorgeschlagen.</p>
+                </div>
             </div>
         </div>
 
