@@ -150,6 +150,12 @@
             </div>
         </span>
     </div>
+    <a href="{{ route('admin.accountings.bank', $accounting) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+        Bankabgleich
+        @if($openBankCount)
+            <span class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-amber-500 text-white text-xs font-semibold" title="Offene Bankbewegungen">{{ $openBankCount }}</span>
+        @endif
+    </a>
     @if(!$accounting->is_closed)
         <a href="{{ route('admin.bookings.create', $accounting) }}" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">+ Neue Buchung</a>
     @endif

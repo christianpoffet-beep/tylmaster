@@ -10,7 +10,7 @@ class Account extends Model
     use LogsActivity;
 
     protected $fillable = [
-        'accounting_id', 'number', 'name', 'type',
+        'accounting_id', 'number', 'name', 'iban', 'type',
         'is_header', 'opening_balance', 'sort_order',
     ];
 

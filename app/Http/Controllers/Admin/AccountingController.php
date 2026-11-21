@@ -126,9 +126,11 @@ class AccountingController extends Controller
             ->filter(fn($a) => $a['balance'] > 0)
             ->sortByDesc('balance')->take(8)->values();
 
+        $openBankCount = $accounting->bankTransactions()->where('status', \App\Models\BankTransaction::OPEN)->count();
+
         return view('admin.accountings.show', compact(
             'accounting', 'bookingsCount', 'totalDebit', 'totalIncome', 'totalExpenses',
-            'incomeByAccount', 'expenseByAccount'
+            'incomeByAccount', 'expenseByAccount', 'openBankCount'
         ));
     }
 

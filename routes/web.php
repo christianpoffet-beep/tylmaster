@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\ProjectTypeController;
 use App\Http\Controllers\Admin\PhotoController;
 use App\Http\Controllers\Admin\ChartTemplateController;
 use App\Http\Controllers\Admin\AccountingController;
+use App\Http\Controllers\Admin\BankImportController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\ContractTemplateController;
 use App\Http\Controllers\Admin\ContractTypeController;
@@ -157,6 +158,16 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('accountings/{accounting}/accounts', [AccountingController::class, 'storeAccount'])->name('accountings.accounts.store');
     Route::put('accounting-accounts/{account}', [AccountingController::class, 'updateAccount'])->name('accountings.accounts.update');
     Route::delete('accounting-accounts/{account}', [AccountingController::class, 'destroyAccount'])->name('accountings.accounts.destroy');
+
+    // Bankabgleich (Bankauszug einlesen und buchen)
+    Route::get('accountings/{accounting}/bank', [BankImportController::class, 'index'])->name('accountings.bank');
+    Route::post('accountings/{accounting}/bank/import', [BankImportController::class, 'import'])->name('accountings.bank.import');
+    Route::post('accountings/{accounting}/bank/book', [BankImportController::class, 'book'])->name('accountings.bank.book');
+    Route::post('accountings/{accounting}/bank/ignore', [BankImportController::class, 'ignore'])->name('accountings.bank.ignore');
+    Route::patch('bank-transactions/{bankTransaction}/reopen', [BankImportController::class, 'reopen'])->name('bank-transactions.reopen');
+    Route::get('bank-imports/{bankImport}/file', [BankImportController::class, 'file'])->name('bank-imports.file');
+    Route::delete('bank-imports/{bankImport}', [BankImportController::class, 'destroyImport'])->name('bank-imports.destroy');
+    Route::delete('booking-rules/{bookingRule}', [BankImportController::class, 'destroyRule'])->name('booking-rules.destroy');
 
     // Buchungen
     Route::get('accountings/{accounting}/bookings/create', [BookingController::class, 'create'])->name('bookings.create');

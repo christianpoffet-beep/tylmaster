@@ -41,15 +41,18 @@
                 @endif
                 @if($invoice->status !== 'paid')
                     <div class="flex items-center gap-2">
-                        <form method="POST" action="{{ route('admin.invoices.markPaid', $invoice) }}">
+                        <form method="POST" action="{{ route('admin.invoices.markPaid', $invoice) }}" class="flex items-center gap-2">
                             @csrf @method('PATCH')
+                            @if($invoice->accounting)
+                                <input type="date" name="paid_at" value="{{ now()->format('Y-m-d') }}" title="Zahlungsdatum (so wird die Zahlung gebucht)" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm py-1.5 focus:border-green-500 focus:ring-green-500">
+                            @endif
                             <button type="submit" class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700" onclick="return confirm('Als bezahlt markieren?')">Bezahlt</button>
                         </form>
                         @if($invoice->accounting)
                             <span x-data="{ show: false }" class="relative inline-block">
                                 <button type="button" @click="show = !show" @click.outside="show = false" class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-green-600 text-xs hover:bg-green-200 focus:outline-none">?</button>
                                 <div x-show="show" x-transition class="absolute z-20 bottom-full right-0 mb-2 w-72 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg">
-                                    Beim Bezahlt-Markieren wird automatisch eine Zahlungsbuchung in der verknüpften Buchhaltung ({{ $invoice->accounting->name }}) erstellt.
+                                    Beim Bezahlt-Markieren wird automatisch eine Zahlungsbuchung mit dem gewählten Datum in der verknüpften Buchhaltung ({{ $invoice->accounting->name }}) erstellt. Tipp: Wird der Bankauszug eingelesen, erkennt der Bankabgleich offene Rechnungen selbst.
                                     <div class="absolute top-full right-4 border-4 border-transparent border-t-gray-800"></div>
                                 </div>
                             </span>

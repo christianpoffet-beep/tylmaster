@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Accounting;
+use App\Models\BankTransaction;
 use App\Models\Booking;
 use App\Models\Contact;
 use App\Models\Document;
@@ -292,9 +293,10 @@ class InvoiceController extends Controller
 
         // If accounting changed, delete old bookings
         if ($oldAccountingId && $oldAccountingId != $invoice->accounting_id) {
-            Booking::where('invoice_id', $invoice->id)
-                ->where('accounting_id', $oldAccountingId)
-                ->delete();
+            $oldBookings = Booking::where('invoice_id', $invoice->id)->where('accounting_id', $oldAccountingId);
+            $bankTransactionIds = (clone $oldBookings)->whereNotNull('bank_transaction_id')->pluck('bank_transaction_id');
+            $oldBookings->delete();
+            BankTransaction::reopenUnbooked($bankTransactionIds);
         }
 
         $this->syncInvoiceBooking($invoice);
@@ -312,8 +314,13 @@ class InvoiceController extends Controller
         }
         DocumentStorage::delete($invoice->qr_code_path);
 
+        // Its bookings go with it (foreign key cascade); bank movements they settled return to the inbox
+        $bankTransactionIds = $invoice->bookings()->whereNotNull('bank_transaction_id')->pluck('bank_transaction_id');
+
         $invoice->items()->delete();
         $invoice->delete();
+        BankTransaction::reopenUnbooked($bankTransactionIds);
+
         return redirect()->route('admin.invoices.index')->with('success', 'Rechnung gelöscht.');
     }
 
@@ -341,18 +348,16 @@ class InvoiceController extends Controller
 
     public function markPaid(Request $request, Invoice $invoice)
     {
+        // The day the money came in (or went out) - not the day of the click
+        $paidAt = $request->validate(['paid_at' => 'nullable|date'])['paid_at'] ?? now()->toDateString();
+
         $invoice->update(['status' => 'paid']);
 
         if ($invoice->accounting_id && $invoice->accounting) {
             $accounting = $invoice->accounting;
             if (!$accounting->is_closed) {
-                // Check if payment booking already exists
                 $existingPayment = Booking::where('invoice_id', $invoice->id)
-                    ->where('description', 'like', '%(Eingang)%')
-                    ->orWhere(function ($q) use ($invoice) {
-                        $q->where('invoice_id', $invoice->id)
-                            ->where('description', 'like', '%(Zahlung)%');
-                    })
+                    ->where('invoice_role', Booking::ROLE_PAYMENT)
                     ->first();
 
                 if (!$existingPayment) {
@@ -376,13 +381,14 @@ class InvoiceController extends Controller
                     if ($debitAccount && $creditAccount && $debitAccount->id !== $creditAccount->id) {
                         Booking::create([
                             'accounting_id' => $accounting->id,
-                            'booking_date' => now()->toDateString(),
+                            'booking_date' => $paidAt,
                             'description' => "Rechnung {$invoice->invoice_number}" . ($invoice->type === 'outgoing' ? ' (Eingang)' : ' (Zahlung)'),
                             'debit_account_id' => $debitAccount->id,
                             'credit_account_id' => $creditAccount->id,
                             'amount' => $invoice->amount,
                             'reference' => $invoice->invoice_number,
                             'invoice_id' => $invoice->id,
+                            'invoice_role' => Booking::ROLE_PAYMENT,
                             'project_id' => $invoice->project_id,
                             'contact_id' => $invoice->contact_id,
                             'organization_id' => $invoice->organization_id,
@@ -538,33 +544,42 @@ class InvoiceController extends Controller
 
     private function syncInvoiceBooking(Invoice $invoice): void
     {
-        // Delete existing invoice booking (not payment bookings)
-        Booking::where('invoice_id', $invoice->id)
-            ->where('description', 'not like', '%(Eingang)%')
-            ->where('description', 'not like', '%(Zahlung)%')
-            ->delete();
-
-        if (!$invoice->accounting_id || !$invoice->accounting || $invoice->accounting->is_closed) {
+        // A closed accounting is not touched - not even to remove the old claim
+        if ($invoice->accounting && $invoice->accounting->is_closed) {
             return;
         }
 
-        if (!$invoice->debit_account_id || !$invoice->credit_account_id) {
-            return;
+        // The claim is rebuilt from scratch (payments stay as they are)
+        $oldClaims = Booking::where('invoice_id', $invoice->id)->where('invoice_role', Booking::ROLE_CLAIM)->get();
+        $bankTransactionIds = $oldClaims->pluck('bank_transaction_id')->filter()->unique()->values();
+        Booking::whereIn('id', $oldClaims->pluck('id'))->delete();
+
+        if ($invoice->accounting_id && $invoice->accounting && $invoice->debit_account_id && $invoice->credit_account_id) {
+            $claim = Booking::create([
+                'accounting_id' => $invoice->accounting_id,
+                'booking_date' => $invoice->invoice_date->toDateString(),
+                'description' => "Rechnung {$invoice->invoice_number}" . ($invoice->type === 'outgoing' ? ' (Forderung)' : ' (Verbindlichkeit)'),
+                'debit_account_id' => $invoice->debit_account_id,
+                'credit_account_id' => $invoice->credit_account_id,
+                'amount' => $invoice->amount,
+                'reference' => $invoice->invoice_number,
+                'invoice_id' => $invoice->id,
+                'invoice_role' => Booking::ROLE_CLAIM,
+                'project_id' => $invoice->project_id,
+                'contact_id' => $invoice->contact_id,
+                'organization_id' => $invoice->organization_id,
+            ]);
+
+            // Booked straight onto the bank and matched with the statement: the match stays while it still fits
+            $transaction = BankTransaction::whereIn('id', $bankTransactionIds)->where('accounting_id', $claim->accounting_id)->first();
+            $bankSide = $transaction && $transaction->is_incoming ? $claim->debit_account_id : $claim->credit_account_id;
+            if ($transaction && (int) $bankSide === (int) $transaction->account_id
+                && abs($transaction->abs_amount - (float) $claim->amount) < 0.005) {
+                $claim->update(['bank_transaction_id' => $transaction->id]);
+            }
         }
 
-        Booking::create([
-            'accounting_id' => $invoice->accounting_id,
-            'booking_date' => $invoice->invoice_date->toDateString(),
-            'description' => "Rechnung {$invoice->invoice_number}" . ($invoice->type === 'outgoing' ? ' (Forderung)' : ' (Verbindlichkeit)'),
-            'debit_account_id' => $invoice->debit_account_id,
-            'credit_account_id' => $invoice->credit_account_id,
-            'amount' => $invoice->amount,
-            'reference' => $invoice->invoice_number,
-            'invoice_id' => $invoice->id,
-            'project_id' => $invoice->project_id,
-            'contact_id' => $invoice->contact_id,
-            'organization_id' => $invoice->organization_id,
-        ]);
+        BankTransaction::reopenUnbooked($bankTransactionIds);
     }
 
     private function generateQrBill(Invoice $invoice): string

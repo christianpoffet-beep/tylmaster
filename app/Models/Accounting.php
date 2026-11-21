@@ -34,6 +34,22 @@ class Accounting extends Model
         return $this->hasMany(Booking::class)->orderBy('booking_date');
     }
 
+    public function bankTransactions()
+    {
+        return $this->hasMany(BankTransaction::class);
+    }
+
+    public function bankImports()
+    {
+        return $this->hasMany(BankImport::class);
+    }
+
+    /** Rules of the owner (contact or organization) - shared by all of its accountings. */
+    public function bookingRules()
+    {
+        return BookingRule::forOwnerOf($this);
+    }
+
     public function chartTemplate()
     {
         return $this->belongsTo(ChartTemplate::class);

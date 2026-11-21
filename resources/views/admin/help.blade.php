@@ -631,10 +631,25 @@
                         <ol class="text-sm text-green-800 dark:text-green-300 list-decimal list-inside space-y-1">
                             <li>Du erstellst eine <strong>Rechnung</strong> und verknüpfst sie mit einer Buchhaltung + Konten</li>
                             <li>Das System erstellt automatisch eine <strong>Buchung</strong> (Forderung oder Verbindlichkeit)</li>
-                            <li>Wenn du die Rechnung als <strong>«Bezahlt»</strong> markierst, erstellt das System automatisch die <strong>Zahlungsbuchung</strong> (Eingang oder Zahlung)</li>
+                            <li>Wenn du die Rechnung als <strong>«Bezahlt»</strong> markierst, erstellt das System automatisch die <strong>Zahlungsbuchung</strong> (Eingang oder Zahlung) &ndash; mit dem Zahlungsdatum, das du neben dem Button wählst</li>
                         </ol>
                         <p class="text-sm text-green-700 dark:text-green-400 mt-2">Du musst also nur Rechnungen erfassen und als bezahlt markieren &ndash; die Buchhaltung führt sich weitgehend von selbst!</p>
                     </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Bankabgleich (Bankauszug einlesen)</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">
+                        Auf der Buchhaltungs-Seite führt <strong>«Bankabgleich»</strong> zur Inbox deiner Bankbewegungen. Dort lädst du den <strong>CSV-Export aus dem E-Banking</strong> hoch (bisher Raiffeisen) und wählst das Bankkonto (z.B. 1003 Bank). Beim Einlesen wird noch nichts gebucht.
+                    </p>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1 mt-2">
+                        <li>Jede Bewegung bekommt einen <strong>Vorschlag</strong>: eine passende Buchung, die schon im Journal steht (wird nur verknüpft, nicht doppelt gebucht), eine offene <strong>Rechnung</strong> mit gleichem Betrag (wird als bezahlt markiert) oder eine <strong>Regel</strong>.</li>
+                        <li>Ohne Vorschlag wählst du das Gegenkonto selbst. Mit <strong>«Als Regel merken»</strong> ist das Konto beim nächsten Import vorausgewählt. Regeln gelten für alle Jahre derselben Organisation bzw. Person.</li>
+                        <li><strong>Aufteilen</strong> verteilt eine Bewegung auf mehrere Konten (z.B. Auszahlung abzüglich Gebühren).</li>
+                        <li>Zeiträume dürfen sich überschneiden &ndash; bereits eingelesene Bewegungen werden übersprungen. Die Datei muss zur IBAN des Kontos passen.</li>
+                        <li>Der <strong>Saldo-Abgleich</strong> vergleicht den Bankstand vor der ersten und nach der letzten Bewegung mit der Buchhaltung. Stimmt beides, ist das Bankkonto vollständig gebucht.</li>
+                        <li>Fehler korrigieren: im Reiter «Gebucht» auf <strong>«Wieder öffnen»</strong> &ndash; oder die Buchung im Journal löschen; die Bewegung landet dann wieder in der Inbox.</li>
+                    </ul>
                 </div>
             </div>
         </div>
