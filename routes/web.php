@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\RoyaltyContractController;
 use App\Http\Controllers\Admin\RoyaltyPaymentController;
 use App\Http\Controllers\Admin\RoyaltyStatementController;
 use App\Http\Controllers\Admin\RoyaltyPayoutController;
+use App\Http\Controllers\Admin\RoyaltyUsageController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\ContractTemplateController;
 use App\Http\Controllers\Admin\ContractTypeController;
@@ -213,6 +214,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('royalties/statements/{royaltyStatement}/finalize', [RoyaltyStatementController::class, 'finalize'])->name('royalties.statements.finalize');
     Route::post('royalties/statements/{royaltyStatement}/undo', [RoyaltyStatementController::class, 'undo'])->name('royalties.statements.undo');
     Route::delete('royalties/statements/{royaltyStatement}', [RoyaltyStatementController::class, 'destroy'])->name('royalties.statements.destroy');
+    Route::get('royalties/usage', [RoyaltyUsageController::class, 'show'])->name('royalties.usage');
     Route::get('royalties/contracts', [RoyaltyContractController::class, 'index'])->name('royalties.contracts');
     Route::post('royalties/contracts/own-label', [RoyaltyContractController::class, 'setOwnLabel'])->name('royalties.ownLabel');
     Route::get('royalties/imports/{royaltyImport}', [RoyaltyImportController::class, 'show'])->name('royalties.show');

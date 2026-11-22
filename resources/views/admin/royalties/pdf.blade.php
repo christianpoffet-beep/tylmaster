@@ -148,6 +148,7 @@
         Beträge unter CHF {{ $chf($minimum) }} tragen wir auf die nächste Abrechnung vor. Möchtest Du den Saldo trotzdem ausbezahlt haben, melde Dich einfach.
     @endif
 </p>
-<p class="muted">Fragen zur Abrechnung beantworten wir gerne. Erstellt am {{ $generatedAt->format('d.m.Y') }}.</p>
+<p style="margin-top: 14pt">Fragen zur Abrechnung beantworten wir gerne{{ $contactLine ? ': ' . $contactLine : '.' }}</p>
+<p class="muted">Erstellt am {{ $generatedAt->format('d.m.Y') }}.</p>
 </body>
 </html>

@@ -16,8 +16,6 @@
 @endphp
 
 @section('content')
-@include('admin.royalties._tabs')
-
 <div class="mb-6">
     <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Auszahlung vorbereiten</h2>
     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Aus «{{ $accounting->name }}». Pro Empfänger entsteht eine Buchung Kreditoren / Bank und eine Zeile in der Zahlungsdatei (pain.001) für das E-Banking.</p>

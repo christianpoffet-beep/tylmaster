@@ -235,12 +235,14 @@ class RoyaltyStatementsTest extends TestCase
         ['result' => $result, 'parties' => $parties] = $document->prepare($statement);
         $this->assertSame(['org-' . $this->band->id, 'org-' . $this->zentrum->id], $parties->pluck('key')->all(), 'Only the credited ones');
 
-        // An earlier credit counts into the balance
+        // An earlier credit counts into the balance; the sender's address is where to ask
         RoyaltyLedgerEntry::create(['organization_id' => $this->band->id, 'entry_date' => '2025-12-15', 'type' => 'credit', 'amount' => 70, 'description' => 'Früher']);
+        $this->own->update(['email' => 'info@label.test', 'phone' => '+41 44 000 00 00']);
         $html = view('admin.royalties.pdf', $document->data($statement, $parties->first(), $result))->render();
         foreach (['ENTWURF', 'Tar Pond', 'Tar Pond – Coroner', 'Dein Anteil an Streaming &amp; Downloads: 80 %', 'Fog', '44.16',
                   'Verrechnung Vorschüsse und Kosten gemäss Vertrag (danach noch offen: CHF 0.00)', '− 5.00',
-                  'CHF 70.00', 'CHF 39.16', 'CHF 109.16', 'Wir überweisen Dir den Saldo'] as $expected) {
+                  'CHF 70.00', 'CHF 39.16', 'CHF 109.16', 'Wir überweisen Dir den Saldo',
+                  'Fragen zur Abrechnung beantworten wir gerne: info@label.test · +41 44 000 00 00'] as $expected) {
             $this->assertStringContainsString($expected, $html);
         }
 

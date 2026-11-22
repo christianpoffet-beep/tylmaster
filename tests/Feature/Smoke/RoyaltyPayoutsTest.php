@@ -139,7 +139,10 @@ class RoyaltyPayoutsTest extends TestCase
     public function test_the_pages_suggest_book_and_download(): void
     {
         $this->actingAs($this->user)->get('/admin/royalties/payouts')->assertOk()
-            ->assertSee('Saldi (2)')->assertSee('Tar Pond')->assertSee(Iban::format(self::BAND_IBAN))->assertSee('fehlt');
+            ->assertSee('Saldi (2)')->assertSee('Tar Pond')->assertSee(Iban::format(self::BAND_IBAN))->assertSee('fehlt')
+            ->assertDontSee('Rebeat-Zahlungen', false); // a menu item of its own, without the Rebeat tabs
+        $this->actingAs($this->user)->get('/admin/royalties')->assertOk()
+            ->assertSee('Saldi &amp; Auszahlungen →', false); // linked from the Rebeat pages
 
         $html = $this->actingAs($this->user)->get("/admin/royalties/payouts/create?accounting={$this->accounting->id}")->assertOk()
             ->assertSee('Mia Muster')->assertSee('keine IBAN')->getContent();

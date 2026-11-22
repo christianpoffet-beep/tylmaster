@@ -110,11 +110,22 @@ class RoyaltyStatementDocument
             'balanceBefore' => $balanceBefore,
             'balanceAfter' => round($balanceBefore + $party->credit, 2),
             'senderLines' => $accounting ? $this->letterhead->addressLines($accounting) : [],
+            'contactLine' => $this->contactLine($statement),
             'recipientLines' => $this->recipientLines($party),
             'logoFile' => $this->letterhead->printLogo($logo['file'] ?? null),
             'minimum' => (float) config('royalties.payout_minimum', 100),
             'generatedAt' => now('Europe/Zurich'),
         ];
+    }
+
+    /** Where to ask: e-mail and phone of the sender, else the address the mails come from */
+    private function contactLine(RoyaltyStatement $statement): string
+    {
+        $owner = $statement->accounting?->accountable ?? RoyaltySettings::ownOrganization();
+        $email = trim((string) ($owner?->email ?? '')) ?: (string) config('services.brevo.sender_email');
+        $phone = trim((string) ($owner?->phone ?? ''));
+
+        return implode(' · ', array_filter([$email, $phone]));
     }
 
     /** Advances of the contract still open once this statement counts */
