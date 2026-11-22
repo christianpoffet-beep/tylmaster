@@ -168,6 +168,12 @@ class Track extends Model
         return $this->belongsToMany(Contract::class);
     }
 
+    /** Usage reported by distributors (Rebeat), see the Rebeat-Matcher */
+    public function royaltyLines()
+    {
+        return $this->hasMany(RoyaltyLine::class);
+    }
+
     public function documents()
     {
         return $this->morphMany(Document::class, 'documentable');

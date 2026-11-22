@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\PhotoController;
 use App\Http\Controllers\Admin\ChartTemplateController;
 use App\Http\Controllers\Admin\AccountingController;
 use App\Http\Controllers\Admin\BankImportController;
+use App\Http\Controllers\Admin\RoyaltyImportController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\ContractTemplateController;
 use App\Http\Controllers\Admin\ContractTypeController;
@@ -177,6 +178,17 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('bank-imports/{bankImport}/file', [BankImportController::class, 'file'])->name('bank-imports.file');
     Route::delete('bank-imports/{bankImport}', [BankImportController::class, 'destroyImport'])->name('bank-imports.destroy');
     Route::delete('booking-rules/{bookingRule}', [BankImportController::class, 'destroyRule'])->name('booking-rules.destroy');
+
+    // Rebeat-Matcher (Nutzungsdaten einlesen und den Tracks zuordnen)
+    Route::get('royalties', [RoyaltyImportController::class, 'index'])->name('royalties.index');
+    Route::post('royalties/imports', [RoyaltyImportController::class, 'store'])->name('royalties.store');
+    Route::post('royalties/rematch', [RoyaltyImportController::class, 'rematch'])->name('royalties.rematch');
+    Route::get('royalties/imports/{royaltyImport}', [RoyaltyImportController::class, 'show'])->name('royalties.show');
+    Route::post('royalties/imports/{royaltyImport}/assign', [RoyaltyImportController::class, 'assign'])->name('royalties.assign');
+    Route::post('royalties/imports/{royaltyImport}/create-track', [RoyaltyImportController::class, 'createTrack'])->name('royalties.createTrack');
+    Route::patch('royalties/imports/{royaltyImport}/confirm', [RoyaltyImportController::class, 'confirm'])->name('royalties.confirm');
+    Route::get('royalties/imports/{royaltyImport}/file', [RoyaltyImportController::class, 'file'])->name('royalties.file');
+    Route::delete('royalties/imports/{royaltyImport}', [RoyaltyImportController::class, 'destroy'])->name('royalties.destroy');
 
     // Buchungen
     Route::get('accountings/{accounting}/bookings/create', [BookingController::class, 'create'])->name('bookings.create');

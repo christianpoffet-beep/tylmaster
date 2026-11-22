@@ -1,0 +1,125 @@
+@extends('admin.layouts.app')
+
+@section('title', 'Rebeat-Matcher')
+
+@php
+    $eur = fn ($value) => number_format((float) $value, 2, '.', "'");
+    $int = fn ($value) => number_format((int) $value, 0, '.', "'");
+    $card = 'bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700';
+@endphp
+
+@section('content')
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+    <div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Rebeat-Matcher</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Nutzungsdaten von Rebeat einlesen und den Tracks zuordnen – die Grundlage für die Abrechnungen an Künstler:innen und Labels.</p>
+    </div>
+    @if($imports->isNotEmpty())
+        <form method="POST" action="{{ route('admin.royalties.rematch') }}">
+            @csrf
+            <button type="submit" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    title="Offene Zeilen nochmals über die ISRC suchen – z.B. nachdem bei Tracks ISRCs ergänzt wurden">Neu zuordnen</button>
+        </form>
+    @endif
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+    <div class="{{ $card }} p-5">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Rebeat-Export einlesen</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+            Die CSV-Datei aus Rebeat (Accounting → Export, «AccountingDataExport-…csv»), direkt hochladen, ohne sie vorher in Excel zu speichern.
+            Zeiträume dürfen sich überschneiden – Zeilen, die schon da sind, werden übersprungen.
+        </p>
+        <form method="POST" action="{{ route('admin.royalties.store') }}" enctype="multipart/form-data" class="space-y-3"
+              x-data="{ busy: false }" @submit="busy = true">
+            @csrf
+            <div>
+                <input type="file" name="file" id="royalty-file" accept=".csv,text/csv,text/plain" required class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
+                @error('file') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                @if($uploadLimit)
+                    <p class="text-xs text-gray-400 mt-1">Der Server nimmt Dateien bis {{ $uploadLimit }} MB an.</p>
+                @endif
+            </div>
+            <button type="submit" :disabled="busy" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60">
+                <span x-show="!busy">Einlesen</span>
+                <span x-show="busy" x-cloak>Wird eingelesen … (kann eine Minute dauern)</span>
+            </button>
+        </form>
+    </div>
+
+    <div class="{{ $card }} p-5">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Nutzungen pro Jahr</h3>
+        @if($years->isEmpty())
+            <p class="text-sm text-gray-500 dark:text-gray-400">Noch keine Daten.</p>
+        @else
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-xs text-gray-500 dark:text-gray-400 text-left">
+                        <th class="pb-2 font-medium">Jahr</th>
+                        <th class="pb-2 font-medium text-right">Nutzungen</th>
+                        <th class="pb-2 font-medium text-right">Gutschrift EUR</th>
+                        <th class="pb-2 font-medium text-right">ohne Track</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    @foreach($years as $year => $row)
+                        <tr>
+                            <td class="py-1.5 text-gray-900 dark:text-gray-100">{{ $year }}</td>
+                            <td class="py-1.5 text-right tabular-nums text-gray-700 dark:text-gray-300">{{ $int($row['quantity']) }}</td>
+                            <td class="py-1.5 text-right tabular-nums text-gray-900 dark:text-gray-100">{{ $eur($row['amount']) }}</td>
+                            <td class="py-1.5 text-right tabular-nums {{ $row['open_amount'] > 0.005 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400' }}">{{ $eur($row['open_amount']) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            <p class="text-xs text-gray-400 mt-3">Nach Nutzungsmonat. Gutschrift = was Rebeat nach seiner Gebühr gutschreibt, in EUR. Nutzungen bis {{ \Carbon\Carbon::parse(config('royalties.settled_until'))->format('d.m.Y') }} sind schon von Hand abgerechnet.</p>
+        @endif
+    </div>
+</div>
+
+<div class="{{ $card }} overflow-hidden">
+    <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Importe</h3>
+    </div>
+    @if($imports->isEmpty())
+        <p class="px-5 py-6 text-sm text-gray-500 dark:text-gray-400">Noch nichts eingelesen.</p>
+    @else
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-gray-700/50">
+                    <tr class="text-xs text-gray-500 dark:text-gray-400 text-left">
+                        <th class="px-5 py-2 font-medium">Eingelesen</th>
+                        <th class="px-3 py-2 font-medium">Datei</th>
+                        <th class="px-3 py-2 font-medium">Nutzungsmonate</th>
+                        <th class="px-3 py-2 font-medium text-right">Zeilen</th>
+                        <th class="px-3 py-2 font-medium text-right">EUR</th>
+                        <th class="px-3 py-2 font-medium text-right">ohne Track</th>
+                        <th class="px-5 py-2 font-medium">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    @foreach($imports as $import)
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/40">
+                            <td class="px-5 py-2.5 text-gray-700 dark:text-gray-300 whitespace-nowrap">{{ $import->created_at->format('d.m.Y H:i') }}</td>
+                            <td class="px-3 py-2.5">
+                                <a href="{{ route('admin.royalties.show', $import) }}" class="text-blue-600 dark:text-blue-400 hover:underline">{{ $import->file_name }}</a>
+                            </td>
+                            <td class="px-3 py-2.5 text-gray-700 dark:text-gray-300 whitespace-nowrap">{{ $import->period_from?->format('m.Y') }} – {{ $import->period_to?->format('m.Y') }}</td>
+                            <td class="px-3 py-2.5 text-right tabular-nums text-gray-700 dark:text-gray-300">{{ $int($import->lines_count) }}</td>
+                            <td class="px-3 py-2.5 text-right tabular-nums text-gray-900 dark:text-gray-100">{{ $eur($import->lines_sum_amount) }}</td>
+                            <td class="px-3 py-2.5 text-right tabular-nums {{ $import->open_count ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400' }}">{{ $int($import->open_count) }}</td>
+                            <td class="px-5 py-2.5 whitespace-nowrap">
+                                @if($import->is_confirmed)
+                                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">bestätigt</span>
+                                @else
+                                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">zu prüfen</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+</div>
+@endsection
