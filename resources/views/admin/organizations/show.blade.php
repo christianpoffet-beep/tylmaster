@@ -180,6 +180,8 @@
     </div>
 
     <div class="w-full lg:w-80 space-y-4">
+        @include('admin.royalties._balance-card', ['who' => $organization])
+
         {{-- Projekte --}}
         @if($organization->projects->count())
         <x-admin.collapsible-card title="Projekte" :count="$organization->projects->count()">

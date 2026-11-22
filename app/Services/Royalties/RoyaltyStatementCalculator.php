@@ -149,7 +149,7 @@ class RoyaltyStatementCalculator
             'usage' => $usage,
             'factor' => $factor,
             'items' => $items->values(),
-            'warnings' => $this->warnings($warnings, $unassigned, $payments->isEmpty(), $usage),
+            'warnings' => array_merge($this->warnings($warnings, $unassigned, $payments->isEmpty(), $usage), $this->plausibility($payments, $usage, $factor)),
             'unconfirmed' => RoyaltyLine::whereNull('royalty_statement_id')->where('presettled', false)
                 ->whereBetween('period', self::bounds($statement))
                 ->whereHas('import', fn ($q) => $q->whereNull('confirmed_at'))->count(),
@@ -217,6 +217,29 @@ class RoyaltyStatementCalculator
     }
 
     /** @return list<string> */
+    /**
+     * Payouts and usage of the same period should be about the same in EUR.
+     * If the usage gives a rate far off the one the bank applied, usage is
+     * probably missing (or a payout belongs to another period).
+     *
+     * @return list<string>
+     */
+    private function plausibility(Collection $payments, float $usage, float $factor): array
+    {
+        $withEur = $payments->filter(fn ($p) => (float) $p->amount_foreign > 0);
+        $paidEur = (float) $withEur->sum('amount_foreign');
+        if ($paidEur <= 0 || $usage <= 0) return [];
+
+        $bankRate = (float) $withEur->sum('amount') / $paidEur;
+        if (abs($factor / $bankRate - 1) <= 0.15) return [];
+
+        $fmt = fn ($v, $d = 2) => number_format($v, $d, '.', "'");
+
+        return ["1 EUR Nutzung ergibt hier CHF {$fmt($factor, 4)}, die Bank hat die Rebeat-Zahlungen aber zu CHF {$fmt($bankRate, 4)} umgerechnet. "
+            . "Rebeat hat im Zeitraum EUR {$fmt($paidEur)} ausbezahlt, eingelesen ist Nutzung von EUR {$fmt($usage)} – "
+            . 'sind die Nutzungsdaten des ganzen Zeitraums eingelesen und bestätigt?'];
+    }
+
     private function warnings(array $warnings, float $unassigned, bool $noPayments, float $usage): array
     {
         $eur = fn ($v) => 'EUR ' . number_format($v, 2, '.', "'");

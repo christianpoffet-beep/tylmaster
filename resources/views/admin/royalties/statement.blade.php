@@ -102,7 +102,7 @@
         <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Einstellungen</h3>
         @if($final)
             <dl class="text-sm grid grid-cols-2 gap-y-1">
-                <dt class="text-gray-500 dark:text-gray-400">Bereits pauschal gebucht</dt><dd class="text-right tabular-nums">CHF {{ $chf($statement->pre_booked) }}</dd>
+                <dt class="text-gray-500 dark:text-gray-400 inline-flex items-center gap-1.5">Bereits pauschal gebucht @include('admin.royalties._pre-booked-tip')</dt><dd class="text-right tabular-nums">CHF {{ $chf($statement->pre_booked) }}</dd>
                 <dt class="text-gray-500 dark:text-gray-400">Abgeschlossen</dt><dd class="text-right">{{ $statement->finalized_at?->timezone('Europe/Zurich')->format('d.m.Y H:i') }}</dd>
             </dl>
         @else
@@ -137,7 +137,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="{{ $labelClass }}" for="pre_booked">Bereits pauschal gebucht (CHF)</label>
+                        <label class="{{ $labelClass }} inline-flex items-center gap-1.5" for="pre_booked">Bereits pauschal gebucht (CHF) @include('admin.royalties._pre-booked-tip')</label>
                         <input type="number" name="pre_booked" id="pre_booked" value="{{ (float) $statement->pre_booked }}" step="0.01" min="0" class="{{ $input }}">
                     </div>
                 </div>

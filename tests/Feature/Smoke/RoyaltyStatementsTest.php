@@ -143,6 +143,18 @@ class RoyaltyStatementsTest extends TestCase
         $this->assertStringContainsString('ohne Track', implode(' ', $result['warnings']));
     }
 
+    public function test_usage_missing_for_the_payouts_is_pointed_out(): void
+    {
+        $calculator = app(\App\Services\Royalties\RoyaltyStatementCalculator::class);
+        $this->assertStringNotContainsString('Nutzungsdaten des ganzen Zeitraums', implode(' ', $calculator->calculate($this->statement())['warnings']));
+
+        // Paid for far more than the usage read in: 1 EUR would be worth CHF 5.52
+        RoyaltyPayment::create(['paid_at' => '2025-03-01', 'amount' => 460, 'amount_foreign' => 500, 'origin' => 'manual', 'fingerprint' => 'd']);
+        $warnings = implode(' ', $calculator->calculate($this->statement(['title' => 'B']))['warnings']);
+        $this->assertStringContainsString('1 EUR Nutzung ergibt hier CHF 5.5200, die Bank hat die Rebeat-Zahlungen aber zu CHF 0.9200 umgerechnet', $warnings);
+        $this->assertStringContainsString('Rebeat hat im Zeitraum EUR 600.00 ausbezahlt, eingelesen ist Nutzung von EUR 100.00', $warnings);
+    }
+
     public function test_finalizing_books_credits_and_marks_and_undo_takes_it_back(): void
     {
         $statement = app(RoyaltyStatementBooker::class)->finalize($this->statement());

@@ -15,7 +15,7 @@ class RoyaltyLedgerEntry extends Model
     public const CORRECTION = 'correction';
 
     protected $fillable = [
-        'organization_id', 'contact_id', 'entry_date', 'type', 'amount', 'description', 'royalty_statement_id', 'booking_id',
+        'organization_id', 'contact_id', 'entry_date', 'type', 'amount', 'description', 'royalty_statement_id', 'royalty_payout_id', 'booking_id',
     ];
 
     protected $casts = [
@@ -36,6 +36,11 @@ class RoyaltyLedgerEntry extends Model
     public function statement()
     {
         return $this->belongsTo(RoyaltyStatement::class, 'royalty_statement_id');
+    }
+
+    public function payout()
+    {
+        return $this->belongsTo(RoyaltyPayout::class, 'royalty_payout_id');
     }
 
     /** Name of the contact or organization */

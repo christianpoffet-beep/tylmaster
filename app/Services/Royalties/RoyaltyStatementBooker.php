@@ -192,6 +192,20 @@ class RoyaltyStatementBooker
         if ($statement->accounting?->is_closed) {
             throw new RoyaltyStatementException("Die Buchhaltung «{$statement->accounting->name}» ist abgeschlossen.");
         }
+        // Paid out from these credits meanwhile: taking them back would leave negative balances
+        $credited = $statement->ledgerEntries()->get(['organization_id', 'contact_id']);
+        $paidSince = $credited->isNotEmpty() && RoyaltyLedgerEntry::where('type', RoyaltyLedgerEntry::PAYOUT)
+            ->where('created_at', '>=', $statement->finalized_at)
+            ->where(function ($q) use ($credited) {
+                foreach ($credited as $entry) {
+                    $q->orWhere(fn ($w) => $entry->organization_id
+                        ? $w->where('organization_id', $entry->organization_id)
+                        : $w->whereNull('organization_id')->where('contact_id', $entry->contact_id));
+                }
+            })->exists();
+        if ($paidSince) {
+            throw new RoyaltyStatementException('Seit dieser Abrechnung wurde ausbezahlt. Zuerst die Auszahlungen stornieren.');
+        }
 
         return DB::transaction(function () use ($statement) {
             Booking::whereIn('id', $statement->booking_ids ?? [])->get()->each->delete();

@@ -55,7 +55,7 @@
                 <div>
                     <label for="pre_booked" class="{{ $labelClass }} inline-flex items-center gap-1.5">
                         Bereits pauschal gebucht (CHF)
-                        <x-admin.info-tip>Was für diesen Zeitraum schon als Pauschale auf die Kreditoren gebucht wurde (z.B. 80 % Ende Jahr). Gebucht wird dann nur noch die Differenz zu den genauen Anteilen. Bei der ersten Abrechnung 2023–2025: 815.08.</x-admin.info-tip>
+                        @include('admin.royalties._pre-booked-tip')
                     </label>
                     <input type="number" name="pre_booked" id="pre_booked" value="{{ old('pre_booked', 0) }}" step="0.01" min="0" class="{{ $input }}">
                 </div>

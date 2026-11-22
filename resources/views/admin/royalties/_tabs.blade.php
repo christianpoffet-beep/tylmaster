@@ -5,6 +5,7 @@
         ['admin.royalties.contracts', 'Verträge', 'admin.royalties.contracts'],
         ['admin.royalties.payments.index', 'Rebeat-Zahlungen', 'admin.royalties.payments.*'],
         ['admin.royalties.statements.index', 'Abrechnungen', 'admin.royalties.statements.*'],
+        ['admin.royalties.payouts.index', 'Saldi & Auszahlungen', 'admin.royalties.payouts.*'],
     ];
 @endphp
 <nav class="flex flex-wrap gap-1 mb-6 border-b border-gray-200 dark:border-gray-700">
