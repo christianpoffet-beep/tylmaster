@@ -20,7 +20,7 @@ class RoyaltyLine extends Model
         'royalty_import_id', 'source', 'external_id', 'track_id', 'release_id', 'match_type',
         'isrc', 'ean', 'artist', 'title', 'label', 'period', 'sales_date', 'billing_period',
         'country', 'shop', 'portal', 'sales_type', 'sales_category', 'stream_type',
-        'quantity', 'amount_gross', 'amount', 'presettled',
+        'quantity', 'amount_gross', 'amount', 'presettled', 'royalty_statement_id',
     ];
 
     protected $casts = [

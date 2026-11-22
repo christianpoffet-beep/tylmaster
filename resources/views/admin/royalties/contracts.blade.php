@@ -30,6 +30,8 @@
 @endphp
 
 @section('content')
+@include('admin.royalties._tabs')
+
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
     <div>
         <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Verträge für die Abrechnung</h2>
