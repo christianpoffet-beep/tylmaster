@@ -92,7 +92,7 @@ class RoyaltyImportController extends Controller
     /** The session's current CSRF token, for an upload from a page that has been open for a while */
     public function token()
     {
-        return response()->json(['token' => csrf_token()]);
+        return response()->json(['token' => csrf_token()])->header('Cache-Control', 'no-store, private');
     }
 
     public function start(Request $request, RebeatImporter $importer)
@@ -105,20 +105,33 @@ class RoyaltyImportController extends Controller
         $path = 'royalty-imports/' . now()->format('Ymd-His') . '-' . Str::random(6) . '.csv';
         $import = $importer->start($data['file_name'], $path);
 
-        return response()->json(['id' => $import->id, 'piece' => route('admin.royalties.piece', $import), 'finish' => route('admin.royalties.finish', $import)]);
+        // Relative: the page posts to the very host it came from, whatever the proxy in front reports
+        return response()->json([
+            'id' => $import->id,
+            'piece' => route('admin.royalties.piece', $import, false),
+            'finish' => route('admin.royalties.finish', $import, false),
+        ]);
     }
 
+    /**
+     * One piece: a file field "piece" of a normal form post (as the page
+     * sends it), or the raw request body with X-Piece-* headers.
+     */
     public function piece(Request $request, RoyaltyImport $royaltyImport, RebeatImporter $importer)
     {
         if ($royaltyImport->is_complete) {
             return response()->json(['message' => 'Dieser Import ist schon abgeschlossen.'], 409);
         }
-        if ((int) $request->header('X-Piece-Index') !== $royaltyImport->upload_pieces) {
+        if ((int) $request->input('index', $request->header('X-Piece-Index')) !== $royaltyImport->upload_pieces) {
             return response()->json(['message' => 'Ein Teil der Datei fehlt oder kam doppelt. Bitte nochmals hochladen.'], 409);
         }
 
-        $content = $request->getContent();
-        if ($request->header('X-Piece-Encoding') === 'gzip') {
+        $file = $request->file('piece');
+        if ($request->has('piece') && !$file?->isValid()) {
+            return response()->json(['message' => 'Ein Teil der Datei kam nicht an (' . ($file?->getErrorMessage() ?? 'leer') . ').'], 422);
+        }
+        $content = $file ? (string) file_get_contents($file->getRealPath()) : $request->getContent();
+        if ($request->input('encoding', $request->header('X-Piece-Encoding')) === 'gzip') {
             $content = @gzdecode($content, 16 * 1024 * 1024);
             if ($content === false) {
                 return response()->json(['message' => 'Ein Teil der Datei kam beschädigt an. Bitte nochmals hochladen.'], 422);
@@ -156,7 +169,7 @@ class RoyaltyImportController extends Controller
 
         session()->flash('success', self::summary($import));
 
-        return response()->json(['redirect' => route('admin.royalties.show', $import)]);
+        return response()->json(['redirect' => route('admin.royalties.show', $import, false)]);
     }
 
     private static function summary(RoyaltyImport $import): string

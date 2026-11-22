@@ -246,8 +246,16 @@ class RebeatMatcherTest extends TestCase
         [$first, $second] = $this->pieces();
 
         $start = $this->actingAs($user)->postJson('/admin/royalties/uploads', ['file_name' => 'AccountingDataExport.csv'])->assertOk()->json();
-        $this->sendPiece($user, $start['piece'], 0, gzencode($first), 'gzip')->assertOk()->assertJson(['rows' => 2]);
+        $this->assertStringStartsWith('/admin/royalties/uploads/', $start['piece'], 'Relative: posted to the host the page came from');
+
+        // As the page sends it: a form post with the gzipped piece as a file
+        $gz = tempnam(sys_get_temp_dir(), 'piece');
+        file_put_contents($gz, gzencode($first));
+        $this->files[] = $gz;
+        $this->actingAs($user)->post($start['piece'], ['index' => '0', 'encoding' => 'gzip', 'piece' => new UploadedFile($gz, 'teil-1.gz', null, null, true)],
+            ['Accept' => 'application/json'])->assertOk()->assertJson(['rows' => 2]);
         $this->sendPiece($user, $start['piece'], 0, gzencode($first), 'gzip')->assertStatus(409);
+        // ... or as a raw body
         $this->sendPiece($user, $start['piece'], 1, $second)->assertOk()->assertJson(['rows' => 6]);
 
         $this->actingAs($user)->postJson($start['finish'])->assertOk()->assertJsonStructure(['redirect']);
@@ -306,6 +314,17 @@ class RebeatMatcherTest extends TestCase
         $this->actingAs(User::factory()->create())->from('/admin/royalties')
             ->call('POST', '/_too-large', [], [], [], ['CONTENT_LENGTH' => $bytes + 1])
             ->assertRedirect('/admin/royalties')->assertSessionHas('error');
+    }
+
+    public function test_a_rejected_upload_request_says_what_was_missing(): void
+    {
+        \Illuminate\Support\Facades\Route::post('/_expired', fn () => throw new \Illuminate\Session\TokenMismatchException())->middleware('web');
+
+        $this->actingAs(User::factory()->create())->postJson('/_expired', ['_token' => 'alt'])
+            ->assertStatus(419)
+            ->assertJsonPath('diagnose.angemeldet', 'ja')
+            ->assertJsonPath('diagnose.Token gesendet', 'ja')
+            ->assertJsonPath('diagnose.Session-Cookie', 'nein');
     }
 
     public function test_a_non_rebeat_upload_shows_an_error(): void

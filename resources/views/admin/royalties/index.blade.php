@@ -35,7 +35,7 @@
         </p>
         {{-- Sent in compressed pieces by rebeatUpload() below; the plain form is the fallback without JavaScript --}}
         <form method="POST" action="{{ route('admin.royalties.store') }}" enctype="multipart/form-data" class="space-y-3"
-              x-data="rebeatUpload(@js(['start' => route('admin.royalties.start'), 'token' => route('admin.royalties.token')]))" @submit.prevent="upload($refs.file.files[0])">
+              x-data="rebeatUpload(@js(['start' => route('admin.royalties.start', [], false), 'token' => route('admin.royalties.token', [], false)]))" @submit.prevent="upload($refs.file.files[0])">
             @csrf
             <div>
                 <input type="file" name="file" id="royalty-file" x-ref="file" accept=".csv,text/csv,text/plain" required :disabled="busy" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
@@ -162,18 +162,19 @@ function rebeatUpload(urls) {
                 // The page may be older than the session's token (open for long, or from before a deploy)
                 await this.refreshToken();
 
-                const started = await this.send('Start', urls.start, JSON.stringify({ file_name: file.name }), { 'Content-Type': 'application/json' });
+                // Plain form posts (multipart, token in the body), like every other upload of the admin
+                const started = await this.send('Start', urls.start, { file_name: file.name });
                 for (let i = 0; i < pieces.length; i++) {
                     this.status = `Teil ${i + 1} von ${pieces.length} wird eingelesen …`;
                     const [body, encoding] = await this.compress(pieces[i]);
-                    await this.send(`Teil ${i + 1}`, started.piece, body, {
-                        'Content-Type': 'application/octet-stream', 'X-Piece-Index': String(i), 'X-Piece-Encoding': encoding,
+                    await this.send(`Teil ${i + 1}`, started.piece, {
+                        index: String(i), encoding, piece: new File([body], `teil-${i + 1}.${encoding === 'gzip' ? 'gz' : 'csv'}`),
                     });
                     this.progress = Math.round(90 * (i + 1) / pieces.length);
                 }
 
                 this.status = 'Tracks werden zugeordnet …';
-                const finished = await this.send('Abschluss', started.finish, '{}', { 'Content-Type': 'application/json' });
+                const finished = await this.send('Abschluss', started.finish, {});
                 this.progress = 100;
                 window.location = finished.redirect;
             } catch (e) {
@@ -206,7 +207,7 @@ function rebeatUpload(urls) {
         async refreshToken() {
             let data = null;
             try {
-                const response = await fetch(urls.token, { headers: { 'Accept': 'application/json' } });
+                const response = await fetch(urls.token, { credentials: 'same-origin', cache: 'no-store', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
                 data = await response.json();
             } catch (e) {
                 // A login page instead of JSON: the session is gone
@@ -215,24 +216,30 @@ function rebeatUpload(urls) {
             this.token = data.token;
         },
 
-        /** POST with the current token; a 419 gets a fresh token and one more try. */
-        async send(step, url, body, headers, retried = false) {
+        /** A form post with the current token; a 419 gets a fresh token and one more try. */
+        async send(step, url, fields, retried = false) {
+            const form = new FormData();
+            form.append('_token', this.token);
+            Object.entries(fields).forEach(([name, value]) => form.append(name, value));
+
             let response;
             try {
                 response = await fetch(url, {
-                    method: 'POST', body,
-                    headers: { ...headers, 'Accept': 'application/json', 'X-CSRF-TOKEN': this.token },
+                    method: 'POST', body: form, credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': this.token, 'X-Requested-With': 'XMLHttpRequest' },
                 });
             } catch (e) {
                 throw new Error(`${step}: keine Verbindung zum Server. Bitte nochmals versuchen.`);
             }
             if (response.status === 419 && !retried) {
                 await this.refreshToken();
-                return this.send(step, url, body, headers, true);
+                return this.send(step, url, fields, true);
             }
             const data = await response.json().catch(() => ({}));
-            if (response.status === 419) throw new Error(`${step}: Der Server lehnt die Sitzung ab (419). Bitte die Seite neu laden und nochmals versuchen.`);
-            if (!response.ok) throw new Error(data.message ? `${step}: ${data.message}` : `${step}: Der Server meldet einen Fehler (${response.status}).`);
+            if (!response.ok) {
+                const detail = data.diagnose ? ` [${Object.entries(data.diagnose).map(([k, v]) => `${k}: ${v}`).join(', ')}]` : '';
+                throw new Error(`${step}: ${data.message || 'Der Server meldet einen Fehler'} (${response.status})${detail}`);
+            }
             return data;
         },
     };
