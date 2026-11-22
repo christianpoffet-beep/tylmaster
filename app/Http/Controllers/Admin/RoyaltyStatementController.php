@@ -83,6 +83,16 @@ class RoyaltyStatementController extends Controller
         $parties = RoyaltyStatementBooker::parties($result['items']);
         $labels = $parties->where('role', RoyaltyStatementItem::LABEL)->pluck('organization')->filter();
 
+        // E-mail: an address per credited party and the last mail it got
+        $mails = $statement->mails()->latest('id')->get();
+        $recipients = $parties->whereIn('role', [RoyaltyStatementItem::ARTIST, RoyaltyStatementItem::LABEL])->map(fn ($p) => (object) [
+            'key' => $p->organization ? 'org-' . $p->organization->id : 'contact-' . $p->contact?->id,
+            'name' => $p->name,
+            'email' => \App\Services\Royalties\RoyaltyStatementMailer::address($p->organization, $p->contact),
+            'last' => $mails->first(fn ($m) => $p->organization ? (int) $m->organization_id === $p->organization->id
+                : (!$m->organization_id && (int) $m->contact_id === (int) $p->contact?->id)),
+        ])->values();
+
         return view('admin.royalties.statement', [
             'statement' => $statement,
             'result' => $result,
@@ -92,7 +102,46 @@ class RoyaltyStatementController extends Controller
             'accountings' => Accounting::with('accountable')->orderByDesc('period_start')->get(),
             'accountOptions' => $statement->accounting?->accounts()->where('is_header', false)->orderBy('number')->get() ?? collect(),
             'accounts' => ($statement->accounts ?? []) + RoyaltyStatementBooker::defaultAccounts($statement->accounting),
+            'recipients' => $recipients,
+            'mailTemplate' => app(\App\Services\Royalties\RoyaltyStatementMailer::class)->template(),
         ]);
+    }
+
+    /** The statements to the parties by e-mail - or, as a test, all to one address */
+    public function mail(Request $request, RoyaltyStatement $royaltyStatement, \App\Services\Royalties\RoyaltyStatementMailer $mailer)
+    {
+        $data = $request->validate([
+            'subject' => 'required|string|max:200',
+            'body' => 'required|string|max:5000',
+            'send' => 'nullable|array',
+            'email' => 'nullable|array',
+            'email.*' => 'nullable|string|max:255',
+            'test' => 'nullable|boolean',
+            'test_address' => 'nullable|required_if:test,1|email|max:255',
+        ], [
+            'test_address.required_if' => 'Bitte die Adresse für den Probeversand angeben.',
+        ]);
+
+        $recipients = collect($data['send'] ?? [])->keys()->mapWithKeys(fn ($key) => [$key => (string) ($data['email'][$key] ?? '')])->all();
+        if (!$recipients) {
+            return back()->withInput()->with('error', 'Bitte mindestens eine Partei auswählen.');
+        }
+
+        @set_time_limit(600);
+        try {
+            $result = $mailer->send($royaltyStatement, $recipients, $data['subject'], $data['body'], $request->boolean('test') ? $data['test_address'] : null);
+        } catch (\App\Services\Royalties\RoyaltyStatementException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        $message = $request->boolean('test')
+            ? "{$result['sent']} Probe-Mail(s) an {$data['test_address']} gesendet."
+            : "{$result['sent']} Abrechnung(en) versendet.";
+        if ($result['failed']) {
+            return back()->with('error', $message . ' Nicht gesendet: ' . implode('; ', $result['errors']));
+        }
+
+        return back()->with('success', $message);
     }
 
     public function update(Request $request, RoyaltyStatement $royaltyStatement)

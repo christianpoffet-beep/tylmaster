@@ -21,7 +21,7 @@ class BrevoService
     }
 
     /**
-     * Send a transactional email via Brevo API.
+     * Send a transactional email via Brevo API, with files attached if given.
      */
     public function sendEmail(
         string $toEmail,
@@ -31,6 +31,7 @@ class BrevoService
         ?string $senderName = null,
         ?string $senderEmail = null,
         ?string $replyTo = null,
+        array $attachments = [],
     ): array {
         $senderName = $senderName ?: config('services.brevo.sender_name');
         $senderEmail = $senderEmail ?: config('services.brevo.sender_email');
@@ -49,6 +50,11 @@ class BrevoService
 
         if ($replyTo) {
             $payload['replyTo'] = ['email' => $replyTo];
+        }
+
+        // [['name' => 'file.pdf', 'content' => <binary>], ...]
+        if ($attachments) {
+            $payload['attachment'] = array_map(fn ($a) => ['name' => $a['name'], 'content' => base64_encode($a['content'])], $attachments);
         }
 
         $response = Http::withHeaders([

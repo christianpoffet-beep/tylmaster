@@ -297,4 +297,8 @@
         </div>
     @endif
 </div>
+
+@if($recipients->isNotEmpty())
+    @include('admin.royalties._mail')
+@endif
 @endsection

@@ -58,6 +58,11 @@ class RoyaltyStatement extends Model
         return $this->hasMany(RoyaltyLedgerEntry::class);
     }
 
+    public function mails()
+    {
+        return $this->hasMany(RoyaltyStatementMail::class);
+    }
+
     public function getIsFinalAttribute(): bool
     {
         return $this->status === self::FINAL;

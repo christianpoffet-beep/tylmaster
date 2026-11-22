@@ -48,9 +48,9 @@ class RoyaltyStatementDocument
         return ['result' => $result, 'parties' => $parties];
     }
 
-    public function pdf(RoyaltyStatement $statement, object $party, array $result): \Barryvdh\DomPDF\PDF
+    public function pdf(RoyaltyStatement $statement, object $party, array $result, ?array $data = null): \Barryvdh\DomPDF\PDF
     {
-        return Pdf::loadView('admin.royalties.pdf', $this->data($statement, $party, $result))->setPaper('A4', 'portrait');
+        return Pdf::loadView('admin.royalties.pdf', $data ?? $this->data($statement, $party, $result))->setPaper('A4', 'portrait');
     }
 
     /** All documents of a statement in one ZIP; returns the path of a temporary file */

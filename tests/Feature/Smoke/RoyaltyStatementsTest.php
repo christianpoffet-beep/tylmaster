@@ -258,6 +258,48 @@ class RoyaltyStatementsTest extends TestCase
         $this->assertSame(['Abrechnung_2023-2025_tar-pond_ENTWURF.pdf', 'Abrechnung_2023-2025_zentrum_ENTWURF.pdf'], $names);
     }
 
+    public function test_the_statements_go_out_by_mail_with_their_pdf(): void
+    {
+        config(['services.brevo.api_key' => 'test-key']);
+        \Illuminate\Support\Facades\Http::fake(['api.brevo.com/*' => \Illuminate\Support\Facades\Http::response(['messageId' => '<m1>'], 201)]);
+        $this->band->update(['email' => 'band@example.test']);
+        $statement = $this->statement();
+        $mailer = app(\App\Services\Royalties\RoyaltyStatementMailer::class);
+        $template = $mailer->template();
+
+        // A draft: only as a test, to one address
+        try {
+            $mailer->send($statement, ["org-{$this->band->id}" => 'band@example.test'], $template['subject'], $template['body']);
+            $this->fail('A draft does not go to the parties');
+        } catch (RoyaltyStatementException $e) {
+            $this->assertStringContainsString('nur als Probe', $e->getMessage());
+        }
+        $this->assertSame(['sent' => 1, 'failed' => 0, 'errors' => []],
+            $mailer->send($statement, ["org-{$this->band->id}" => 'band@example.test'], $template['subject'], $template['body'], 'ich@example.test'));
+        \Illuminate\Support\Facades\Http::assertSent(fn ($request) => $request['to'][0]['email'] === 'ich@example.test'
+            && $request['subject'] === '[Probe für Tar Pond] Deine Abrechnung 2023–2025'
+            && $request['attachment'][0]['name'] === 'Abrechnung_2023-2025_tar-pond_ENTWURF.pdf'
+            && str_starts_with(base64_decode($request['attachment'][0]['content']), '%PDF'));
+
+        // Final: to the band, its figures in the text
+        app(RoyaltyStatementBooker::class)->finalize($statement);
+        $this->actingAs($this->user)->get("/admin/royalties/statements/{$statement->id}")->assertOk()
+            ->assertSee('Per E-Mail versenden')->assertSee('value="band@example.test"', false);
+
+        $this->actingAs($this->user)->post("/admin/royalties/statements/{$statement->id}/mail", [
+            'subject' => $template['subject'], 'body' => $template['body'],
+            'send' => ["org-{$this->band->id}" => '1', "org-{$this->zentrum->id}" => '1'],
+            'email' => ["org-{$this->band->id}" => 'band@example.test', "org-{$this->zentrum->id}" => ''],
+        ])->assertSessionHas('error'); // Zentrum has no address: reported, the band still gets it
+
+        \Illuminate\Support\Facades\Http::assertSent(fn ($request) => $request['to'][0]['email'] === 'band@example.test'
+            && $request['subject'] === 'Deine Abrechnung 2023–2025'
+            && str_contains($request['htmlContent'], 'Deine Gutschrift beträgt CHF 39.16, Dein Saldo neu CHF 39.16')
+            && $request['attachment'][0]['name'] === 'Abrechnung_2023-2025_tar-pond.pdf');
+        $this->assertSame(['test', 'sent'], \App\Models\RoyaltyStatementMail::orderBy('id')->pluck('status')->all());
+        $this->actingAs($this->user)->get("/admin/royalties/statements/{$statement->id}")->assertSee('1 von 2 versendet');
+    }
+
     public function test_rebeat_payouts_come_from_bank_statements_once(): void
     {
         $csv = implode("\r\n", [
