@@ -15,11 +15,14 @@
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Nutzungsdaten von Rebeat einlesen und den Tracks zuordnen – die Grundlage für die Abrechnungen an Künstler:innen und Labels.</p>
     </div>
     @if($imports->isNotEmpty())
+        <div class="flex items-center gap-2">
+        <a href="{{ route('admin.royalties.contracts') }}" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Verträge für die Abrechnung</a>
         <form method="POST" action="{{ route('admin.royalties.rematch') }}">
             @csrf
             <button type="submit" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                     title="Offene Zeilen nochmals über die ISRC suchen – z.B. nachdem bei Tracks ISRCs ergänzt wurden">Neu zuordnen</button>
         </form>
+        </div>
     @endif
 </div>
 

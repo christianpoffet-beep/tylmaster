@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\ChartTemplateController;
 use App\Http\Controllers\Admin\AccountingController;
 use App\Http\Controllers\Admin\BankImportController;
 use App\Http\Controllers\Admin\RoyaltyImportController;
+use App\Http\Controllers\Admin\RoyaltyContractController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\ContractTemplateController;
 use App\Http\Controllers\Admin\ContractTypeController;
@@ -83,6 +84,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::resource('contracts', ContractController::class);
     Route::patch('contracts/{contract}/documents/{document}/archive', [ContractController::class, 'archiveDocument'])->name('contracts.documents.archive');
     Route::post('contracts/{contract}/pdf', [ContractController::class, 'pdf'])->name('contracts.pdf');
+    Route::post('contracts/{contract}/advances', [ContractController::class, 'storeAdvance'])->name('contracts.advances.store');
+    Route::delete('contract-advances/{contractAdvance}', [ContractController::class, 'destroyAdvance'])->name('contracts.advances.destroy');
     Route::resource('documents', DocumentController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
     Route::get('documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
     Route::get('documents/{document}/preview', [DocumentController::class, 'preview'])->name('documents.preview');
@@ -187,6 +190,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('royalties/uploads/{royaltyImport}/piece', [RoyaltyImportController::class, 'piece'])->name('royalties.piece');
     Route::post('royalties/uploads/{royaltyImport}/finish', [RoyaltyImportController::class, 'finish'])->name('royalties.finish');
     Route::post('royalties/rematch', [RoyaltyImportController::class, 'rematch'])->name('royalties.rematch');
+    Route::get('royalties/contracts', [RoyaltyContractController::class, 'index'])->name('royalties.contracts');
+    Route::post('royalties/contracts/own-label', [RoyaltyContractController::class, 'setOwnLabel'])->name('royalties.ownLabel');
     Route::get('royalties/imports/{royaltyImport}', [RoyaltyImportController::class, 'show'])->name('royalties.show');
     Route::post('royalties/imports/{royaltyImport}/assign', [RoyaltyImportController::class, 'assign'])->name('royalties.assign');
     Route::post('royalties/imports/{royaltyImport}/create-track', [RoyaltyImportController::class, 'createTrack'])->name('royalties.createTrack');

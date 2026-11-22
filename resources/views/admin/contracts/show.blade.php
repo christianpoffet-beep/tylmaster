@@ -29,6 +29,21 @@
                 <div><span class="text-gray-500 dark:text-gray-400">Laufzeit:</span> <span class="text-gray-900 dark:text-gray-100 ml-1">{{ $contract->start_date?->format('d.m.Y') ?? '-' }} — {{ $contract->end_date?->format('d.m.Y') ?? '-' }}</span></div>
             </div>
 
+            @if($contract->supersedes || $contract->supersededBy->isNotEmpty())
+                <div class="mt-3 text-sm space-y-0.5">
+                    @if($contract->supersedes)
+                        <p><span class="text-gray-500 dark:text-gray-400">Ersetzt:</span>
+                            <a href="{{ route('admin.contracts.show', $contract->supersedes) }}" class="text-blue-600 dark:text-blue-400 hover:underline ml-1">{{ $contract->supersedes->contract_number }} · {{ $contract->supersedes->title }}</a>
+                            <span class="text-gray-400">(bis {{ $contract->supersedes->end_date?->format('d.m.Y') ?? 'offen' }})</span></p>
+                    @endif
+                    @foreach($contract->supersededBy as $successor)
+                        <p><span class="text-gray-500 dark:text-gray-400">Ersetzt durch:</span>
+                            <a href="{{ route('admin.contracts.show', $successor) }}" class="text-blue-600 dark:text-blue-400 hover:underline ml-1">{{ $successor->contract_number }} · {{ $successor->title }}</a>
+                            <span class="text-gray-400">(ab {{ $successor->start_date?->format('d.m.Y') ?? '?' }})</span></p>
+                    @endforeach
+                </div>
+            @endif
+
             {{-- Placeholders are filled here as in the PDF; what is still missing is marked. --}}
             @php
                 $markClass = 'bg-amber-200 dark:bg-amber-700/60 text-gray-900 dark:text-gray-100 rounded px-0.5';
@@ -139,17 +154,67 @@
                     @foreach($contract->rights as $right)
                         <div class="flex items-start gap-2 text-sm">
                             <span class="font-medium text-gray-700 dark:text-gray-300 min-w-0">{{ $right['label'] }}:</span>
+                            @php $rightCategory = \App\Models\Contract::rightCategory($right); @endphp
                             @if(($right['mode'] ?? 'split') === 'split')
                                 @php $sv = $contract->rightSplitValues($right); @endphp
                                 <span class="text-gray-600 dark:text-gray-400">@foreach($rLabels as $li => $lname)@if(!$loop->first) / @endif{{ $sv[$li] ?? 0 }}% {{ $lname }}@endforeach</span>
                             @else
                                 <span class="text-gray-600 dark:text-gray-400">{!! $marked($contract->fillPlaceholders($right['custom_text'] ?? '')) !!}</span>
                             @endif
+                            @if($rightCategory !== 'other')
+                                <span class="ml-auto flex-shrink-0 inline-flex px-2 py-0.5 rounded-full text-[11px] bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300" title="Gilt in den Abrechnungen für diese Einnahmen">{{ \App\Models\Contract::RIGHT_CATEGORIES[$rightCategory] }}</span>
+                            @endif
                         </div>
                     @endforeach
                 </div>
             </div>
             @endif
+
+            {{-- Recouped from the artists' shares of this contract in the statements --}}
+            @php $advanceTotal = $contract->advances->sum('amount'); @endphp
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700" x-data="{ adding: false }">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Vorschüsse & verrechenbare Kosten</h3>
+                    <button type="button" @click="adding = !adding" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">+ erfassen</button>
+                </div>
+                <p class="text-xs text-gray-400 mb-2">Was das Label für die Künstler:innen dieses Vertrags bezahlt hat (Mastering, Pressung, Geldvorschuss). Die Abrechnungen verrechnen es mit ihren Anteilen aus diesem Vertrag, bevor etwas gutgeschrieben wird.</p>
+                @if($contract->advances->isNotEmpty())
+                    <table class="w-full text-sm">
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                            @foreach($contract->advances as $advance)
+                                <tr>
+                                    <td class="py-1.5 pr-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ $advance->date->format('d.m.Y') }}</td>
+                                    <td class="py-1.5 pr-3 text-gray-900 dark:text-gray-100">{{ $advance->description }}</td>
+                                    <td class="py-1.5 pr-3 text-right tabular-nums text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ $advance->currency }} {{ number_format((float) $advance->amount, 2, '.', "'") }}</td>
+                                    <td class="py-1.5 text-right">
+                                        <form method="POST" action="{{ route('admin.contracts.advances.destroy', $advance) }}" onsubmit="return confirm('Diesen Eintrag löschen?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="text-xs text-red-600 dark:text-red-400 hover:underline">löschen</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                            <tr>
+                                <td colspan="2" class="py-1.5 pr-3 text-gray-500 dark:text-gray-400">Total</td>
+                                <td class="py-1.5 pr-3 text-right tabular-nums font-medium text-gray-900 dark:text-gray-100">CHF {{ number_format((float) $advanceTotal, 2, '.', "'") }}</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                @else
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Keine.</p>
+                @endif
+                <form x-show="adding" x-cloak method="POST" action="{{ route('admin.contracts.advances.store', $contract) }}" class="mt-3 grid grid-cols-1 sm:grid-cols-[9rem_1fr_8rem_auto] gap-2 items-start">
+                    @csrf
+                    <input type="date" name="date" value="{{ old('date', now()->format('Y-m-d')) }}" required class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <input type="text" name="description" value="{{ old('description') }}" required maxlength="255" placeholder="z.B. Mastering, CD-Pressung 300 Stk." class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <input type="number" name="amount" value="{{ old('amount') }}" required step="0.05" min="0.05" placeholder="CHF" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Speichern</button>
+                </form>
+                @if($errors->has('amount') || $errors->has('description') || $errors->has('date'))
+                    <p class="text-red-500 text-xs mt-1">{{ $errors->first('date') ?: ($errors->first('description') ?: $errors->first('amount')) }}</p>
+                @endif
+            </div>
 
             @if($contract->tracks->count() || $contract->relations_note)
             @php
