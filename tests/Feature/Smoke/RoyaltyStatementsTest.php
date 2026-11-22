@@ -215,6 +215,37 @@ class RoyaltyStatementsTest extends TestCase
         $this->assertSame(0, RoyaltyStatement::count());
     }
 
+    public function test_each_party_gets_its_statement_as_pdf(): void
+    {
+        $statement = $this->statement();
+        $document = app(\App\Services\Royalties\RoyaltyStatementDocument::class);
+
+        ['result' => $result, 'parties' => $parties] = $document->prepare($statement);
+        $this->assertSame(['org-' . $this->band->id, 'org-' . $this->zentrum->id], $parties->pluck('key')->all(), 'Only the credited ones');
+
+        // An earlier credit counts into the balance
+        RoyaltyLedgerEntry::create(['organization_id' => $this->band->id, 'entry_date' => '2025-12-15', 'type' => 'credit', 'amount' => 70, 'description' => 'Früher']);
+        $html = view('admin.royalties.pdf', $document->data($statement, $parties->first(), $result))->render();
+        foreach (['ENTWURF', 'Tar Pond', 'Tar Pond – Coroner', 'Dein Anteil an Streaming &amp; Downloads: 80 %', 'Fog', '44.16',
+                  'Verrechnung Vorschüsse und Kosten gemäss Vertrag (danach noch offen: CHF 0.00)', '− 5.00',
+                  'CHF 70.00', 'CHF 39.16', 'CHF 109.16', 'Wir überweisen Dir den Saldo'] as $expected) {
+            $this->assertStringContainsString($expected, $html);
+        }
+
+        $this->actingAs($this->user)->get("/admin/royalties/statements/{$statement->id}/pdf/org-{$this->band->id}")
+            ->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->actingAs($this->user)->get("/admin/royalties/statements/{$statement->id}/pdf/org-99999")->assertNotFound();
+
+        $zip = $this->actingAs($this->user)->get("/admin/royalties/statements/{$statement->id}/pdfs")->assertOk();
+        $archive = new \ZipArchive();
+        $archive->open($zip->baseResponse->getFile()->getPathname());
+        $names = [];
+        for ($i = 0; $i < $archive->numFiles; $i++) $names[] = $archive->getNameIndex($i);
+        $archive->close();
+        @unlink($zip->baseResponse->getFile()->getPathname());
+        $this->assertSame(['Abrechnung_2023-2025_tar-pond_ENTWURF.pdf', 'Abrechnung_2023-2025_zentrum_ENTWURF.pdf'], $names);
+    }
+
     public function test_rebeat_payouts_come_from_bank_statements_once(): void
     {
         $csv = implode("\r\n", [

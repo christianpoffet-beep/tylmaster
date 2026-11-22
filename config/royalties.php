@@ -9,4 +9,10 @@ return [
      */
     'settled_until' => '2022-12-31',
 
+    /*
+     * Balances from this amount (CHF) on are suggested for payout; smaller
+     * ones are carried forward (they can still be paid out by hand).
+     */
+    'payout_minimum' => 100,
+
 ];

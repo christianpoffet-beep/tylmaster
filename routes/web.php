@@ -200,6 +200,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('royalties/statements', [RoyaltyStatementController::class, 'store'])->name('royalties.statements.store');
     Route::get('royalties/statements/{royaltyStatement}', [RoyaltyStatementController::class, 'show'])->name('royalties.statements.show');
     Route::put('royalties/statements/{royaltyStatement}', [RoyaltyStatementController::class, 'update'])->name('royalties.statements.update');
+    Route::get('royalties/statements/{royaltyStatement}/pdf/{party}', [RoyaltyStatementController::class, 'pdf'])->name('royalties.statements.pdf');
+    Route::get('royalties/statements/{royaltyStatement}/pdfs', [RoyaltyStatementController::class, 'pdfs'])->name('royalties.statements.pdfs');
     Route::post('royalties/statements/{royaltyStatement}/finalize', [RoyaltyStatementController::class, 'finalize'])->name('royalties.statements.finalize');
     Route::post('royalties/statements/{royaltyStatement}/undo', [RoyaltyStatementController::class, 'undo'])->name('royalties.statements.undo');
     Route::delete('royalties/statements/{royaltyStatement}', [RoyaltyStatementController::class, 'destroy'])->name('royalties.statements.destroy');

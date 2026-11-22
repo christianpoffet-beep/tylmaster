@@ -227,9 +227,14 @@
 
 {{-- Parteien --}}
 <div class="{{ $card }} overflow-hidden">
-    <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-        <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Anteile pro Partei</h3>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Anklicken für die Tracks und Produkte dahinter.</p>
+    <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center justify-between gap-2">
+        <div>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Anteile pro Partei</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Anklicken für die Tracks und Produkte dahinter. «PDF» zeigt die Abrechnung, wie die Partei sie erhält{{ $final ? '' : ' (als Entwurf markiert)' }}.</p>
+        </div>
+        @if($credited->isNotEmpty())
+            <a href="{{ route('admin.royalties.statements.pdfs', $statement) }}" class="px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">Alle PDFs (ZIP)</a>
+        @endif
     </div>
     @if($parties->isEmpty())
         <p class="px-5 py-6 text-sm text-gray-500 dark:text-gray-400">Nichts zu verteilen.</p>
@@ -247,6 +252,8 @@
                         @endif
                         @if(in_array($party->role, [Item::ARTIST, Item::LABEL], true))
                             <span class="tabular-nums font-medium text-gray-900 dark:text-gray-100 w-36 text-right">Gutschrift CHF {{ $chf($party->credit) }}</span>
+                            <a href="{{ route('admin.royalties.statements.pdf', [$statement, $party->organization ? 'org-' . $party->organization->id : 'contact-' . $party->contact?->id]) }}"
+                               target="_blank" class="text-xs text-blue-600 dark:text-blue-400 hover:underline" onclick="event.stopPropagation()">PDF</a>
                         @else
                             <span class="w-36"></span>
                         @endif

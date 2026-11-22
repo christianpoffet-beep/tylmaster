@@ -120,6 +120,28 @@ class RoyaltyStatementController extends Controller
         return back()->with('success', 'Gespeichert.');
     }
 
+    /** The statement of one party (org-ID or contact-ID) as PDF */
+    public function pdf(RoyaltyStatement $royaltyStatement, string $party, \App\Services\Royalties\RoyaltyStatementDocument $document)
+    {
+        @set_time_limit(120);
+        ['result' => $result, 'parties' => $parties] = $document->prepare($royaltyStatement->load('accounting'));
+        $match = $parties->firstWhere('key', $party) ?? abort(404);
+
+        return $document->pdf($royaltyStatement, $match, $result)->stream($document->fileName($royaltyStatement, $match));
+    }
+
+    /** All statements of the parties in one ZIP */
+    public function pdfs(RoyaltyStatement $royaltyStatement, \App\Services\Royalties\RoyaltyStatementDocument $document)
+    {
+        @set_time_limit(300);
+        @ini_set('memory_limit', '512M');
+        $path = $document->zip($royaltyStatement->load('accounting'));
+        $name = 'Abrechnungen_' . $royaltyStatement->period_from->format('Y') . '-' . $royaltyStatement->period_to->format('Y')
+            . ($royaltyStatement->is_final ? '' : '_ENTWURF') . '.zip';
+
+        return response()->download($path, $name)->deleteFileAfterSend();
+    }
+
     public function finalize(RoyaltyStatement $royaltyStatement, RoyaltyStatementBooker $booker)
     {
         try {
