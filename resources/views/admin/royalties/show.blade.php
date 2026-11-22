@@ -37,7 +37,11 @@
 </div>
 
 {{-- Status --}}
-@if($import->is_confirmed)
+@if(!$import->is_complete)
+    <div class="mb-6 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4">
+        <p class="text-sm text-red-800 dark:text-red-200">Dieser Import ist unvollständig – das Hochladen brach nach {{ $import->upload_pieces }} Teil(en) ab. Bitte entfernen und die Datei nochmals hochladen (das passiert beim nächsten Hochladen auch von selbst).</p>
+    </div>
+@elseif($import->is_confirmed)
     <div class="mb-6 rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p class="text-sm text-green-800 dark:text-green-200">Bestätigt am {{ $import->confirmed_at->format('d.m.Y') }} – die Zeilen kommen in die nächste Abrechnung.</p>
         <form method="POST" action="{{ route('admin.royalties.confirm', $import) }}">

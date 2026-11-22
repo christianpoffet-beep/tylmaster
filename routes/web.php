@@ -182,6 +182,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Rebeat-Matcher (Nutzungsdaten einlesen und den Tracks zuordnen)
     Route::get('royalties', [RoyaltyImportController::class, 'index'])->name('royalties.index');
     Route::post('royalties/imports', [RoyaltyImportController::class, 'store'])->name('royalties.store');
+    Route::post('royalties/uploads', [RoyaltyImportController::class, 'start'])->name('royalties.start');
+    Route::post('royalties/uploads/{royaltyImport}/piece', [RoyaltyImportController::class, 'piece'])->name('royalties.piece');
+    Route::post('royalties/uploads/{royaltyImport}/finish', [RoyaltyImportController::class, 'finish'])->name('royalties.finish');
     Route::post('royalties/rematch', [RoyaltyImportController::class, 'rematch'])->name('royalties.rematch');
     Route::get('royalties/imports/{royaltyImport}', [RoyaltyImportController::class, 'show'])->name('royalties.show');
     Route::post('royalties/imports/{royaltyImport}/assign', [RoyaltyImportController::class, 'assign'])->name('royalties.assign');

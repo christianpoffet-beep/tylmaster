@@ -46,7 +46,6 @@ class RoyaltyImportController extends Controller
         return view('admin.royalties.index', [
             'imports' => $imports,
             'years' => $years,
-            'uploadLimit' => self::uploadLimit(),
         ]);
     }
 
@@ -76,17 +75,92 @@ class RoyaltyImportController extends Controller
         }
 
         if ($import->rows_new === 0) {
-            DocumentStorage::delete($import->file_path);
-            $import->delete();
+            $importer->discard($import);
 
             return back()->with('error', "Alle {$import->rows_duplicate} Zeilen dieser Datei sind schon importiert.");
         }
 
-        $message = number_format($import->rows_new, 0, '.', "'") . ' Zeilen eingelesen';
-        if ($import->rows_duplicate) $message .= ', ' . number_format($import->rows_duplicate, 0, '.', "'") . ' waren schon da';
-        if ($import->rows_presettled) $message .= ', ' . number_format($import->rows_presettled, 0, '.', "'") . ' sind vor dem Stichtag schon abgerechnet';
+        return redirect()->route('admin.royalties.show', $import)->with('success', self::summary($import));
+    }
 
-        return redirect()->route('admin.royalties.show', $import)->with('success', $message . '.');
+    /*
+     * The matcher page sends a large export in pieces (compressed, about 1 MB
+     * of the file each), so neither PHP's upload limits nor a long request
+     * stand in the way: start, one request per piece, finish.
+     */
+
+    public function start(Request $request, RebeatImporter $importer)
+    {
+        $data = $request->validate(['file_name' => 'required|string|max:255']);
+        if (!in_array(strtolower(pathinfo($data['file_name'], PATHINFO_EXTENSION)), ['csv', 'txt'], true)) {
+            return response()->json(['message' => 'Bitte die CSV-Datei aus Rebeat hochladen (nicht in Excel öffnen und speichern).'], 422);
+        }
+
+        $path = 'royalty-imports/' . now()->format('Ymd-His') . '-' . Str::random(6) . '.csv';
+        $import = $importer->start($data['file_name'], $path);
+
+        return response()->json(['id' => $import->id, 'piece' => route('admin.royalties.piece', $import), 'finish' => route('admin.royalties.finish', $import)]);
+    }
+
+    public function piece(Request $request, RoyaltyImport $royaltyImport, RebeatImporter $importer)
+    {
+        if ($royaltyImport->is_complete) {
+            return response()->json(['message' => 'Dieser Import ist schon abgeschlossen.'], 409);
+        }
+        if ((int) $request->header('X-Piece-Index') !== $royaltyImport->upload_pieces) {
+            return response()->json(['message' => 'Ein Teil der Datei fehlt oder kam doppelt. Bitte nochmals hochladen.'], 409);
+        }
+
+        $content = $request->getContent();
+        if ($request->header('X-Piece-Encoding') === 'gzip') {
+            $content = @gzdecode($content, 16 * 1024 * 1024);
+            if ($content === false) {
+                return response()->json(['message' => 'Ein Teil der Datei kam beschädigt an. Bitte nochmals hochladen.'], 422);
+            }
+        }
+
+        @set_time_limit(120);
+        try {
+            $importer->addPiece($royaltyImport, $content);
+        } catch (RoyaltyImportException $e) {
+            $importer->discard($royaltyImport);
+
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['rows' => $royaltyImport->rows_new + $royaltyImport->rows_duplicate]);
+    }
+
+    public function finish(RoyaltyImport $royaltyImport, RebeatImporter $importer)
+    {
+        @set_time_limit(120);
+        try {
+            $import = $importer->finish($royaltyImport);
+        } catch (RoyaltyImportException $e) {
+            $importer->discard($royaltyImport);
+
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        if ($import->rows_new === 0) {
+            $importer->discard($import);
+
+            return response()->json(['message' => "Alle {$import->rows_duplicate} Zeilen dieser Datei sind schon importiert."], 422);
+        }
+
+        session()->flash('success', self::summary($import));
+
+        return response()->json(['redirect' => route('admin.royalties.show', $import)]);
+    }
+
+    private static function summary(RoyaltyImport $import): string
+    {
+        $int = fn ($n) => number_format($n, 0, '.', "'");
+        $message = $int($import->rows_new) . ' Zeilen eingelesen';
+        if ($import->rows_duplicate) $message .= ', ' . $int($import->rows_duplicate) . ' waren schon da';
+        if ($import->rows_presettled) $message .= ', ' . $int($import->rows_presettled) . ' sind vor dem Stichtag schon abgerechnet';
+
+        return $message . '.';
     }
 
     public function show(RoyaltyImport $royaltyImport, RoyaltyMatcher $matcher)
@@ -168,6 +242,9 @@ class RoyaltyImportController extends Controller
 
     public function confirm(RoyaltyImport $royaltyImport)
     {
+        if (!$royaltyImport->is_complete) {
+            return back()->with('error', 'Dieser Import ist unvollständig. Bitte entfernen und die Datei nochmals hochladen.');
+        }
         if ($royaltyImport->is_confirmed) {
             $royaltyImport->update(['confirmed_at' => null]);
 
@@ -187,11 +264,9 @@ class RoyaltyImportController extends Controller
         return DocumentStorage::privately(response()->download($path, $royaltyImport->file_name));
     }
 
-    public function destroy(RoyaltyImport $royaltyImport)
+    public function destroy(RoyaltyImport $royaltyImport, RebeatImporter $importer)
     {
-        $royaltyImport->lines()->delete();
-        DocumentStorage::delete($royaltyImport->file_path);
-        $royaltyImport->delete();
+        $importer->discard($royaltyImport);
 
         return redirect()->route('admin.royalties.index')->with('success', 'Import entfernt.');
     }
@@ -222,14 +297,5 @@ class RoyaltyImportController extends Controller
 
             return $group;
         });
-    }
-
-    /** What the server accepts in one upload, in MB */
-    private static function uploadLimit(): ?int
-    {
-        $bytes = fn ($v) => (int) $v * match (strtolower(substr(trim((string) $v), -1))) { 'g' => 1024 ** 3, 'm' => 1024 ** 2, 'k' => 1024, default => 1 };
-        $limits = array_filter([$bytes(ini_get('upload_max_filesize')), $bytes(ini_get('post_max_size'))]);
-
-        return $limits ? (int) floor(min($limits) / 1024 ** 2) : null;
     }
 }

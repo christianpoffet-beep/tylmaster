@@ -25,7 +25,11 @@ class RebeatReader
     /** @var array<string, int> column => index */
     private array $columns;
 
-    public function __construct(string $path)
+    /**
+     * @param string|null $header the header line, for a later piece of an
+     *                            export that arrives in pieces (it has none)
+     */
+    public function __construct(string $path, ?string $header = null)
     {
         $handle = @fopen($path, 'r');
         if (!$handle) {
@@ -33,24 +37,44 @@ class RebeatReader
         }
         $this->handle = $handle;
 
-        for ($i = 0; $i < self::MAX_PREAMBLE_LINES && ($line = fgets($handle)) !== false; $i++) {
-            $line = self::utf8(preg_replace('/^\xEF\xBB\xBF/', '', $line));
-            if (!str_contains($line, '_isrc') || !str_contains($line, '_cash')) {
-                continue;
-            }
+        $line = $header ?? self::findHeader($handle);
+        if ($line !== null) {
             $this->delimiter = self::delimiter($line);
-            $header = array_map(fn ($c) => trim($c), str_getcsv(rtrim($line, "\r\n"), $this->delimiter, '"', ''));
-            $this->columns = array_flip($header);
-            if (!array_diff(self::REQUIRED, $header)) {
+            $columns = array_map(fn ($c) => trim($c), str_getcsv(rtrim($line, "\r\n"), $this->delimiter, '"', ''));
+            $this->columns = array_flip($columns);
+            if (!array_diff(self::REQUIRED, $columns)) {
                 return;
             }
-            break;
         }
 
         fclose($handle);
         throw new RoyaltyImportException(
             'Das ist kein Rebeat-Export. Erwartet wird die CSV-Datei aus Rebeat → Accounting → Export («AccountingDataExport-…csv»).'
         );
+    }
+
+    /** The header line of an export (after Rebeat's note lines), or null */
+    public static function headerOf(string $path): ?string
+    {
+        $handle = @fopen($path, 'r');
+        if (!$handle) return null;
+        $line = self::findHeader($handle);
+        fclose($handle);
+
+        return $line;
+    }
+
+    /** Reads up to the header line and leaves the handle just after it */
+    private static function findHeader($handle): ?string
+    {
+        for ($i = 0; $i < self::MAX_PREAMBLE_LINES && ($line = fgets($handle)) !== false; $i++) {
+            $line = self::utf8(preg_replace('/^\xEF\xBB\xBF/', '', $line));
+            if (str_contains($line, '_isrc') && str_contains($line, '_cash')) {
+                return rtrim($line, "\r\n");
+            }
+        }
+
+        return null;
     }
 
     public function __destruct()

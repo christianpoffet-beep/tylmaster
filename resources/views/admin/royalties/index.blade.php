@@ -30,19 +30,24 @@
             Die CSV-Datei aus Rebeat (Accounting → Export, «AccountingDataExport-…csv»), direkt hochladen, ohne sie vorher in Excel zu speichern.
             Zeiträume dürfen sich überschneiden – Zeilen, die schon da sind, werden übersprungen.
         </p>
+        {{-- Sent in compressed pieces by rebeatUpload() below; the plain form is the fallback without JavaScript --}}
         <form method="POST" action="{{ route('admin.royalties.store') }}" enctype="multipart/form-data" class="space-y-3"
-              x-data="{ busy: false }" @submit="busy = true">
+              x-data="rebeatUpload(@js(['start' => route('admin.royalties.start')]))" @submit.prevent="upload($refs.file.files[0])">
             @csrf
             <div>
-                <input type="file" name="file" id="royalty-file" accept=".csv,text/csv,text/plain" required class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
+                <input type="file" name="file" id="royalty-file" x-ref="file" accept=".csv,text/csv,text/plain" required :disabled="busy" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
                 @error('file') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                @if($uploadLimit)
-                    <p class="text-xs text-gray-400 mt-1">Der Server nimmt Dateien bis {{ $uploadLimit }} MB an.</p>
-                @endif
             </div>
+            <div x-show="busy" x-cloak>
+                <div class="h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                    <div class="h-2 bg-blue-600 transition-all" :style="`width: ${progress}%`"></div>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="status"></p>
+            </div>
+            <p x-show="error" x-cloak x-text="error" class="text-sm text-red-600 dark:text-red-400"></p>
             <button type="submit" :disabled="busy" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60">
                 <span x-show="!busy">Einlesen</span>
-                <span x-show="busy" x-cloak>Wird eingelesen … (kann eine Minute dauern)</span>
+                <span x-show="busy" x-cloak>Wird eingelesen …</span>
             </button>
         </form>
     </div>
@@ -109,7 +114,9 @@
                             <td class="px-3 py-2.5 text-right tabular-nums text-gray-900 dark:text-gray-100">{{ $eur($import->lines_sum_amount) }}</td>
                             <td class="px-3 py-2.5 text-right tabular-nums {{ $import->open_count ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400' }}">{{ $int($import->open_count) }}</td>
                             <td class="px-5 py-2.5 whitespace-nowrap">
-                                @if($import->is_confirmed)
+                                @if(!$import->is_complete)
+                                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">unvollständig</span>
+                                @elseif($import->is_confirmed)
                                     <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">bestätigt</span>
                                 @else
                                     <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">zu prüfen</span>
@@ -122,4 +129,89 @@
         </div>
     @endif
 </div>
+
+<script>
+/*
+ * Sends the export in pieces of about 1 MB, cut at line ends and gzipped
+ * where the browser can: no request comes near PHP's upload limits, and the
+ * server reads each piece while the next one is on its way.
+ */
+function rebeatUpload(urls) {
+    const PIECE = 1024 * 1024;
+
+    return {
+        busy: false,
+        progress: 0,
+        status: '',
+        error: '',
+
+        async upload(file) {
+            if (!file || this.busy) return;
+            this.busy = true;
+            this.error = '';
+            this.progress = 0;
+            try {
+                this.status = 'Datei wird gelesen …';
+                const bytes = new Uint8Array(await file.arrayBuffer());
+                const pieces = this.cut(bytes);
+
+                const started = await this.send(urls.start, JSON.stringify({ file_name: file.name }), { 'Content-Type': 'application/json' });
+                for (let i = 0; i < pieces.length; i++) {
+                    this.status = `Teil ${i + 1} von ${pieces.length} wird eingelesen …`;
+                    const [body, encoding] = await this.compress(pieces[i]);
+                    await this.send(started.piece, body, {
+                        'Content-Type': 'application/octet-stream', 'X-Piece-Index': String(i), 'X-Piece-Encoding': encoding,
+                    });
+                    this.progress = Math.round(90 * (i + 1) / pieces.length);
+                }
+
+                this.status = 'Tracks werden zugeordnet …';
+                const finished = await this.send(started.finish, '{}', { 'Content-Type': 'application/json' });
+                this.progress = 100;
+                window.location = finished.redirect;
+            } catch (e) {
+                this.error = e.message;
+                this.busy = false;
+            }
+        },
+
+        cut(bytes) {
+            const pieces = [];
+            let start = 0;
+            while (start < bytes.length) {
+                let end = Math.min(start + PIECE, bytes.length);
+                if (end < bytes.length) {
+                    const newline = bytes.indexOf(10, end);
+                    end = newline === -1 ? bytes.length : newline + 1;
+                }
+                pieces.push(bytes.subarray(start, end));
+                start = end;
+            }
+            return pieces;
+        },
+
+        async compress(piece) {
+            if (!('CompressionStream' in window)) return [piece, 'identity'];
+            const stream = new Blob([piece]).stream().pipeThrough(new CompressionStream('gzip'));
+            return [new Uint8Array(await new Response(stream).arrayBuffer()), 'gzip'];
+        },
+
+        async send(url, body, headers) {
+            let response;
+            try {
+                response = await fetch(url, {
+                    method: 'POST', body,
+                    headers: { ...headers, 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                });
+            } catch (e) {
+                throw new Error('Keine Verbindung zum Server. Bitte nochmals versuchen.');
+            }
+            const data = await response.json().catch(() => ({}));
+            if (response.status === 419) throw new Error('Die Sitzung ist abgelaufen. Bitte die Seite neu laden und nochmals versuchen.');
+            if (!response.ok) throw new Error(data.message || `Der Server meldet einen Fehler (${response.status}).`);
+            return data;
+        },
+    };
+}
+</script>
 @endsection

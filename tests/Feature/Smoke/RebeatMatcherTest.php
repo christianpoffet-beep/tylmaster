@@ -224,6 +224,83 @@ class RebeatMatcherTest extends TestCase
         Storage::disk('documents')->assertMissing($import->file_path);
     }
 
+    /** The page cuts the file at line ends: the first piece carries Rebeat's header, the next ones only lines. */
+    private function pieces(): array
+    {
+        $lines = preg_split('/(?<=\n)/', file_get_contents($this->standardExport()), -1, PREG_SPLIT_NO_EMPTY);
+
+        return [implode('', array_slice($lines, 0, 5)), implode('', array_slice($lines, 5))];
+    }
+
+    private function sendPiece(User $user, string $url, int $index, string $body, string $encoding = 'identity')
+    {
+        return $this->actingAs($user)->call('POST', $url, [], [], [], [
+            'HTTP_X_PIECE_INDEX' => (string) $index, 'HTTP_X_PIECE_ENCODING' => $encoding,
+            'CONTENT_TYPE' => 'application/octet-stream', 'HTTP_ACCEPT' => 'application/json',
+        ], $body);
+    }
+
+    public function test_a_large_export_arrives_in_compressed_pieces(): void
+    {
+        $user = User::factory()->create();
+        [$first, $second] = $this->pieces();
+
+        $start = $this->actingAs($user)->postJson('/admin/royalties/uploads', ['file_name' => 'AccountingDataExport.csv'])->assertOk()->json();
+        $this->sendPiece($user, $start['piece'], 0, gzencode($first), 'gzip')->assertOk()->assertJson(['rows' => 2]);
+        $this->sendPiece($user, $start['piece'], 0, gzencode($first), 'gzip')->assertStatus(409);
+        $this->sendPiece($user, $start['piece'], 1, $second)->assertOk()->assertJson(['rows' => 6]);
+
+        $this->actingAs($user)->postJson($start['finish'])->assertOk()->assertJsonStructure(['redirect']);
+
+        $import = RoyaltyImport::sole();
+        $this->assertTrue($import->is_complete);
+        $this->assertSame([6, 2], [$import->rows_new, $import->upload_pieces]);
+        $this->assertSame($first . $second, Storage::disk('documents')->get($import->file_path), 'The whole file is kept, as uploaded');
+        $this->assertSame(3, $this->track->royaltyLines()->count());
+    }
+
+    public function test_an_upload_that_broke_off_is_cleared_by_the_next_one(): void
+    {
+        $user = User::factory()->create();
+        [$first] = $this->pieces();
+        $start = $this->actingAs($user)->postJson('/admin/royalties/uploads', ['file_name' => 'AccountingDataExport.csv'])->json();
+        $this->sendPiece($user, $start['piece'], 0, $first)->assertOk();
+
+        $broken = RoyaltyImport::sole();
+        $this->actingAs($user)->get("/admin/royalties/imports/{$broken->id}")->assertOk()->assertSee('unvollständig')->assertDontSee('Import bestätigen');
+        $this->actingAs($user)->patch("/admin/royalties/imports/{$broken->id}/confirm")->assertSessionHas('error');
+
+        $this->actingAs($user)->post('/admin/royalties/imports', [
+            'file' => new UploadedFile($this->standardExport(), 'AccountingDataExport.csv', null, null, true),
+        ])->assertSessionHas('success');
+
+        $this->assertNull($broken->fresh(), 'The broken import is gone');
+        $this->assertSame(6, RoyaltyImport::sole()->rows_new, 'Its lines do not count as "already there"');
+    }
+
+    public function test_a_piece_without_the_header_is_refused(): void
+    {
+        $user = User::factory()->create();
+        [, $second] = $this->pieces();
+        $start = $this->actingAs($user)->postJson('/admin/royalties/uploads', ['file_name' => 'AccountingDataExport.csv'])->json();
+
+        $this->sendPiece($user, $start['piece'], 0, $second)->assertStatus(422)->assertJsonFragment(['message' => 'Das ist kein Rebeat-Export. Erwartet wird die CSV-Datei aus Rebeat → Accounting → Export («AccountingDataExport-…csv»).']);
+        $this->assertSame(0, RoyaltyImport::count());
+    }
+
+    public function test_a_form_too_large_for_php_says_so_instead_of_page_expired(): void
+    {
+        $limit = (string) ini_get('post_max_size');
+        $bytes = (int) $limit * match (strtolower(substr(trim($limit), -1))) { 'g' => 1024 ** 3, 'm' => 1024 ** 2, 'k' => 1024, default => 1 };
+        if ($bytes <= 0) $this->markTestSkipped('post_max_size is unlimited here');
+
+        \Illuminate\Support\Facades\Route::post('/_too-large', fn () => throw new \Illuminate\Session\TokenMismatchException())->middleware('web');
+
+        $this->actingAs(User::factory()->create())->from('/admin/royalties')
+            ->call('POST', '/_too-large', [], [], [], ['CONTENT_LENGTH' => $bytes + 1])
+            ->assertRedirect('/admin/royalties')->assertSessionHas('error');
+    }
+
     public function test_a_non_rebeat_upload_shows_an_error(): void
     {
         $path = $this->files[] = tempnam(sys_get_temp_dir(), 'other') . '.csv';
