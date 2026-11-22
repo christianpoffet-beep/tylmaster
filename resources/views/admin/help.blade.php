@@ -26,12 +26,14 @@
             <a href="#fotos" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">11. Fotos / Bilder</a>
             <a href="#finanzen" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">12. Finanzen (Rechnungen)</a>
             <a href="#buchhaltung" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">13. Buchhaltung</a>
-            <a href="#settings" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">14. Settings</a>
-            <a href="#adresskreise" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">15. Kampagnen & Adresskreise</a>
-            <a href="#darstellung" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">16. Darstellung (Dark Mode)</a>
-            <a href="#navigation" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">17. Navigation</a>
-            <a href="#benutzerverwaltung" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">18. Benutzerverwaltung</a>
-            <a href="#content-planer" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">19. Content-Planer & Vorschau</a>
+            <a href="#kuenstlerabrechnungen" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">14. Rebeat-Matcher & Künstlerabrechnungen</a>
+            <a href="#saldi" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">15. Saldi & Auszahlungen</a>
+            <a href="#settings" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">16. Settings</a>
+            <a href="#adresskreise" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">17. Kampagnen & Adresskreise</a>
+            <a href="#darstellung" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">18. Darstellung (Dark Mode)</a>
+            <a href="#navigation" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">19. Navigation</a>
+            <a href="#benutzerverwaltung" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">20. Benutzerverwaltung</a>
+            <a href="#content-planer" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 py-0.5">21. Content-Planer & Vorschau</a>
         </div>
     </div>
 
@@ -684,9 +686,144 @@
             </div>
         </div>
 
-        {{-- 14. Settings --}}
+        {{-- 14. Rebeat-Matcher & Künstlerabrechnungen --}}
+        <div id="kuenstlerabrechnungen" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">14. Rebeat-Matcher & Künstlerabrechnungen</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Rebeat meldet, wie oft jeder Track gestreamt, heruntergeladen oder in Videos genutzt wurde &ndash; pro Monat, Land, Dienst (Spotify, Apple Music …) und Abotyp &ndash; und zahlt das Geld gesammelt aus. Das Tool liest diese Meldungen ein, ordnet sie deinen Tracks zu, teilt die Einnahmen nach den Verträgen auf, schreibt den Künstler:innen und Labels ihren Anteil gut, bucht alles und erstellt die Abrechnungen als PDF. Du findest alles unter <strong>Finanzen → Rebeat-Matcher</strong>, in den Reitern <em>Rebeat-Matcher · Verträge · Rebeat-Zahlungen · Abrechnungen</em>. Das Auszahlen ist ein eigener Bereich (<a href="#saldi" class="text-blue-600 dark:text-blue-400 hover:underline">Kapitel 15</a>).</p>
+
+            <div class="space-y-4">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Rebeat-Matcher: Nutzung einlesen und zuordnen</h4>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1 mt-1">
+                        <li><strong>Einlesen:</strong> die CSV-Datei aus Rebeat (Accounting → Export, «AccountingDataExport-…csv») hochladen &ndash; <em>direkt</em>, nicht vorher in Excel öffnen und speichern. Grosse Dateien schickt der Browser in Teilen; ein Balken zeigt den Fortschritt.</li>
+                        <li><strong>Keine Doppelten:</strong> Jede Zeile trägt die ID von Rebeat. Exporte dürfen sich überschneiden &ndash; was schon da ist, wird übersprungen.</li>
+                        <li><strong>Stichtag:</strong> Nutzungen bis 31.12.2022 wurden von Hand abgerechnet; solche Zeilen gelten als «schon abgerechnet» und kommen in keine Abrechnung.</li>
+                        <li><strong>Zuordnen:</strong> Jede Zeile findet ihren Track über die ISRC (auch die einer Audioversion). Was übrig bleibt, steht unter «Ohne Track»: einen <em>Vorschlag</em> anklicken («Zuordnen: Titel · Band (100% Übereinstimmung)» &ndash; die Prozent sagen, wie gut der <em>Titel</em> passt, nicht wer wie viel bekommt), selbst suchen, oder mit «Neu anlegen» den Track aus den Rebeat-Daten erstellen. Album-Downloads ohne ISRC ordnest du einem Produkt zu.</li>
+                        <li><strong>Gemerkt:</strong> Eine Zuordnung von Hand gilt für alle Zeilen dieses Titels und für alle späteren Importe. «Neu zuordnen» sucht offene Zeilen nochmals über die ISRC (z.B. nachdem du bei Tracks ISRCs ergänzt hast).</li>
+                        <li><strong>Bestätigen:</strong> Erst ein bestätigter Import zählt für eine Abrechnung. Ein falscher Import lässt sich entfernen, solange er nicht abgerechnet ist.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Nutzung auf Tracks und Produkten</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Auf jeder Track- und Produktseite zeigt die Karte <strong>«Nutzung bei Rebeat»</strong> Streams, Downloads, Videos und die Gutschrift. Der Link darunter führt zur Detailseite: Säulen pro Monat, Ranglisten nach Land, Dienst und Abotyp und die einzelnen Meldungen &ndash; alles filterbar nach Jahr, Art, Land, Dienst und Abotyp. Ein Klick auf einen Eintrag einer Rangliste filtert die ganze Seite.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Verträge: wer wie viel bekommt</h4>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1 mt-1">
+                        <li><strong>Eigene Labels</strong> (Reiter «Verträge», oben): The yelling light und die Labels, die ihm gehören. Ihr Anteil bleibt Ertrag und wird niemandem gutgeschrieben. Produkte <em>anderer</em> Labels ohne Vertrag gehen zu 100 % an das Label.</li>
+                        <li><strong>Übersicht pro Produkt:</strong> Nutzung in EUR, Vertrag und Streaming-Split, die grössten Beträge zuerst. Der Status zeigt, was zu tun ist: <em>abgedeckt</em>, <em>100 % ans Label</em>, <em>nur Entwurf</em>, <em>kein Streaming-Split</em>, <em>Vertrag fehlt</em>.</li>
+                        <li><strong>«Vertrag erfassen»</strong> öffnet das Vertragsformular vorausgefüllt: Vorlage, Titel «Band – Produkt», Startdatum (Veröffentlichung, sonst erste Nutzung), Parteien (eigenes Label 20 %, Band 80 %), Produkt und Tracks, und &ndash; wenn die Vorlage keine Rechte hat &ndash; das Recht «Streaming & Downloads 20/80».</li>
+                        <li><strong>Welcher Split gilt:</strong> Jedes Recht im Vertrag hat ein Feld «Gilt für» (Streaming & Downloads, Physische Verkäufe, Merchandising …). Für Rebeat zählt das Recht «Streaming & Downloads» mit Prozenten; die Prozente gehören der Reihe nach zu den Parteien.</li>
+                        <li><strong>Welcher Vertrag zählt:</strong> Status <em>Aktiv</em>, <em>Ausgelaufen</em> oder <em>Gekündigt</em> (ein Entwurf nie), gültig im jeweiligen Nutzungsmonat (Start- und Enddatum), verknüpft mit dem Produkt oder dessen Tracks.</li>
+                        <li><strong>Nachträge:</strong> Ändert sich ein Vertrag, erfasst du einen neuen mit «Ersetzt Vertrag». Der alte endet am Tag vor dem neuen Startdatum; die Abrechnung nimmt für jeden Monat den Vertrag, der damals galt.</li>
+                        <li><strong>Vorschüsse & verrechenbare Kosten:</strong> auf der Vertragsseite erfassen (Datum, Text, Betrag) &ndash; Mastering, Pressung, Geldvorschuss. Die Abrechnung verrechnet sie zuerst mit den Anteilen der Künstler:innen <em>dieses</em> Vertrags; der Anteil von TYL bleibt unberührt.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Rebeat-Zahlungen</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Was Rebeat ausbezahlt hat, in CHF wie es auf dem Konto ankam (EUR und Kurs stehen im Buchungstext). Zahlungen aus dem Bankimport einer Buchhaltung erscheinen von selbst. Für Jahre ohne Buchhaltung im Tool lädst du die Kontoauszüge (CSV aus dem E-Banking) hoch &ndash; übernommen werden nur die Rebeat-Zeilen, gebucht wird nichts. Dieselbe Zahlung aus zwei Quellen zählt einmal.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Abrechnungen: so wird gerechnet</h4>
+                    <ol class="text-sm text-gray-600 dark:text-gray-300 list-decimal list-inside space-y-1 mt-1">
+                        <li>Verteilt wird, was Rebeat im Zeitraum in CHF ausbezahlt hat, und zwar nach der Nutzung im gleichen Zeitraum (EUR als Verteilschlüssel): «1 EUR Nutzung = CHF x». Wechselkurs, Gebühren und Abzüge tragen damit alle gleich. Darum muss die Nutzung des ganzen Zeitraums eingelesen sein &ndash; sonst warnt der Entwurf («sind die Nutzungsdaten vollständig?»).</li>
+                        <li>Jeder Track und Monat geht nach dem Vertrag, der damals galt, und dessen Split für Streaming.</li>
+                        <li>Der Anteil eigener Labels bleibt bei TYL. Künstler:innen und Labels bekommen ihren Anteil gutgeschrieben &ndash; abzüglich offener Vorschüsse ihres Vertrags.</li>
+                        <li>Kein gültiger Vertrag: Produkte anderer Labels gehen zu 100 % ans Label; eigene bleiben bei TYL und erscheinen als Warnung. Nutzung ohne Track bleibt ebenfalls bei TYL.</li>
+                    </ol>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">Beim Abschliessen entstehen diese Buchungen (am Datum der Abrechnung, in der gewählten Buchhaltung):</p>
+                    <div class="mt-2 overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                                <tr class="text-xs text-gray-500 dark:text-gray-400 uppercase border-b border-gray-200 dark:border-gray-700">
+                                    <th class="text-left py-1.5 font-medium">Was</th>
+                                    <th class="text-left py-1.5 font-medium">Soll</th>
+                                    <th class="text-left py-1.5 font-medium">Haben</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                <tr><td class="py-1.5 text-gray-600 dark:text-gray-300">Anteile Künstler:innen (abzüglich «bereits pauschal gebucht»)</td><td class="py-1.5 text-gray-600 dark:text-gray-300">6501 Vergütungen Streaming</td><td class="py-1.5 text-gray-600 dark:text-gray-300">2001 Kreditoren</td></tr>
+                                <tr><td class="py-1.5 text-gray-600 dark:text-gray-300">Verrechnete Vorschüsse</td><td class="py-1.5 text-gray-600 dark:text-gray-300">6501 Vergütungen Streaming</td><td class="py-1.5 text-gray-600 dark:text-gray-300">3004 Kostenbeteiligungen Künstler:innen</td></tr>
+                                <tr><td class="py-1.5 text-gray-600 dark:text-gray-300">Anteil eines anderen Labels</td><td class="py-1.5 text-gray-600 dark:text-gray-300">Konto des Labels (z.B. 6510 Zentrum)</td><td class="py-1.5 text-gray-600 dark:text-gray-300">2001 Kreditoren</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1 mt-2">
+                        <li><strong>Bereits pauschal gebucht:</strong> Lag für den Zeitraum schon eine Pauschale auf den Kreditoren (z.B. 80 % Ende Jahr), trägst du sie hier ein. Die Verteilung ändert sich nicht &ndash; gebucht wird nur noch die Differenz, damit auf den Kreditoren am Ende genau die Summe aller Saldi liegt.</li>
+                        <li><strong>Entwurf:</strong> rechnet bei jedem Öffnen neu, mit den aktuellen Verträgen und Zahlungen; zeigt Warnungen, die Buchungsvorschau und die Anteile pro Partei (aufklappbar bis auf jeden Track).</li>
+                        <li><strong>Abschliessen und buchen:</strong> bucht, schreibt die Saldi gut und markiert Nutzung und Zahlungen als abgerechnet.</li>
+                        <li><strong>Rückgängig machen:</strong> löscht Buchungen und Gutschriften wieder und öffnet Nutzung und Zahlungen &ndash; solange aus der Abrechnung nichts ausbezahlt ist.</li>
+                        <li><strong>PDF:</strong> pro Partei («PDF» neben ihrem Namen) oder alle als ZIP. Ein Entwurf trägt das Wasserzeichen «ENTWURF».</li>
+                        <li><strong>E-Mail:</strong> «Per E-Mail versenden» schickt jeder Partei ihr PDF (über Brevo, gleicher Absender wie die Kampagnen). Adressen, Betreff und Text mit Platzhaltern sind anpassbar; der <em>Probeversand</em> schickt alles an deine Adresse. Ein Entwurf geht nur als Probe hinaus. Pro Partei steht, wann sie die Abrechnung bekommen hat.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Ablauf der Abrechnung im Detail (jährlich, normalerweise am 15. Dezember)</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-1"><strong>Einmal einrichten:</strong></p>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1 mt-1">
+                        <li>Unter «Verträge» die eigenen Labels ankreuzen und die Vorlage für neue Verträge wählen («Label Standard» mit den Rechten 20/80).</li>
+                        <li>In der Buchhaltung des Jahres die Konten 6501, 2001, 3004 und ein Aufwandkonto pro anderem Label (6510 …) bereithalten.</li>
+                        <li>Bei Bands, Labels und Personen IBAN, Adresse und E-Mail erfassen &ndash; die Bank verlangt Ort und Land, die E-Mail braucht es für den Versand.</li>
+                    </ul>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-3"><strong>Jedes Jahr:</strong></p>
+                    <ol class="text-sm text-gray-600 dark:text-gray-300 list-decimal list-inside space-y-1.5 mt-1">
+                        <li><strong>Export bei Rebeat:</strong> Accounting → Export für den Zeitraum seit der letzten Abrechnung (bzw. das ganze Jahr), CSV speichern.</li>
+                        <li><strong>Rebeat-Matcher:</strong> Datei hochladen, «Ohne Track» abarbeiten (zuordnen oder neu anlegen), Import bestätigen.</li>
+                        <li><strong>Rebeat-Zahlungen:</strong> prüfen, ob alle Auszahlungen des Zeitraums dastehen (sie kommen aus dem Bankimport &ndash; dafür vorher den Bankabgleich des Jahres erledigen).</li>
+                        <li><strong>Verträge:</strong> in der Übersicht jedes rote «Vertrag fehlt» erfassen, Entwürfe auf «Aktiv» setzen, neue Vorschüsse beim Vertrag eintragen.</li>
+                        <li><strong>Abrechnung anlegen:</strong> Datum (15.12.), Nutzung von/bis (z.B. 1.1.–31.12. des Vorjahres), Buchhaltung des laufenden Jahres, «bereits pauschal gebucht» nur wenn eine Pauschale gebucht wurde.</li>
+                        <li><strong>Entwurf prüfen:</strong> Warnungen abarbeiten (fehlende Verträge, Nutzung ohne Track, unplausibler Kurs), Buchungsvorschau und Konten kontrollieren, einige PDFs öffnen, eine Probe-Mail an dich schicken.</li>
+                        <li><strong>Abschliessen und buchen.</strong> Danach stimmen Buchhaltung und Saldi überein.</li>
+                        <li><strong>Versenden:</strong> «Per E-Mail versenden» &ndash; Adressen prüfen, senden. Wer keine Adresse hat, bekommt das PDF auf anderem Weg.</li>
+                        <li><strong>Auszahlen:</strong> unter <em>Finanzen → Saldi & Auszahlungen</em> (siehe Kapitel 15).</li>
+                    </ol>
+                    <div class="mt-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                        <p class="text-sm text-gray-700 dark:text-gray-300"><strong>Die erste Abrechnung (2023&ndash;2025):</strong> Nutzung 1.1.2023&ndash;31.12.2025, «bereits pauschal gebucht» 815.08 (die 80-%-Pauschalen 2023&ndash;2025 auf den Kreditoren). Zahlungen und Nutzungen von 2026 gehören in die nächste Abrechnung.</p>
+                    </div>
+                    <div class="mt-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                        <p class="text-sm text-gray-700 dark:text-gray-300"><strong>Etwas stimmt nicht?</strong> Solange nichts ausbezahlt ist: Abrechnung rückgängig machen, korrigieren (Vertrag, Zuordnung, Zahlung), neu abschliessen. Wurde schon ausbezahlt: zuerst die Auszahlung stornieren (geht bis zum Bankabgleich).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- 15. Saldi & Auszahlungen --}}
+        <div id="saldi" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">15. Saldi & Auszahlungen</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Was Künstler:innen und Labels aus den Abrechnungen zugute haben, und das Auszahlen. Unter <strong>Finanzen → Saldi & Auszahlungen</strong>. Der Bereich ist unabhängig von Rebeat: Jede Gutschrift und jede Auszahlung ist eine Bewegung pro Kontakt oder Organisation &ndash; künftige Abrechnungen (z.B. Events oder Webshop) fliessen in dieselben Saldi.</p>
+
+            <div class="space-y-4">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Funktionen</h4>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1 mt-1">
+                        <li><strong>Saldi:</strong> alle mit einem Guthaben, mit IBAN-Prüfung (gültig, ungültig, fehlt). Auf der Seite einer Organisation oder eines Kontakts zeigt die Karte «Abrechnungen» Saldo, Gutschriften und Auszahlungen.</li>
+                        <li><strong>Auszahlung vorbereiten:</strong> aus einer Buchhaltung (auch über «Auszahlungen Künstler:innen» auf der Buchhaltungsseite). Vorgeschlagen ist, wer ab <strong>CHF 100</strong> und mit gültiger IBAN dasteht; kleinere Beträge kannst du dazunehmen, Beträge anpassen (höchstens der Saldo).</li>
+                        <li><strong>Buchen:</strong> pro Empfänger <em>Soll 2001 Kreditoren / Haben Bank</em> am Ausführungsdatum; der Saldo sinkt entsprechend.</li>
+                        <li><strong>Zahlungsdatei (pain.001):</strong> für das E-Banking, nach den Swiss Payment Standards. Die Bank belastet jede Zahlung einzeln &ndash; so verknüpft der nächste Bankimport die Belastungen mit den Buchungen, statt sie doppelt zu buchen. Wer keine gültige IBAN hat, ist gebucht, aber nicht in der Datei; diese zahlst du von Hand.</li>
+                        <li><strong>Stornieren:</strong> löscht Buchungen und Saldobewegungen wieder &ndash; bis die Zahlungen mit dem Bankauszug abgeglichen sind. Eine Abrechnung, aus der ausbezahlt wurde, lässt sich erst nach dem Stornieren der Auszahlung rückgängig machen.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Ablauf einer Auszahlung</h4>
+                    <ol class="text-sm text-gray-600 dark:text-gray-300 list-decimal list-inside space-y-1.5 mt-1">
+                        <li><strong>Finanzen → Saldi & Auszahlungen</strong>, Buchhaltung wählen, «Auszahlung vorbereiten».</li>
+                        <li>Empfänger und Beträge prüfen, Warnungen beachten (keine IBAN, Ort fehlt), Ausführungsdatum, Bankkonto und Mitteilung setzen.</li>
+                        <li><strong>«Buchen und Zahlungsdatei erstellen»</strong>, dann «Zahlungsdatei (pain.001)» herunterladen.</li>
+                        <li>Im <strong>Raiffeisen E-Banking</strong> unter Zahlungen die Datei hochladen, kontrollieren und visieren.</li>
+                        <li>Beim nächsten <strong>Bankabgleich</strong> erscheinen die Belastungen einzeln und werden mit den Auszahlungsbuchungen verknüpft.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        {{-- 16. Settings --}}
         <div id="settings" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">14. Settings</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">16. Settings</h3>
             <p class="text-sm text-gray-600 mb-3">Unter Settings findest du drei Bereiche: <strong>Labels</strong>, <strong>Vorlagen</strong> und <strong>System</strong>.</p>
             <div class="space-y-3">
                 <div>
@@ -721,9 +858,9 @@
             </div>
         </div>
 
-        {{-- 15. Kampagnen & Adresskreise --}}
+        {{-- 17. Kampagnen & Adresskreise --}}
         <div id="adresskreise" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">15. Kampagnen & Adresskreise</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">17. Kampagnen & Adresskreise</h3>
             <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Das Kampagnen-Modul erm&ouml;glicht den Versand von E-Mail-Kampagnen an Gruppen von Kontakten und Organisationen. Der Bereich besteht aus drei Teilen: <strong>Kampagnen</strong>, <strong>Kampagnenvorlagen</strong> und <strong>Adresskreise</strong>.</p>
 
             <div class="space-y-4">
@@ -821,9 +958,9 @@
             </div>
         </div>
 
-        {{-- 16. Darstellung --}}
+        {{-- 18. Darstellung --}}
         <div id="darstellung" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">16. Darstellung (Dark Mode)</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">18. Darstellung (Dark Mode)</h3>
             <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Unter <strong>Settings &rarr; Darstellung</strong> kannst du das Farbschema des Admin Panels anpassen.</p>
             <div class="space-y-3">
                 <div>
@@ -842,9 +979,9 @@
             </div>
         </div>
 
-        {{-- 17. Navigation --}}
+        {{-- 19. Navigation --}}
         <div id="navigation" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">17. Navigation</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">19. Navigation</h3>
             <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Die Navigation befindet sich als horizontale Leiste am oberen Bildschirmrand.</p>
             <div class="space-y-3">
                 <div>
@@ -853,7 +990,7 @@
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Dropdown-Men&uuml;s</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Bereiche mit Untermen&uuml;s &ouml;ffnen sich als Dropdown: <strong>Projekte</strong> (Projekte, Aufgaben, Vertr&auml;ge, Musik, Submissions, Logos, Fotos), <strong>Finanzen</strong> (Rechnungen, Ausgaben, Buchhaltung), <strong>Kampagnen</strong> (Kampagnen, Adresskreise) und <strong>Settings</strong> (Labels, Vorlagen, Profil, Darstellung, System).</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Bereiche mit Untermen&uuml;s &ouml;ffnen sich als Dropdown: <strong>Projekte</strong> (Projekte, Aufgaben, Vertr&auml;ge, Musik, Submissions, Logos, Fotos), <strong>Finanzen</strong> (Rechnungen, Ausgaben, Buchhaltung, Rebeat-Matcher, Saldi &amp; Auszahlungen), <strong>Kampagnen</strong> (Kampagnen, Adresskreise) und <strong>Settings</strong> (Labels, Vorlagen, Profil, Darstellung, System).</p>
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Mobile Ansicht</h4>
@@ -862,9 +999,9 @@
             </div>
         </div>
 
-        {{-- 18. Benutzerverwaltung --}}
+        {{-- 20. Benutzerverwaltung --}}
         <div id="benutzerverwaltung" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">18. Benutzerverwaltung</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">20. Benutzerverwaltung</h3>
             <p class="text-sm text-gray-600 mb-3">Unter <strong>Benutzerverwaltung</strong> in der Sidebar findest du verschiedene Werkzeuge und Informationen zur Systemverwaltung.</p>
             <div class="space-y-3">
                 <div>
@@ -898,9 +1035,9 @@
 
     </div>
 
-        {{-- 19. Content-Planer --}}
+        {{-- 21. Content-Planer --}}
         <div id="content-planer" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 scroll-mt-4">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">19. Content-Planer & Vorschau</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">21. Content-Planer & Vorschau</h3>
             <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">Planung und Vorschau von Social-Media-Beiträgen für Instagram, Facebook und X/Twitter.</p>
             <div class="space-y-3">
                 <div>
