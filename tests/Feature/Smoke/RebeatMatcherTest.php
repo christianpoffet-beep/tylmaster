@@ -259,6 +259,13 @@ class RebeatMatcherTest extends TestCase
         $this->assertSame(3, $this->track->royaltyLines()->count());
     }
 
+    public function test_the_upload_can_fetch_a_fresh_token_and_learns_when_logged_out(): void
+    {
+        $this->actingAs(User::factory()->create())->getJson('/admin/royalties/uploads/token')->assertOk()->assertJsonStructure(['token']);
+        auth()->logout();
+        $this->getJson('/admin/royalties/uploads/token')->assertUnauthorized()->assertJsonMissing(['token']);
+    }
+
     public function test_an_upload_that_broke_off_is_cleared_by_the_next_one(): void
     {
         $user = User::factory()->create();

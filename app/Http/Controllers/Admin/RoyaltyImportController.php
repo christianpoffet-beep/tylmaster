@@ -89,6 +89,12 @@ class RoyaltyImportController extends Controller
      * stand in the way: start, one request per piece, finish.
      */
 
+    /** The session's current CSRF token, for an upload from a page that has been open for a while */
+    public function token()
+    {
+        return response()->json(['token' => csrf_token()]);
+    }
+
     public function start(Request $request, RebeatImporter $importer)
     {
         $data = $request->validate(['file_name' => 'required|string|max:255']);
