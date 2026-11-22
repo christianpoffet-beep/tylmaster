@@ -105,11 +105,13 @@
 
                         {{-- Finanzen Dropdown --}}
                         @php
-                            $finanzenActive = request()->routeIs('admin.invoices.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.accountings.*') || request()->routeIs('admin.bookings.*');
+                            $finanzenActive = request()->routeIs('admin.invoices.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.accountings.*') || request()->routeIs('admin.bookings.*') || request()->routeIs('admin.royalties.*');
                             $finanzenItems = [
                                 ['route' => 'admin.invoices.index', 'label' => 'Rechnungen', 'match' => 'admin.invoices.*', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
                                 ['route' => 'admin.expenses.index', 'label' => 'Ausgaben', 'match' => 'admin.expenses.*', 'icon' => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'],
                                 ['route' => 'admin.accountings.index', 'label' => 'Buchhaltung', 'match' => 'admin.accountings.*||admin.bookings.*', 'icon' => 'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z'],
+                                ['route' => 'admin.royalties.index', 'label' => 'Rebeat-Matcher', 'match' => 'admin.royalties.index||admin.royalties.show||admin.royalties.contracts||admin.royalties.payments.*||admin.royalties.statements.*||admin.royalties.usage', 'icon' => 'M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3'],
+                                ['route' => 'admin.royalties.payouts.index', 'label' => 'Saldi & Auszahlungen', 'match' => 'admin.royalties.payouts.*', 'icon' => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'],
                             ];
                         @endphp
                         <div class="relative" x-data="{ open: false }" @click.outside="open = false">
@@ -254,6 +256,8 @@
                             ['route' => 'admin.invoices.index', 'label' => 'Rechnungen', 'match' => 'admin.invoices.*'],
                             ['route' => 'admin.expenses.index', 'label' => 'Ausgaben', 'match' => 'admin.expenses.*'],
                             ['route' => 'admin.accountings.index', 'label' => 'Buchhaltung', 'match' => 'admin.accountings.*||admin.bookings.*'],
+                            ['route' => 'admin.royalties.index', 'label' => 'Rebeat-Matcher', 'match' => 'admin.royalties.index||admin.royalties.show||admin.royalties.contracts||admin.royalties.payments.*||admin.royalties.statements.*||admin.royalties.usage'],
+                            ['route' => 'admin.royalties.payouts.index', 'label' => 'Saldi & Auszahlungen', 'match' => 'admin.royalties.payouts.*'],
                             'divider',
                             ['route' => 'admin.address-circles.index', 'label' => 'Adresskreise', 'match' => 'admin.address-circles.*'],
                             'divider',

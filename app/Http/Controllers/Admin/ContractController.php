@@ -65,7 +65,7 @@ class ContractController extends Controller
         return view('admin.contracts.index', compact('contracts', 'contractTypes'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $contacts = Contact::orderBy('last_name')->get();
         $organizations = Organization::with('contacts')->orderBy('names')->get();
@@ -83,7 +83,69 @@ class ContractController extends Controller
 
         $territoryPresets = Contract::TERRITORY_PRESETS;
 
-        return view('admin.contracts.create', compact('contacts', 'organizations', 'projects', 'tracks', 'releases', 'orgContactsMap', 'contractTypes', 'templates', 'territoryPresets'));
+        $otherContracts = Contract::orderByDesc('contract_number')->get(['id', 'contract_number', 'title']);
+        $prefill = $this->prefill($request, $templates);
+
+        return view('admin.contracts.create', compact('contacts', 'organizations', 'projects', 'tracks', 'releases', 'orgContactsMap', 'contractTypes', 'templates', 'territoryPresets', 'otherContracts', 'prefill'));
+    }
+
+    /**
+     * A new contract for a product, opened from the contract overview of the
+     * statements (?release=..&template=..): the template, the product with
+     * its tracks, and the parties - the own label and the band - are set; the
+     * form fills in the rest from the template as usual.
+     *
+     * @return array{template_id: ?int, title: ?string, start_date: ?string, start_hint: ?string, releases: \Illuminate\Support\Collection, tracks: \Illuminate\Support\Collection, parties: array, rights: array}
+     */
+    private function prefill(Request $request, $templates): array
+    {
+        $release = $request->filled('release') ? Release::with(['tracks', 'organizations'])->find($request->integer('release')) : null;
+        $track = !$release && $request->filled('track') ? Track::with(['organizations', 'releases'])->find($request->integer('track')) : null;
+        $template = $request->filled('template') ? $templates->firstWhere('id', $request->integer('template')) : null;
+
+        $owners = $release?->organizations ?? $track?->organizations ?? collect();
+        $band = $owners->firstWhere('type', 'band');
+        // The contract is made with the product's own label (one The yelling light owns), else with The yelling light
+        $coverage = app(\App\Services\Royalties\RoyaltyCoverage::class);
+        $own = $owners->where('type', 'label')->first(fn ($label) => $coverage->isOwn($label))
+            ?? \App\Services\Royalties\RoyaltySettings::ownOrganization();
+        // Own label 20, artists 80; without a band on the product the second slot stays open to pick
+        $party = fn (?\App\Models\Organization $org, float $share) => ['type' => 'organization', 'organization_id' => $org ? (string) $org->id : '', 'contact_id' => '', 'share' => $share, 'role_label' => ''];
+        $parties = $own && ($release || $track) && $band?->id !== $own->id ? [$party($own, 20), $party($band, 80)] : [];
+
+        $subject = $release?->title ?? $track?->display_title;
+        $tracks = $release ? $release->tracks : ($track ? collect([$track]) : collect());
+
+        // Start: the release of the product; without one the first month with usage,
+        // so the contract covers everything the statements will settle
+        [$startDate, $startHint] = [null, null];
+        if ($release?->release_date) {
+            [$startDate, $startHint] = [$release->release_date->format('Y-m-d'), 'Vorschlag: Veröffentlichung des Produkts.'];
+        } elseif ($release || $track) {
+            $firstUsage = \App\Models\RoyaltyLine::where(function ($q) use ($tracks, $release) {
+                $q->whereIn('track_id', $tracks->pluck('id'));
+                if ($release) $q->orWhere('release_id', $release->id);
+            })->min('period');
+            if ($firstUsage) {
+                [$startDate, $startHint] = [substr((string) $firstUsage, 0, 10), 'Vorschlag: erste Nutzung bei Rebeat (das Produkt hat kein Veröffentlichungsdatum). Ist das Vertragsdatum bekannt, bitte dieses eintragen.'];
+            }
+        }
+
+        // Without rights in the template, the split the statements need: streaming, own label first
+        $rights = ($release || $track) && empty($template?->rights)
+            ? [['label' => 'Streaming & Downloads', 'mode' => 'split', 'splits' => [20, 80], 'category' => 'streaming']]
+            : [];
+
+        return [
+            'template_id' => $template?->id,
+            'title' => $subject ? trim(($band ? $band->primary_name . ' – ' : '') . $subject) : null,
+            'start_date' => $startDate,
+            'start_hint' => $startHint,
+            'releases' => $release ? collect([$release]) : collect(),
+            'tracks' => $tracks,
+            'parties' => $parties,
+            'rights' => $rights,
+        ];
     }
 
     public function store(Request $request)
@@ -102,6 +164,7 @@ class ContractController extends Controller
             'logo_in_header' => 'nullable|boolean',
             'logo_as_watermark' => 'nullable|boolean',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'supersedes_id' => 'nullable|integer|exists:contracts,id',
             'terms' => 'nullable|string',
             'subject' => 'nullable|string',
             'subject_heading' => 'nullable|string|max:120',
@@ -132,6 +195,7 @@ class ContractController extends Controller
             'rights' => 'nullable|array',
             'rights.*.label' => 'required|string|max:255',
             'rights.*.mode' => 'required|in:split,custom',
+            'rights.*.category' => 'nullable|in:' . implode(',', array_keys(\App\Models\Contract::RIGHT_CATEGORIES)),
             'rights.*.splits' => 'nullable|array',
             'rights.*.splits.*' => 'nullable|numeric',
             'rights_label_a' => 'nullable|string|max:50',
@@ -209,6 +273,7 @@ class ContractController extends Controller
         $this->syncSubmitted($request, $contract->projects(), 'project_ids');
         $this->syncSubmitted($request, $contract->tracks(), 'track_ids');
         $this->syncSubmitted($request, $contract->releases(), 'release_ids');
+        $this->endSupersededContract($contract);
 
         if ($request->hasFile('document')) {
             $file = $request->file('document');
@@ -232,7 +297,7 @@ class ContractController extends Controller
 
     public function show(Contract $contract)
     {
-        $contract->load(['parties.organization', 'parties.contact', 'projects', 'tracks.contacts', 'releases']);
+        $contract->load(['parties.organization', 'parties.contact', 'projects', 'tracks.contacts', 'releases', 'supersedes', 'supersededBy', 'advances']);
         $contract->setRelation('documents', $contract->documents()->withTrashed()->get());
         $contractTypes = ContractType::orderBy('sort_order')->get();
         return view('admin.contracts.show', compact('contract', 'contractTypes'));
@@ -266,7 +331,9 @@ class ContractController extends Controller
 
         $territoryPresets = Contract::TERRITORY_PRESETS;
 
-        return view('admin.contracts.edit', compact('contract', 'contacts', 'organizations', 'projects', 'tracks', 'releases', 'orgContactsMap', 'partiesData', 'contractTypes', 'territoryPresets'));
+        $otherContracts = Contract::whereKeyNot($contract->id)->orderByDesc('contract_number')->get(['id', 'contract_number', 'title']);
+
+        return view('admin.contracts.edit', compact('contract', 'contacts', 'organizations', 'projects', 'tracks', 'releases', 'orgContactsMap', 'partiesData', 'contractTypes', 'territoryPresets', 'otherContracts'));
     }
 
     public function update(Request $request, Contract $contract)
@@ -278,6 +345,7 @@ class ContractController extends Controller
             'language' => 'nullable|in:de,en,es',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'supersedes_id' => ['nullable', 'integer', 'exists:contracts,id', \Illuminate\Validation\Rule::notIn([$contract->id])],
             'terms' => 'nullable|string',
             'subject' => 'nullable|string',
             'subject_heading' => 'nullable|string|max:120',
@@ -314,6 +382,7 @@ class ContractController extends Controller
             'rights' => 'nullable|array',
             'rights.*.label' => 'required|string|max:255',
             'rights.*.mode' => 'required|in:split,custom',
+            'rights.*.category' => 'nullable|in:' . implode(',', array_keys(\App\Models\Contract::RIGHT_CATEGORIES)),
             'rights.*.splits' => 'nullable|array',
             'rights.*.splits.*' => 'nullable|numeric',
             'rights_label_a' => 'nullable|string|max:50',
@@ -384,6 +453,7 @@ class ContractController extends Controller
         $this->syncSubmitted($request, $contract->projects(), 'project_ids');
         $this->syncSubmitted($request, $contract->tracks(), 'track_ids');
         $this->syncSubmitted($request, $contract->releases(), 'release_ids');
+        $this->endSupersededContract($contract);
 
         if ($request->hasFile('document')) {
             $file = $request->file('document');
@@ -399,6 +469,41 @@ class ContractController extends Controller
         }
 
         return redirect()->route('admin.contracts.show', $contract)->with('success', 'Vertrag aktualisiert.');
+    }
+
+    public function storeAdvance(Request $request, Contract $contract)
+    {
+        $data = $request->validate([
+            'date' => 'required|date',
+            'description' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:0.01|max:9999999',
+        ], [
+            'amount.min' => 'Bitte einen Betrag erfassen.',
+        ]);
+
+        $contract->advances()->create($data + ['currency' => 'CHF']);
+
+        return redirect()->to(route('admin.contracts.show', $contract))->with('success', 'Vorschuss erfasst.');
+    }
+
+    public function destroyAdvance(\App\Models\ContractAdvance $contractAdvance)
+    {
+        $contract = $contractAdvance->contract;
+        $contractAdvance->delete();
+
+        return redirect()->route('admin.contracts.show', $contract)->with('success', 'Vorschuss gelöscht.');
+    }
+
+    /**
+     * An amendment takes over from its start date: the contract it replaces
+     * ends the day before, unless it already has an end date of its own.
+     */
+    private function endSupersededContract(Contract $contract): void
+    {
+        $old = $contract->supersedes;
+        if ($old && $contract->start_date && !$old->end_date && $old->start_date?->lt($contract->start_date) !== false) {
+            $old->update(['end_date' => $contract->start_date->copy()->subDay()]);
+        }
     }
 
     /**

@@ -247,6 +247,8 @@
 
     <!-- Sidebar: Related Items -->
     <div class="w-full lg:w-80 space-y-4">
+        @include('admin.royalties._balance-card', ['who' => $contact])
+
         <!-- Organizations -->
         @if($contact->organizations->count())
         <x-admin.collapsible-card title="Organisationen" :count="$contact->organizations->count()">

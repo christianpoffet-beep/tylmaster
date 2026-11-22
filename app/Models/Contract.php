@@ -11,7 +11,7 @@ class Contract extends Model
     use LogsActivity;
 
     protected $fillable = [
-        'contract_number', 'title', 'type', 'status', 'language', 'start_date', 'end_date', 'terms',
+        'contract_number', 'title', 'type', 'status', 'language', 'start_date', 'end_date', 'supersedes_id', 'terms',
         'subject', 'subject_heading', 'relations_note', 'relations_heading',
         'preamble_mode', 'preamble_text', 'show_parties_table',
         'sections', 'auto_number_sections', 'closing_note', 'placeholder_values',
@@ -23,6 +23,7 @@ class Contract extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'supersedes_id' => 'integer',
         'has_zession' => 'boolean',
         'zession_amount' => 'decimal:2',
         'territory' => 'array',
@@ -35,6 +36,79 @@ class Contract extends Model
         'logo_in_header' => 'boolean',
         'logo_as_watermark' => 'boolean',
     ];
+
+    /** Statuses whose contracts count for the statements to the artists (a draft does not) */
+    public const SETTLING_STATUSES = ['active', 'expired', 'terminated'];
+
+    /**
+     * What a right is about, so the statements know which split applies to
+     * which income. Keys stay stable; the labels are shown in the form.
+     */
+    public const RIGHT_CATEGORIES = [
+        'streaming' => 'Streaming & Downloads',
+        'physical' => 'Physische Verkäufe (CD, Vinyl)',
+        'merch' => 'Merchandising',
+        'sync' => 'Synchronisation',
+        'performance' => 'Aufführung / Verwertungsgesellschaften',
+        'other' => 'Sonstiges',
+    ];
+
+    /**
+     * The category of a right: as chosen in the form, else read from its
+     * label ("Streaming & Downloads", "Physische Verkäufe", ...).
+     */
+    public static function rightCategory(array $right): string
+    {
+        if (isset($right['category']) && array_key_exists($right['category'], self::RIGHT_CATEGORIES)) {
+            return $right['category'];
+        }
+
+        return self::guessRightCategory((string) ($right['label'] ?? ''));
+    }
+
+    public static function guessRightCategory(string $label): string
+    {
+        $label = strtolower(\Illuminate\Support\Str::ascii($label));
+
+        return match (true) {
+            (bool) preg_match('/stream|download|digital/', $label) => 'streaming',
+            (bool) preg_match('/physi|\bcd\b|vinyl|\blp\b|tontrager|tontraeger/', $label) => 'physical',
+            str_contains($label, 'merch') => 'merch',
+            str_contains($label, 'sync') => 'sync',
+            (bool) preg_match('/auffuhr|auffuehr|perform|suisa|swissperform|verwertung|leistungsschutz/', $label) => 'performance',
+            default => 'other',
+        };
+    }
+
+    /**
+     * The split for one kind of income, per party in the order of the
+     * parties: [party => percent]. Null when the contract has no such right
+     * or settles it in free text ("gemäss SUISA").
+     *
+     * @return array<int, array{party: ContractParty, percent: float}>|null
+     */
+    public function splitFor(string $category): ?array
+    {
+        $right = collect($this->rights ?? [])->first(fn ($r) => is_array($r) && self::rightCategory($r) === $category);
+        if (!$right || ($right['mode'] ?? 'split') !== 'split') {
+            return null;
+        }
+
+        $values = $this->rightSplitValues($right);
+
+        return $this->parties->values()->map(fn (ContractParty $party, int $i) => [
+            'party' => $party,
+            'percent' => (float) ($values[$i] ?? 0),
+        ])->all();
+    }
+
+    /** Counts for the statements in the given months (status and validity) */
+    public function settlesBetween(\Carbon\CarbonInterface $from, \Carbon\CarbonInterface $to): bool
+    {
+        return in_array($this->status, self::SETTLING_STATUSES, true)
+            && (!$this->start_date || $this->start_date->lte($to))
+            && (!$this->end_date || $this->end_date->gte($from));
+    }
 
     /**
      * Resolve the party labels used in the rights/remuneration split.
@@ -610,6 +684,24 @@ class Contract extends Model
     public function parties()
     {
         return $this->hasMany(ContractParty::class)->orderBy('sort_order');
+    }
+
+    /** The contract this one replaces (an amendment) */
+    public function supersedes()
+    {
+        return $this->belongsTo(Contract::class, 'supersedes_id');
+    }
+
+    /** The contracts that replace this one */
+    public function supersededBy()
+    {
+        return $this->hasMany(Contract::class, 'supersedes_id');
+    }
+
+    /** Advances and costs recouped from the artists' shares */
+    public function advances()
+    {
+        return $this->hasMany(ContractAdvance::class)->orderBy('date')->orderBy('id');
     }
 
     public function contacts()

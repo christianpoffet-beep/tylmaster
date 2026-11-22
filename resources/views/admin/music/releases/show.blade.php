@@ -197,6 +197,8 @@
         $queuePosition = collect($album['items'])->pluck('trackId')->flip();
         $withoutAudio = $release->tracks->count() - count($album['items']);
     @endphp
+    @include('admin.royalties._usage-card', ['subject' => $release])
+
     <div x-data="{ album: @js($album) }">
     <x-admin.collapsible-card title="Tracklist" :count="$release->tracks->count()" class="mt-6">
         @if(count($album['items']))

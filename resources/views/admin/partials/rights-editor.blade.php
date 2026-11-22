@@ -53,12 +53,19 @@
                 <input type="hidden" :name="'rights['+index+'][label]'" :value="right.label">
                 <input type="hidden" :name="'rights['+index+'][mode]'" :value="right.mode">
                 <input type="hidden" :name="'rights['+index+'][custom_text]'" :value="right.custom_text">
+                <input type="hidden" :name="'rights['+index+'][category]'" :value="right.category">
                 {{-- Legacy mirror of the first two splits --}}
                 <input type="hidden" :name="'rights['+index+'][split_a]'" :value="right.splits[0] ?? ''">
                 <input type="hidden" :name="'rights['+index+'][split_b]'" :value="right.splits[1] ?? ''">
 
                 <div class="flex justify-between items-start mb-3">
-                    <input type="text" x-model="right.label" placeholder="Bezeichnung (z.B. Mechanische Rechte)" class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm font-medium focus:border-blue-500 focus:ring-blue-500">
+                    <input type="text" x-model="right.label" @input="if (right.categoryAuto) right.category = guessCategory(right.label)" placeholder="Bezeichnung (z.B. Mechanische Rechte)" class="flex-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm font-medium focus:border-blue-500 focus:ring-blue-500">
+                    <select x-model="right.category" @change="right.categoryAuto = false" title="Für welche Einnahmen dieser Split in den Abrechnungen gilt"
+                            class="ml-2 w-44 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs focus:border-blue-500 focus:ring-blue-500">
+                        @foreach(\App\Models\Contract::RIGHT_CATEGORIES as $categoryKey => $categoryLabel)
+                            <option value="{{ $categoryKey }}">Gilt für: {{ $categoryLabel }}</option>
+                        @endforeach
+                    </select>
                     <button type="button" @click="removeRight(index)" class="ml-2 text-red-400 hover:text-red-600 flex-shrink-0 mt-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
@@ -210,7 +217,20 @@ function rightsEditor() {
                 mode: r.mode || 'split',
                 splits: splits,
                 custom_text: r.custom_text || '',
+                // Chosen in the form, else read from the label (as Contract::rightCategory does)
+                category: r.category || this.guessCategory(r.label),
+                categoryAuto: !r.category,
             };
+        },
+
+        guessCategory(label) {
+            const l = String(label || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+            if (/stream|download|digital/.test(l)) return 'streaming';
+            if (/physi|\bcd\b|vinyl|\blp\b|tontrager|tontraeger/.test(l)) return 'physical';
+            if (l.includes('merch')) return 'merch';
+            if (l.includes('sync')) return 'sync';
+            if (/auffuhr|auffuehr|perform|suisa|swissperform|verwertung|leistungsschutz/.test(l)) return 'performance';
+            return 'other';
         },
 
         syncSplits() {
@@ -263,7 +283,7 @@ function rightsEditor() {
         },
 
         addRight() {
-            this.rights.push({ label: '', mode: 'split', splits: this.evenSplits(this.labels.length), custom_text: '' });
+            this.rights.push({ label: '', mode: 'split', splits: this.evenSplits(this.labels.length), custom_text: '', category: 'other', categoryAuto: true });
         },
 
         removeRight(index) {

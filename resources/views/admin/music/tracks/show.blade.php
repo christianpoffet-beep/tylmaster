@@ -282,6 +282,8 @@
         </x-admin.collapsible-card>
     @endif
 
+    @include('admin.royalties._usage-card', ['subject' => $track])
+
     {{-- Releases --}}
     @if($track->releases->count())
         <x-admin.collapsible-card title="Produkte" :count="$track->releases->count()" class="mt-6">

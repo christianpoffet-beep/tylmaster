@@ -3,7 +3,7 @@
 @section('title', 'Neuer Vertrag')
 
 @php
-    $defaultParties = old('parties', [
+    $defaultParties = old('parties', $prefill['parties'] ?: [
         ['type' => 'organization', 'organization_id' => '', 'contact_id' => '', 'share' => 50, 'role_label' => ''],
         ['type' => 'organization', 'organization_id' => '', 'contact_id' => '', 'share' => 50, 'role_label' => ''],
     ]);
@@ -36,7 +36,7 @@
                 <select id="template_id" name="template_id" @change="onTemplateChange($event.target.value)" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                     <option value="">— Keine Vorlage —</option>
                     @foreach($templates as $tpl)
-                        <option value="{{ $tpl->id }}">{{ $tpl->name }}</option>
+                        <option value="{{ $tpl->id }}" @selected((string) old('template_id', $prefill['template_id']) === (string) $tpl->id)>{{ $tpl->name }}</option>
                     @endforeach
                 </select>
                 <p class="text-xs text-gray-400 mt-1">Wähle eine Vorlage, um Typ und Bedingungen automatisch auszufüllen.</p>
@@ -48,7 +48,7 @@
 
             <div>
                 <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Titel *</label>
-                <input type="text" name="title" id="title" value="{{ old('title') }}" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <input type="text" name="title" id="title" value="{{ old('title', $prefill['title']) }}" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                 @error('title') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
@@ -82,13 +82,18 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="start_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Startdatum</label>
-                    <input type="date" name="start_date" id="start_date" value="{{ old('start_date') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <input type="date" name="start_date" id="start_date" value="{{ old('start_date', $prefill['start_date']) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    @if($prefill['start_hint'])
+                        <p class="text-xs text-gray-400 mt-1">{{ $prefill['start_hint'] }} Die Abrechnungen nehmen den Vertrag für Nutzungen ab diesem Datum.</p>
+                    @endif
                 </div>
                 <div>
                     <label for="end_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Enddatum</label>
                     <input type="date" name="end_date" id="end_date" value="{{ old('end_date') }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
             </div>
+
+            @include('admin.partials.contract-supersedes', ['selected' => old('supersedes_id', request('supersedes'))])
 
             @include('admin.partials.contract-zession', [
                 'has' => (bool) old('has_zession', $blankContract->has_zession),
@@ -175,7 +180,7 @@
                 'rightsLabelA' => old('rights_label_a', ''),
                 'rightsLabelB' => old('rights_label_b', ''),
                 'rightsLabels' => old('rights_labels', []),
-                'rightsData' => old('rights', []),
+                'rightsData' => old('rights', $prefill['rights']),
             ])
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
@@ -192,11 +197,11 @@
             </div>
 
             <div>
-                @include('admin.partials.contract-track-picker', ['selected' => collect()])
+                @include('admin.partials.contract-track-picker', ['selected' => $prefill['tracks']])
             </div>
 
             <div>
-                @include('admin.partials.release-search', ['selected' => collect()])
+                @include('admin.partials.release-search', ['selected' => $prefill['releases']])
             </div>
 
             @include('admin.partials.contract-sections', [
@@ -253,6 +258,24 @@ function contractForm() {
         init() {
             this.$watch('parties', () => this.dispatchPartyNames());
             this.$nextTick(() => this.dispatchPartyNames());
+            // Opened for a product from the contract overview: apply the chosen template,
+            // then put the own label and the band back in if the template brought other parties.
+            const prefill = @json(['template_id' => old('template_id') ? null : $prefill['template_id'], 'parties' => old('parties') ? [] : $prefill['parties']]);
+            if (prefill.template_id) {
+                this.$nextTick(async () => {
+                    await this.onTemplateChange(String(prefill.template_id));
+                    this.keepParties(prefill.parties);
+                });
+            }
+        },
+        keepParties(wanted) {
+            wanted.forEach(want => {
+                if (!want.organization_id) return; // an open slot to pick the artists in
+                if (this.parties.some(p => p.type === 'organization' && String(p.organization_id) === want.organization_id)) return;
+                const empty = this.parties.find(p => !p.organization_id && !p.contact_id);
+                if (empty) Object.assign(empty, { type: 'organization', organization_id: want.organization_id, contact_id: '' });
+                else this.parties.push({ ...want, share: 0 });
+            });
         },
         dispatchPartyNames() {
             const names = this.parties.map(p => {

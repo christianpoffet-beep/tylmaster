@@ -70,6 +70,8 @@
                 </div>
             </div>
 
+            @include('admin.partials.contract-supersedes', ['selected' => old('supersedes_id', $contract->supersedes_id)])
+
             @include('admin.partials.contract-zession', [
                 'has' => (bool) old('has_zession', $contract->has_zession),
                 'amount' => old('zession_amount', $contract->zession_amount),

@@ -24,6 +24,12 @@ use App\Http\Controllers\Admin\PhotoController;
 use App\Http\Controllers\Admin\ChartTemplateController;
 use App\Http\Controllers\Admin\AccountingController;
 use App\Http\Controllers\Admin\BankImportController;
+use App\Http\Controllers\Admin\RoyaltyImportController;
+use App\Http\Controllers\Admin\RoyaltyContractController;
+use App\Http\Controllers\Admin\RoyaltyPaymentController;
+use App\Http\Controllers\Admin\RoyaltyStatementController;
+use App\Http\Controllers\Admin\RoyaltyPayoutController;
+use App\Http\Controllers\Admin\RoyaltyUsageController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\ContractTemplateController;
 use App\Http\Controllers\Admin\ContractTypeController;
@@ -82,6 +88,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::resource('contracts', ContractController::class);
     Route::patch('contracts/{contract}/documents/{document}/archive', [ContractController::class, 'archiveDocument'])->name('contracts.documents.archive');
     Route::post('contracts/{contract}/pdf', [ContractController::class, 'pdf'])->name('contracts.pdf');
+    Route::post('contracts/{contract}/advances', [ContractController::class, 'storeAdvance'])->name('contracts.advances.store');
+    Route::delete('contract-advances/{contractAdvance}', [ContractController::class, 'destroyAdvance'])->name('contracts.advances.destroy');
     Route::resource('documents', DocumentController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
     Route::get('documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
     Route::get('documents/{document}/preview', [DocumentController::class, 'preview'])->name('documents.preview');
@@ -177,6 +185,44 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('bank-imports/{bankImport}/file', [BankImportController::class, 'file'])->name('bank-imports.file');
     Route::delete('bank-imports/{bankImport}', [BankImportController::class, 'destroyImport'])->name('bank-imports.destroy');
     Route::delete('booking-rules/{bookingRule}', [BankImportController::class, 'destroyRule'])->name('booking-rules.destroy');
+
+    // Rebeat-Matcher (Nutzungsdaten einlesen und den Tracks zuordnen)
+    Route::get('royalties', [RoyaltyImportController::class, 'index'])->name('royalties.index');
+    Route::post('royalties/imports', [RoyaltyImportController::class, 'store'])->name('royalties.store');
+    Route::get('royalties/uploads/token', [RoyaltyImportController::class, 'token'])->name('royalties.token');
+    Route::post('royalties/uploads', [RoyaltyImportController::class, 'start'])->name('royalties.start');
+    Route::post('royalties/uploads/{royaltyImport}/piece', [RoyaltyImportController::class, 'piece'])->name('royalties.piece');
+    Route::post('royalties/uploads/{royaltyImport}/finish', [RoyaltyImportController::class, 'finish'])->name('royalties.finish');
+    Route::post('royalties/rematch', [RoyaltyImportController::class, 'rematch'])->name('royalties.rematch');
+    Route::get('royalties/payments', [RoyaltyPaymentController::class, 'index'])->name('royalties.payments.index');
+    Route::post('royalties/payments', [RoyaltyPaymentController::class, 'store'])->name('royalties.payments.store');
+    Route::post('royalties/payments/upload', [RoyaltyPaymentController::class, 'upload'])->name('royalties.payments.upload');
+    Route::delete('royalties/payments/{royaltyPayment}', [RoyaltyPaymentController::class, 'destroy'])->name('royalties.payments.destroy');
+    Route::get('royalties/payouts', [RoyaltyPayoutController::class, 'index'])->name('royalties.payouts.index');
+    Route::get('royalties/payouts/create', [RoyaltyPayoutController::class, 'create'])->name('royalties.payouts.create');
+    Route::post('royalties/payouts', [RoyaltyPayoutController::class, 'store'])->name('royalties.payouts.store');
+    Route::get('royalties/payouts/{royaltyPayout}', [RoyaltyPayoutController::class, 'show'])->name('royalties.payouts.show');
+    Route::get('royalties/payouts/{royaltyPayout}/pain001', [RoyaltyPayoutController::class, 'pain001'])->name('royalties.payouts.pain001');
+    Route::delete('royalties/payouts/{royaltyPayout}', [RoyaltyPayoutController::class, 'destroy'])->name('royalties.payouts.destroy');
+    Route::get('royalties/statements', [RoyaltyStatementController::class, 'index'])->name('royalties.statements.index');
+    Route::post('royalties/statements', [RoyaltyStatementController::class, 'store'])->name('royalties.statements.store');
+    Route::get('royalties/statements/{royaltyStatement}', [RoyaltyStatementController::class, 'show'])->name('royalties.statements.show');
+    Route::put('royalties/statements/{royaltyStatement}', [RoyaltyStatementController::class, 'update'])->name('royalties.statements.update');
+    Route::get('royalties/statements/{royaltyStatement}/pdf/{party}', [RoyaltyStatementController::class, 'pdf'])->name('royalties.statements.pdf');
+    Route::get('royalties/statements/{royaltyStatement}/pdfs', [RoyaltyStatementController::class, 'pdfs'])->name('royalties.statements.pdfs');
+    Route::post('royalties/statements/{royaltyStatement}/mail', [RoyaltyStatementController::class, 'mail'])->name('royalties.statements.mail');
+    Route::post('royalties/statements/{royaltyStatement}/finalize', [RoyaltyStatementController::class, 'finalize'])->name('royalties.statements.finalize');
+    Route::post('royalties/statements/{royaltyStatement}/undo', [RoyaltyStatementController::class, 'undo'])->name('royalties.statements.undo');
+    Route::delete('royalties/statements/{royaltyStatement}', [RoyaltyStatementController::class, 'destroy'])->name('royalties.statements.destroy');
+    Route::get('royalties/usage', [RoyaltyUsageController::class, 'show'])->name('royalties.usage');
+    Route::get('royalties/contracts', [RoyaltyContractController::class, 'index'])->name('royalties.contracts');
+    Route::post('royalties/contracts/own-label', [RoyaltyContractController::class, 'setOwnLabel'])->name('royalties.ownLabel');
+    Route::get('royalties/imports/{royaltyImport}', [RoyaltyImportController::class, 'show'])->name('royalties.show');
+    Route::post('royalties/imports/{royaltyImport}/assign', [RoyaltyImportController::class, 'assign'])->name('royalties.assign');
+    Route::post('royalties/imports/{royaltyImport}/create-track', [RoyaltyImportController::class, 'createTrack'])->name('royalties.createTrack');
+    Route::patch('royalties/imports/{royaltyImport}/confirm', [RoyaltyImportController::class, 'confirm'])->name('royalties.confirm');
+    Route::get('royalties/imports/{royaltyImport}/file', [RoyaltyImportController::class, 'file'])->name('royalties.file');
+    Route::delete('royalties/imports/{royaltyImport}', [RoyaltyImportController::class, 'destroy'])->name('royalties.destroy');
 
     // Buchungen
     Route::get('accountings/{accounting}/bookings/create', [BookingController::class, 'create'])->name('bookings.create');
