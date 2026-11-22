@@ -21,12 +21,14 @@ function contractPartyNormalize(text) {
     return String(text || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 }
 
-function contractPartyPicker() {
+/** config.members = false: organizations and persons only, no "Band · Person" entries. */
+function contractPartyPicker(config = {}) {
     return {
         query: '',
         open: false,
         editing: false,
         active: 0,
+        members: config.members !== false,
 
         hasSelection(p) {
             return p.type === 'organization' ? !!p.organization_id : !!p.contact_id;
@@ -50,7 +52,7 @@ function contractPartyPicker() {
          */
         get results() {
             const words = contractPartyNormalize(this.query).split(/\s+/).filter(Boolean);
-            const entries = CONTRACT_PARTY_OPTIONS.entries;
+            const entries = this.members ? CONTRACT_PARTY_OPTIONS.entries : CONTRACT_PARTY_OPTIONS.entries.filter(e => !e.member);
             if (words.length === 0) {
                 return entries.filter(e => !e.member);
             }

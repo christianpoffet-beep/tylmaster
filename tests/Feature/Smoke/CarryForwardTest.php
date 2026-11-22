@@ -135,7 +135,10 @@ class CarryForwardTest extends TestCase
     public function test_a_new_accounting_without_a_previous_year_still_works(): void
     {
         $this->actingAs($this->user)->get('/admin/accountings/create')
-            ->assertOk()->assertSee('Neue Buchhaltung')->assertSee('Kontoplan-Vorlage');
+            ->assertOk()->assertSee('Neue Buchhaltung')->assertSee('Kontoplan-Vorlage')
+            // The owner is searched, not picked from two long dropdowns
+            ->assertSee('Organisation oder Person suchen')->assertSee('"name":"Testband"', false)
+            ->assertDontSee('— Organisation wählen —')->assertDontSee('Ansprechperson (optional)');
 
         $this->actingAs($this->user)->post('/admin/accountings', [
             'accountable_type' => 'organization', 'accountable_id' => $this->year2025->accountable_id,

@@ -40,7 +40,8 @@ class AccountingController extends Controller
     public function create(Request $request, CarryForward $carryForward)
     {
         $contacts = Contact::orderBy('last_name')->get();
-        $organizations = Organization::orderBy('names')->get();
+        // With their people: the owner search shows a person's band next to the name
+        $organizations = Organization::with('contacts')->orderBy('names')->get();
         $templates = ChartTemplate::with(['accounts' => fn($q) => $q->orderBy('number')])->orderBy('name')->get();
         $year = now()->year;
 

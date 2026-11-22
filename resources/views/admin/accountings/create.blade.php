@@ -118,33 +118,11 @@
 
                 <fieldset x-show="mode === 'new'" :disabled="mode !== 'new'">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Zuordnung *</label>
-                    <div class="flex gap-4 mb-3">
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="accountable_type" value="organization" x-model="entityType" class="text-blue-600 focus:ring-blue-500">
-                            <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">Organisation</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="accountable_type" value="contact" x-model="entityType" class="text-blue-600 focus:ring-blue-500">
-                            <span class="ml-1.5 text-sm text-gray-700 dark:text-gray-300">Kontakt</span>
-                        </label>
-                    </div>
-
-                    <div x-show="entityType === 'organization'" x-cloak>
-                        <select name="accountable_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" :disabled="entityType !== 'organization'" :required="entityType === 'organization'">
-                            <option value="">— Organisation wählen —</option>
-                            @foreach($organizations as $org)
-                                <option value="{{ $org->id }}" {{ old('accountable_id') == $org->id && old('accountable_type') === 'organization' ? 'selected' : '' }}>{{ $org->primary_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div x-show="entityType === 'contact'" x-cloak>
-                        <select name="accountable_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500" :disabled="entityType !== 'contact'" :required="entityType === 'contact'">
-                            <option value="">— Kontakt wählen —</option>
-                            @foreach($contacts as $contact)
-                                <option value="{{ $contact->id }}" {{ old('accountable_id') == $contact->id && old('accountable_type') === 'contact' ? 'selected' : '' }}>{{ $contact->full_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    {{-- Search field for organization or person; the form sends the same two fields as before --}}
+                    <input type="hidden" name="accountable_type" :value="party.type">
+                    <input type="hidden" name="accountable_id" :value="party.type === 'organization' ? party.organization_id : party.contact_id">
+                    @include('admin.partials.contract-party-picker', ['members' => false, 'withContactPerson' => false])
+                    <p x-show="ownerError" x-cloak x-text="ownerError" class="text-red-500 text-xs mt-1"></p>
                     @error('accountable_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </fieldset>
 
@@ -334,6 +312,8 @@
     </form>
 </div>
 
+@include('admin.partials.contract-party-picker-script', ['organizations' => $organizations, 'contacts' => $contacts])
+
 <script>
 function accountingWizard() {
     return {
@@ -345,13 +325,21 @@ function accountingWizard() {
         name: @js(old('name', 'Buchhaltung ' . $year)),
         periodStart: @js(old('period_start', $year . '-01-01')),
         periodEnd: @js(old('period_end', $year . '-12-31')),
-        entityType: '{{ old('accountable_type', 'organization') }}',
+        // The owner, as the party search keeps it
+        party: {
+            type: @js(old('accountable_type') === 'contact' ? 'contact' : 'organization'),
+            organization_id: @js(old('accountable_type', 'organization') === 'organization' ? (string) old('accountable_id', '') : ''),
+            contact_id: @js(old('accountable_type') === 'contact' ? (string) old('accountable_id', '') : ''),
+        },
+        ownerError: '',
         templateId: '{{ old('chart_template_id', '') }}',
         openingMode: 'zero',
 
         init() {
             // Coming from "Folgejahr eröffnen": fill in the next year right away
             if (this.mode === 'carry' && @js(!old('source_accounting_id'))) this.applySource();
+            // (Alpine watches objects deeply)
+            this.$watch('party', () => { this.ownerError = ''; });
         },
 
         get source() {
@@ -493,6 +481,12 @@ function accountingWizard() {
         },
 
         submitForm(event) {
+            const ownerId = this.party.type === 'organization' ? this.party.organization_id : this.party.contact_id;
+            if (this.mode === 'new' && !ownerId) {
+                this.step = 1;
+                this.ownerError = 'Bitte eine Organisation oder Person wählen.';
+                return;
+            }
             event.target.submit();
         }
     }
