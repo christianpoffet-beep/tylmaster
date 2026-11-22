@@ -625,6 +625,7 @@
                     </ul>
                     <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">Ertrags- und Aufwandkonten starten bei 0, die Regeln für den Bankabgleich gelten weiter. Bevor du eröffnest, siehst du die Eröffnungsbilanz als Vorschau.</p>
                     <p class="text-sm text-gray-600 dark:text-gray-300 mt-2"><strong>Nachträge im alten Jahr:</strong> Buchst du dort nach der Eröffnung noch etwas, zeigt die neue Buchhaltung einen Hinweis. Mit <strong>«Schlusssalden übernehmen»</strong> passt du die Eröffnungssaldi an.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2"><strong>Jahre aus Webling:</strong> Unter Buchhaltung → <strong>«Aus Webling importieren»</strong> lädst du den Excel-Export «Bilanz und Erfolgsrechnung» hoch. Die Konten werden der Kontenplan-Vorlage zugeordnet, die Eröffnungsbilanz wird zu den Eröffnungssaldi, und pro Konto entsteht eine Sammelbuchung über das Jahr. Erfolgsrechnung und Schlussbilanz stimmen danach mit Webling überein &ndash; und aus diesem Jahr lässt sich das nächste eröffnen.</p>
                     <p class="text-sm text-gray-600 dark:text-gray-300 mt-2"><strong>Offene Posten:</strong> Rechnungen und Ausgaben, die Ende Jahr noch offen sind, findet der Bankabgleich auch im neuen Jahr. Die Zahlung wird im Jahr gebucht, in dem das Geld fliesst (z.B. Bank an Debitoren 2026). Eine Rechnung von 2025 mit Zahldatum 2026 bucht «Bezahlt» ebenfalls ins neue Jahr.</p>
                 </div>
                 <div>

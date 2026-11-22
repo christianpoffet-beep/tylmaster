@@ -16,6 +16,7 @@
             <a href="{{ route('admin.accountings.index') }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:hover:text-gray-200 dark:text-gray-400">Zurücksetzen</a>
         @endif
     </form>
+    <a href="{{ route('admin.accountings.importWebling') }}" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 whitespace-nowrap" title="Ein Jahr aus dem Webling-Export «Bilanz und Erfolgsrechnung» übernehmen">Aus Webling importieren</a>
     <a href="{{ route('admin.accountings.create') }}" class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 whitespace-nowrap">+ Neue Buchhaltung</a>
 </div>
 

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\AnnualReportController;
+use App\Http\Controllers\Admin\WeblingImportController;
 use App\Http\Controllers\Admin\SubmissionController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\OrganizationController;
@@ -149,6 +150,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::delete('submissions/{submission}', [SubmissionController::class, 'destroy'])->name('submissions.destroy');
 
     // Buchhaltung
+    // Before the resource: "import-webling" is no accounting id
+    Route::get('accountings/import-webling', [WeblingImportController::class, 'create'])->name('accountings.importWebling');
+    Route::post('accountings/import-webling', [WeblingImportController::class, 'store'])->name('accountings.importWebling.store');
     Route::resource('accountings', AccountingController::class);
     Route::patch('accountings/{accounting}/close', [AccountingController::class, 'close'])->name('accountings.close');
     Route::patch('accountings/{accounting}/reopen', [AccountingController::class, 'reopen'])->name('accountings.reopen');
