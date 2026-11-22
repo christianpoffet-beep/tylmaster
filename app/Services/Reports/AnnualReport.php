@@ -5,6 +5,7 @@ namespace App\Services\Reports;
 use App\Models\Account;
 use App\Models\Accounting;
 use App\Services\CarryForward;
+use App\Services\ChartGroups;
 use Illuminate\Support\Collection;
 
 /**
@@ -94,34 +95,28 @@ class AnnualReport
     private function section(Collection $accounts, array $closing, ?\Closure $compare): array
     {
         $groups = [];
-        $current = ['title' => null, 'lines' => []];
-        $flush = function () use (&$groups, &$current, $compare) {
-            if ($current['lines']) {
-                $current['total'] = round(array_sum(array_column($current['lines'], 'amount')), 2);
-                $current['compare'] = $compare ? round(array_sum(array_column($current['lines'], 'compare')), 2) : null;
-                $groups[] = $current;
+        foreach (ChartGroups::of($accounts) as $chartGroup) {
+            $lines = [];
+            foreach ($chartGroup['accounts'] as $account) {
+                $line = [
+                    'number' => $account->number,
+                    'name' => $account->name,
+                    'amount' => round($closing[$account->id] ?? 0, 2),
+                    'compare' => $compare ? round($compare($account), 2) : null,
+                ];
+                if (abs($line['amount']) >= 0.005 || abs($line['compare'] ?? 0) >= 0.005) {
+                    $lines[] = $line;
+                }
             }
-        };
+            if (!$lines) continue;
 
-        // In chart order (by number, as on the accounting's page)
-        foreach ($accounts->sortBy('number', SORT_NATURAL) as $account) {
-            if ($account->is_header) {
-                $flush();
-                $current = ['title' => $account->name, 'lines' => []];
-                continue;
-            }
-
-            $line = [
-                'number' => $account->number,
-                'name' => $account->name,
-                'amount' => round($closing[$account->id] ?? 0, 2),
-                'compare' => $compare ? round($compare($account), 2) : null,
+            $groups[] = [
+                'title' => $chartGroup['header']?->name,
+                'lines' => $lines,
+                'total' => round(array_sum(array_column($lines, 'amount')), 2),
+                'compare' => $compare ? round(array_sum(array_column($lines, 'compare')), 2) : null,
             ];
-            if (abs($line['amount']) >= 0.005 || abs($line['compare'] ?? 0) >= 0.005) {
-                $current['lines'][] = $line;
-            }
         }
-        $flush();
 
         return [
             'groups' => $groups,

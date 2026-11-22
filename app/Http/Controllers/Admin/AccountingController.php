@@ -10,6 +10,7 @@ use App\Models\Contact;
 use App\Models\Organization;
 use App\Models\Project;
 use App\Services\CarryForward;
+use App\Services\ChartGroups;
 use Illuminate\Http\Request;
 
 class AccountingController extends Controller
@@ -187,36 +188,33 @@ class AccountingController extends Controller
 
     public function show(Accounting $accounting, CarryForward $carryForward)
     {
-        $accounting->load(['accountable', 'accounts', 'chartTemplate', 'previousAccounting', 'profitAccount', 'nextAccountings']);
+        $accounting->load(['accountable', 'chartTemplate', 'previousAccounting', 'profitAccount', 'nextAccountings'])
+            ->loadAccountTotals();
         $openingDifferences = $carryForward->differences($accounting);
         $bookingsCount = $accounting->bookings()->count();
 
-        $totalDebit = $accounting->bookings()->sum('amount');
-        $incomeAccounts = $accounting->accounts()->where('type', 'income')->pluck('id');
-        $expenseAccounts = $accounting->accounts()->where('type', 'expense')->pluck('id');
+        // Everything below works on the loaded accounts - no query per account
+        $accounts = $accounting->accounts->where('is_header', false);
+        // Net per account, as in the income statement: a refund on an income account lowers the income
+        $totalIncome = round($accounts->where('type', 'income')->sum(fn ($a) => $a->balance), 2);
+        $totalExpenses = round($accounts->where('type', 'expense')->sum(fn ($a) => $a->balance), 2);
 
-        $totalIncome = $accounting->bookings()->whereIn('credit_account_id', $incomeAccounts)->sum('amount');
-        $totalExpenses = $accounting->bookings()->whereIn('debit_account_id', $expenseAccounts)->sum('amount');
-
-        // Chart-Daten: Top Ertragskonten
-        $incomeByAccount = $accounting->accounts()
-            ->where('type', 'income')->where('is_header', false)->get()
-            ->map(fn($a) => ['name' => $a->number . ' ' . $a->name, 'balance' => abs($a->balance)])
-            ->filter(fn($a) => $a['balance'] > 0)
+        // Chart-Daten: Top Ertrags- und Aufwandkonten
+        $topAccounts = fn (string $type) => $accounts->where('type', $type)
+            ->map(fn ($a) => ['name' => $a->number . ' ' . $a->name, 'balance' => abs($a->balance)])
+            ->filter(fn ($a) => $a['balance'] > 0)
             ->sortByDesc('balance')->take(8)->values();
+        $incomeByAccount = $topAccounts('income');
+        $expenseByAccount = $topAccounts('expense');
 
-        // Chart-Daten: Top Aufwandkonten
-        $expenseByAccount = $accounting->accounts()
-            ->where('type', 'expense')->where('is_header', false)->get()
-            ->map(fn($a) => ['name' => $a->number . ' ' . $a->name, 'balance' => abs($a->balance)])
-            ->filter(fn($a) => $a['balance'] > 0)
-            ->sortByDesc('balance')->take(8)->values();
+        // Zwischensumme pro Überschriften-Konto
+        $headerTotals = ChartGroups::headerTotals($accounting->accounts, fn ($a) => $a->balance);
 
         $openBankCount = $accounting->bankTransactions()->where('status', \App\Models\BankTransaction::OPEN)->count();
 
         return view('admin.accountings.show', compact(
-            'accounting', 'bookingsCount', 'totalDebit', 'totalIncome', 'totalExpenses',
-            'incomeByAccount', 'expenseByAccount', 'openBankCount', 'openingDifferences'
+            'accounting', 'bookingsCount', 'totalIncome', 'totalExpenses',
+            'incomeByAccount', 'expenseByAccount', 'openBankCount', 'openingDifferences', 'headerTotals'
         ));
     }
 
@@ -319,7 +317,7 @@ class AccountingController extends Controller
 
     public function trialBalance(Accounting $accounting)
     {
-        $accounting->load(['accountable', 'accounts']);
+        $accounting->load('accountable')->loadAccountTotals();
 
         $typeLabels = ['asset' => 'Aktiven', 'liability' => 'Passiven', 'income' => 'Ertrag', 'expense' => 'Aufwand'];
         $grouped = $accounting->accounts->where('is_header', false)->groupBy('type');
@@ -329,22 +327,27 @@ class AccountingController extends Controller
 
     public function balanceSheet(Accounting $accounting)
     {
-        $accounting->load(['accountable', 'accounts']);
+        $accounting->load('accountable')->loadAccountTotals();
 
         $assets = $accounting->accounts->where('is_header', false)->where('type', 'asset');
         $liabilities = $accounting->accounts->where('is_header', false)->where('type', 'liability');
+        // Grouped under their header accounts, with subtotals
+        $assetGroups = ChartGroups::of($accounting->accounts->where('type', 'asset'));
+        $liabilityGroups = ChartGroups::of($accounting->accounts->where('type', 'liability'));
 
-        return view('admin.accountings.balance-sheet', compact('accounting', 'assets', 'liabilities'));
+        return view('admin.accountings.balance-sheet', compact('accounting', 'assets', 'liabilities', 'assetGroups', 'liabilityGroups'));
     }
 
     public function incomeStatement(Accounting $accounting)
     {
-        $accounting->load(['accountable', 'accounts']);
+        $accounting->load('accountable')->loadAccountTotals();
 
         $incomeAccounts = $accounting->accounts->where('is_header', false)->where('type', 'income');
         $expenseAccounts = $accounting->accounts->where('is_header', false)->where('type', 'expense');
+        $incomeGroups = ChartGroups::of($accounting->accounts->where('type', 'income'));
+        $expenseGroups = ChartGroups::of($accounting->accounts->where('type', 'expense'));
 
-        return view('admin.accountings.income-statement', compact('accounting', 'incomeAccounts', 'expenseAccounts'));
+        return view('admin.accountings.income-statement', compact('accounting', 'incomeAccounts', 'expenseAccounts', 'incomeGroups', 'expenseGroups'));
     }
 
     public function storeAccount(Request $request, Accounting $accounting)

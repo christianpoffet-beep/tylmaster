@@ -216,12 +216,15 @@ class AnnualReportExportTest extends TestCase
         Storage::disk('public')->put('avatars/organizations/big.png', ob_get_clean());
         $this->owner->update(['avatar_path' => 'avatars/organizations/big.png']);
 
-        $data = app(\App\Services\Reports\AnnualReportExport::class)->data($this->accounting->fresh(), [
+        $export = app(\App\Services\Reports\AnnualReportExport::class);
+        $data = $export->data($this->accounting->fresh(), [
             'logo' => 'avatar', 'address' => false, 'signatures' => false, 'signature_labels' => '', 'signature_note' => '',
         ]);
+        $this->assertNull($data['logoFile'], 'The export page does not scale the logo - only the PDF does.');
 
-        $this->assertStringStartsWith('data:image/png;base64,', $data['logoFile']);
-        $size = getimagesizefromstring(base64_decode(substr($data['logoFile'], strlen('data:image/png;base64,'))));
+        $logo = $export->printLogo($data['logoSource']);
+        $this->assertStringStartsWith('data:image/png;base64,', $logo);
+        $size = getimagesizefromstring(base64_decode(substr($logo, strlen('data:image/png;base64,'))));
         $this->assertSame([200, 300], [$size[0], $size[1]], 'Fits 900 x 300, keeps its proportions.');
     }
 

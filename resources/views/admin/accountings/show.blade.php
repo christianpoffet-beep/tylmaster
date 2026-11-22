@@ -240,10 +240,12 @@
                         <td class="px-4 py-2 text-gray-900 dark:text-gray-100">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $typeColors[$account->type] ?? '' }}">{{ $typeLabels[$account->type] ?? $account->type }}</span>
                         </td>
-                        <td class="px-4 py-2 text-sm text-right font-mono {{ $account->is_header ? '' : ($account->balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100') }}">
-                            @unless($account->is_header)
-                                {{ number_format($account->balance, 2, '.', "'") }}
-                            @endunless
+                        @php $amount = $account->is_header ? ($headerTotals[$account->id] ?? null) : $account->balance; @endphp
+                        <td class="px-4 py-2 text-sm text-right font-mono {{ $account->is_header ? 'font-semibold' : '' }} {{ $amount < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}"
+                            @if($account->is_header) title="Zwischensumme der Konten unter «{{ $account->name }}»" @endif>
+                            @if($amount !== null)
+                                {{ number_format($amount, 2, '.', "'") }}
+                            @endif
                         </td>
                         <td class="px-4 py-2 text-right text-gray-900 dark:text-gray-100">
                             @if(!$account->is_header && !$account->has_bookings && !$accounting->is_closed)

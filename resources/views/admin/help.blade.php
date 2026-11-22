@@ -611,6 +611,7 @@
                         <p class="text-sm text-gray-600 dark:text-gray-300"><strong>Probebilanz:</strong> Übersicht aller Konten mit ihren Soll- und Haben-Summen. Dient zur Kontrolle &ndash; die Summe aller Soll-Buchungen muss gleich der Summe aller Haben-Buchungen sein.</p>
                         <p class="text-sm text-gray-600 dark:text-gray-300"><strong>Bilanz:</strong> Zeigt dein Vermögen (Aktiven) und deine Schulden (Passiven). Die Differenz ist dein Eigenkapital. Du siehst die Eröffnungsbilanz (Jahresanfang) und die Schlussbilanz (aktueller Stand).</p>
                         <p class="text-sm text-gray-600 dark:text-gray-300"><strong>Erfolgsrechnung:</strong> Zeigt alle Einnahmen (Ertrag) und Ausgaben (Aufwand). Ertrag minus Aufwand = Gewinn (oder Verlust). Dieses Ergebnis stimmt mit der Differenz in der Bilanz überein.</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-300"><strong>Zwischensummen:</strong> Überschriften-Konten (z.B. «1000 Umlaufvermögen») zeigen im Kontenplan, in der Bilanz und in der Erfolgsrechnung die Summe der Konten darunter &ndash; bis zur nächsten Überschrift.</p>
                     </div>
                 </div>
 

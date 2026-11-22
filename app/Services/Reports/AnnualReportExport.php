@@ -45,7 +45,9 @@ class AnnualReportExport
 
         return $this->report->build($accounting) + $this->receipts->collect($accounting) + [
             'options' => $options,
-            'logoFile' => $this->printLogo($logos[$options['logo'] ?? '']['file'] ?? null),
+            // Scaled for print only when a PDF is made - the export page does not need it
+            'logoSource' => $logos[$options['logo'] ?? '']['file'] ?? null,
+            'logoFile' => null,
             'addressLines' => $options['address'] ? $this->addressLines($accounting) : [],
             'signatureLabels' => $options['signatures'] ? self::lines($options['signature_labels']) : [],
             // The app runs in UTC; the date on the paper is a Swiss one
@@ -121,6 +123,8 @@ class AnnualReportExport
 
     public function pdf(array $data): \Barryvdh\DomPDF\PDF
     {
+        $data['logoFile'] = $this->printLogo($data['logoSource'] ?? null);
+
         return Pdf::loadView('admin.accountings.exports.annual-report', $data)->setPaper('A4', 'portrait');
     }
 
@@ -188,7 +192,7 @@ class AnnualReportExport
      * The logo at print size (at most 900 x 300 px) as a data URI. A profile
      * picture straight from the camera would make dompdf slow and the PDF big.
      */
-    private function printLogo(?string $file): ?string
+    public function printLogo(?string $file): ?string
     {
         if (!$file) return null;
         $size = @getimagesize($file);

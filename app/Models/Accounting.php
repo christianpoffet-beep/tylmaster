@@ -56,6 +56,15 @@ class Accounting extends Model
         return $this->belongsTo(ChartTemplate::class);
     }
 
+    /** Its accounts with their debit/credit sums, in two queries instead of several per account. */
+    public function loadAccountTotals(): static
+    {
+        $this->loadMissing('accounts');
+        Account::loadTotals($this->accounts);
+
+        return $this;
+    }
+
     /** The year this one was opened from (Saldovortrag). */
     public function previousAccounting()
     {

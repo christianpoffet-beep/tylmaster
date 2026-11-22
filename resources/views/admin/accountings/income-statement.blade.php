@@ -54,17 +54,11 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse($incomeAccounts->sortBy('sort_order') as $account)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                            <td class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{{ $account->number }}</td>
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
-                                <a href="{{ route('admin.accountings.ledger', [$accounting, $account]) }}" class="hover:text-blue-600 dark:hover:text-blue-400">{{ $account->name }}</a>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-right font-mono {{ $account->balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}">{{ number_format($account->balance, 2, '.', "'") }}</td>
-                        </tr>
-                    @empty
+                    @if($incomeAccounts->isNotEmpty())
+                        @include('admin.accountings._grouped-rows', ['groups' => $incomeGroups, 'withOpening' => false])
+                    @else
                         <tr><td colspan="3" class="px-4 py-4 text-sm text-gray-400 dark:text-gray-500 text-center">Keine Ertragskonten vorhanden</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
                 <tfoot class="bg-gray-50 dark:bg-gray-700/50">
                     <tr class="font-bold">
@@ -91,17 +85,11 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse($expenseAccounts->sortBy('sort_order') as $account)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                            <td class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{{ $account->number }}</td>
-                            <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
-                                <a href="{{ route('admin.accountings.ledger', [$accounting, $account]) }}" class="hover:text-blue-600 dark:hover:text-blue-400">{{ $account->name }}</a>
-                            </td>
-                            <td class="px-4 py-2 text-sm text-right font-mono {{ $account->balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}">{{ number_format($account->balance, 2, '.', "'") }}</td>
-                        </tr>
-                    @empty
+                    @if($expenseAccounts->isNotEmpty())
+                        @include('admin.accountings._grouped-rows', ['groups' => $expenseGroups, 'withOpening' => false])
+                    @else
                         <tr><td colspan="3" class="px-4 py-4 text-sm text-gray-400 dark:text-gray-500 text-center">Keine Aufwandskonten vorhanden</td></tr>
-                    @endforelse
+                    @endif
                 </tbody>
                 <tfoot class="bg-gray-50 dark:bg-gray-700/50">
                     <tr class="font-bold">
