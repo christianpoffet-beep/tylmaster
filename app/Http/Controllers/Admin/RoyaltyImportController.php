@@ -175,9 +175,9 @@ class RoyaltyImportController extends Controller
     private static function summary(RoyaltyImport $import): string
     {
         $int = fn ($n) => number_format($n, 0, '.', "'");
-        $message = $int($import->rows_new) . ' Zeilen eingelesen';
-        if ($import->rows_duplicate) $message .= ', ' . $int($import->rows_duplicate) . ' waren schon da';
-        if ($import->rows_presettled) $message .= ', ' . $int($import->rows_presettled) . ' sind vor dem Stichtag schon abgerechnet';
+        $message = $int($import->rows_new) . ($import->rows_new === 1 ? ' Zeile' : ' Zeilen') . ' eingelesen';
+        if ($import->rows_duplicate) $message .= ', ' . $int($import->rows_duplicate) . ($import->rows_duplicate === 1 ? ' war' : ' waren') . ' schon da';
+        if ($import->rows_presettled) $message .= ', ' . $int($import->rows_presettled) . ($import->rows_presettled === 1 ? ' liegt' : ' liegen') . ' vor dem Stichtag (schon abgerechnet)';
 
         return $message . '.';
     }

@@ -127,7 +127,10 @@
 <div id="offen" class="{{ $card }} mb-6 overflow-hidden">
     <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
         <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Ohne Track ({{ $open->count() }})</h3>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Einmal zuordnen genügt: Die Zuordnung gilt für alle Zeilen mit dieser ISRC und wird für die nächsten Importe gemerkt.</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            Hier legst Du nur fest, <em>welcher</em> Track (bei Album-Downloads: welches Produkt) gemeint ist – einen Vorschlag anklicken oder selbst suchen.
+            Wer wie viel bekommt, regelt später der Vertrag des Produkts. Die Zuordnung gilt für alle Zeilen dieses Titels und wird für die nächsten Importe gemerkt.
+        </p>
     </div>
     @if($open->isEmpty())
         <p class="px-5 py-6 text-sm text-gray-500 dark:text-gray-400">Alle Zeilen haben einen Track.</p>
@@ -152,7 +155,7 @@
                             </p>
                         </div>
                         <div class="text-xs text-gray-500 dark:text-gray-400 tabular-nums whitespace-nowrap">
-                            {{ $int($group->n) }} Zeilen · {{ $int($group->quantity) }}× · <span class="text-gray-900 dark:text-gray-100 font-medium">EUR {{ $eur($group->amount) }}</span>
+                            {{ $int($group->n) }} {{ $group->n == 1 ? 'Zeile' : 'Zeilen' }} · {{ $int($group->quantity) }}× genutzt · <span class="text-gray-900 dark:text-gray-100 font-medium">EUR {{ $eur($group->amount) }}</span>
                         </div>
                     </div>
 
@@ -164,16 +167,23 @@
                         <input type="hidden" name="{{ $group->isrc ? 'track_id' : 'release_id' }}" x-ref="target">
 
                         <div class="flex flex-wrap items-center gap-2">
+                            @if($group->suggestions)
+                                <span class="text-xs text-gray-500 dark:text-gray-400">Vorschlag:</span>
+                            @endif
                             @foreach($group->suggestions as $suggestion)
+                                @php
+                                    // How close the title is - not a share of anything
+                                    $closeness = $suggestion['score'] . '% Übereinstimmung';
+                                @endphp
                                 <button type="button" @click="choose({{ $suggestion['id'] }})"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
-                                        title="{{ $suggestion['isrc'] ? 'ISRC im Tool: ' . $suggestion['isrc'] : '' }}">
-                                    → {{ $suggestion['title'] }}{{ $suggestion['artist'] ? ' · ' . $suggestion['artist'] : '' }}
-                                    <span class="text-blue-400 dark:text-blue-400/70">{{ $suggestion['score'] }}%</span>
+                                        title="Diesem {{ $suggestion['type'] === 'track' ? 'Track' : 'Produkt' }} zuordnen{{ $suggestion['isrc'] ? ' (ISRC im Tool: ' . $suggestion['isrc'] . ')' : '' }}">
+                                    Zuordnen: {{ $suggestion['title'] }}{{ $suggestion['artist'] ? ' · ' . $suggestion['artist'] : '' }}
+                                    <span class="font-normal text-blue-500/80 dark:text-blue-300/70">({{ $closeness }})</span>
                                 </button>
                             @endforeach
                             <button type="button" @click="toggle()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                {{ $group->isrc ? 'Track suchen' : 'Produkt suchen' }}
+                                {{ $group->suggestions ? ($group->isrc ? 'Anderen Track suchen' : 'Anderes Produkt suchen') : ($group->isrc ? 'Track suchen' : 'Produkt suchen') }}
                             </button>
                         </div>
                     </form>
