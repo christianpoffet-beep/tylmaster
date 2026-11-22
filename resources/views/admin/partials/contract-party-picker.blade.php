@@ -5,8 +5,11 @@
     Alpine scope. `party` is handed to every call rather than kept: applying
     a template swaps the party objects under the same loop rows. The data and contractPartyPicker() come from
     contract-party-picker-script, included once per page.
+
+    Also picks the owner of an accounting: with 'members' => false (no
+    "Band · Person" entries) and 'withContactPerson' => false.
 --}}
-<div x-data="contractPartyPicker()" class="relative" @click.outside="close()">
+<div x-data="contractPartyPicker({{ ($members ?? true) ? '' : '{ members: false }' }})" class="relative" @click.outside="close()">
     {{-- The chosen party --}}
     <div x-show="hasSelection(party) && !editing" class="flex items-center justify-between gap-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/40 px-3 py-2">
         <div class="min-w-0">
@@ -41,10 +44,11 @@
                 </button>
             </template>
             <p x-show="results.length === 0" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">Nichts gefunden.</p>
-            <p x-show="query.trim() === '' && results.length > 0" class="px-3 py-1.5 text-[11px] text-gray-400 border-t border-gray-100 dark:border-gray-700">Tippen, um auch Personen innerhalb einer Organisation zu finden, z.&nbsp;B. ein Bandmitglied.</p>
+            <p x-show="members && query.trim() === '' && results.length > 0" class="px-3 py-1.5 text-[11px] text-gray-400 border-t border-gray-100 dark:border-gray-700">Tippen, um auch Personen innerhalb einer Organisation zu finden, z.&nbsp;B. ein Bandmitglied.</p>
         </div>
     </div>
 
+    @if($withContactPerson ?? true)
     {{-- Contact person of an organization --}}
     <div x-show="party.type === 'organization' && party.organization_id && getOrgContacts(party.organization_id).length > 0" class="mt-2">
         <label class="block text-xs text-gray-500 mb-1">Ansprechperson (optional)</label>
@@ -55,4 +59,5 @@
             </template>
         </select>
     </div>
+    @endif
 </div>

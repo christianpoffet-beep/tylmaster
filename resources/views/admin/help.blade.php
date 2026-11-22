@@ -611,13 +611,22 @@
                         <p class="text-sm text-gray-600 dark:text-gray-300"><strong>Probebilanz:</strong> Übersicht aller Konten mit ihren Soll- und Haben-Summen. Dient zur Kontrolle &ndash; die Summe aller Soll-Buchungen muss gleich der Summe aller Haben-Buchungen sein.</p>
                         <p class="text-sm text-gray-600 dark:text-gray-300"><strong>Bilanz:</strong> Zeigt dein Vermögen (Aktiven) und deine Schulden (Passiven). Die Differenz ist dein Eigenkapital. Du siehst die Eröffnungsbilanz (Jahresanfang) und die Schlussbilanz (aktueller Stand).</p>
                         <p class="text-sm text-gray-600 dark:text-gray-300"><strong>Erfolgsrechnung:</strong> Zeigt alle Einnahmen (Ertrag) und Ausgaben (Aufwand). Ertrag minus Aufwand = Gewinn (oder Verlust). Dieses Ergebnis stimmt mit der Differenz in der Bilanz überein.</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-300"><strong>Zwischensummen:</strong> Überschriften-Konten (z.B. «1000 Umlaufvermögen») zeigen im Kontenplan, in der Bilanz und in der Erfolgsrechnung die Summe der Konten darunter &ndash; bis zur nächsten Überschrift.</p>
                     </div>
                 </div>
 
                 <div>
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Eröffnungssaldi</h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Wenn du eine neue Buchhaltung für ein neues Jahr erstellst, solltest du die <strong>Endsaldi des Vorjahres</strong> als Anfangswerte übertragen (z.B. Bankstand, offene Forderungen). Dies geschieht über das Feld «Eröffnungssaldo» beim Hinzufügen eines Kontos.</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 italic">Nur Aktiv- und Passivkonten haben Eröffnungssaldi. Ertrags- und Aufwandskonten starten immer bei 0.</p>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Neues Geschäftsjahr (Saldovortrag)</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Jedes Jahr bekommt eine eigene Buchhaltung. Auf der Seite des alten Jahres klickst du <strong>«Folgejahr eröffnen»</strong> (oder bei «Neue Buchhaltung» die Option «Folgejahr eröffnen»). Dabei wird übernommen:</p>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1 mt-2">
+                        <li>der ganze <strong>Kontenplan</strong> samt IBAN, auch Konten, die du im Lauf des Jahres ergänzt hast</li>
+                        <li>die <strong>Schlusssalden</strong> der Aktiv- und Passivkonten als Eröffnungssaldi (Bank, Kasse, offene Forderungen …)</li>
+                        <li>der <strong>Gewinn oder Verlust</strong> des Vorjahres auf das gewählte Eigenkapitalkonto (vorgeschlagen: 2801), damit die Eröffnungsbilanz aufgeht</li>
+                    </ul>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">Ertrags- und Aufwandkonten starten bei 0, die Regeln für den Bankabgleich gelten weiter. Bevor du eröffnest, siehst du die Eröffnungsbilanz als Vorschau.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2"><strong>Nachträge im alten Jahr:</strong> Buchst du dort nach der Eröffnung noch etwas, zeigt die neue Buchhaltung einen Hinweis. Mit <strong>«Schlusssalden übernehmen»</strong> passt du die Eröffnungssaldi an.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2"><strong>Jahre aus Webling:</strong> Unter Buchhaltung → <strong>«Aus Webling importieren»</strong> lädst du den Excel-Export «Bilanz und Erfolgsrechnung» hoch. Die Konten werden der Kontenplan-Vorlage zugeordnet, die Eröffnungsbilanz wird zu den Eröffnungssaldi, und pro Konto entsteht eine Sammelbuchung über das Jahr. Erfolgsrechnung und Schlussbilanz stimmen danach mit Webling überein &ndash; und aus diesem Jahr lässt sich das nächste eröffnen.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2"><strong>Offene Posten:</strong> Rechnungen und Ausgaben, die Ende Jahr noch offen sind, findet der Bankabgleich auch im neuen Jahr. Die Zahlung wird im Jahr gebucht, in dem das Geld fliesst (z.B. Bank an Debitoren 2026). Eine Rechnung von 2025 mit Zahldatum 2026 bucht «Bezahlt» ebenfalls ins neue Jahr.</p>
                 </div>
                 <div>
                     <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Periode abschliessen</h4>
@@ -631,10 +640,46 @@
                         <ol class="text-sm text-green-800 dark:text-green-300 list-decimal list-inside space-y-1">
                             <li>Du erstellst eine <strong>Rechnung</strong> und verknüpfst sie mit einer Buchhaltung + Konten</li>
                             <li>Das System erstellt automatisch eine <strong>Buchung</strong> (Forderung oder Verbindlichkeit)</li>
-                            <li>Wenn du die Rechnung als <strong>«Bezahlt»</strong> markierst, erstellt das System automatisch die <strong>Zahlungsbuchung</strong> (Eingang oder Zahlung)</li>
+                            <li>Wenn du die Rechnung als <strong>«Bezahlt»</strong> markierst, erstellt das System automatisch die <strong>Zahlungsbuchung</strong> (Eingang oder Zahlung) &ndash; mit dem Zahlungsdatum, das du neben dem Button wählst</li>
                         </ol>
                         <p class="text-sm text-green-700 dark:text-green-400 mt-2">Du musst also nur Rechnungen erfassen und als bezahlt markieren &ndash; die Buchhaltung führt sich weitgehend von selbst!</p>
                     </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Bankabgleich (Bankauszug einlesen)</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">
+                        Auf der Buchhaltungs-Seite führt <strong>«Bankabgleich»</strong> zur Inbox deiner Bankbewegungen. Dort lädst du den <strong>CSV-Export aus dem E-Banking</strong> hoch (bisher Raiffeisen) und wählst das Bankkonto (z.B. 1003 Bank). Beim Einlesen wird noch nichts gebucht.
+                    </p>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1 mt-2">
+                        <li>Jede Bewegung bekommt einen <strong>Vorschlag</strong>: eine passende Buchung, die schon im Journal steht (wird nur verknüpft, nicht doppelt gebucht), eine offene <strong>Rechnung</strong> mit gleichem Betrag (wird als bezahlt markiert) oder eine <strong>Regel</strong>.</li>
+                        <li>Ohne Vorschlag wählst du das Gegenkonto selbst. Mit <strong>«Als Regel merken»</strong> ist das Konto beim nächsten Import vorausgewählt. Regeln gelten für alle Jahre derselben Organisation bzw. Person.</li>
+                        <li><strong>Aufteilen</strong> verteilt eine Bewegung auf mehrere Konten (z.B. Auszahlung abzüglich Gebühren).</li>
+                        <li>Zeiträume dürfen sich überschneiden &ndash; bereits eingelesene Bewegungen werden übersprungen. Die Datei muss zur IBAN des Kontos passen.</li>
+                        <li>Der <strong>Saldo-Abgleich</strong> vergleicht den Bankstand vor der ersten und nach der letzten Bewegung mit der Buchhaltung. Stimmt beides, ist das Bankkonto vollständig gebucht.</li>
+                        <li>Fehler korrigieren: im Reiter «Gebucht» auf <strong>«Wieder öffnen»</strong> &ndash; oder die Buchung im Journal löschen; die Bewegung landet dann wieder in der Inbox.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Ausgaben &amp; Belege</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Unter <strong>Finanzen → Ausgaben</strong> erfasst du Kosten mit Beleg (Quittung, Rechnung, Foto), Buchhaltung und <strong>Aufwandkonto</strong>. Das Feld «Bezahlt mit» entscheidet, wie gebucht wird:</p>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1 mt-2">
+                        <li><strong>Bank</strong> (Standard): Die Ausgabe bleibt «offen», bis die Zahlung im Bankauszug auftaucht. Der Bankabgleich schlägt sie dann vor (gleicher Betrag) oder du ordnest sie von Hand zu &ndash; auch bei Fremdwährung.</li>
+                        <li><strong>Bar / privat</strong> (z.B. Kasse oder Eigenkapital): Die Ausgabe bucht sich sofort selbst, am Datum des Belegs.</li>
+                        <li>Buchst du im Bankabgleich eine Belastung auf ein Aufwandkonto, entsteht automatisch eine Ausgabe &ndash; dort kannst du den Beleg nachträglich anhängen.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Export für die Steuererklärung</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Auf der Buchhaltungs-Seite führt <strong>«Export Steuererklärung»</strong> zur Jahresrechnung. Oben rechts prüft die Seite, ob noch Bankbewegungen offen sind, ob die Bilanz aufgeht und wie viele Belege vorhanden sind.</p>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1 mt-2">
+                        <li><strong>PDF:</strong> Bilanz (mit Vorjahr), Erfolgsrechnung (mit Vorjahr, wenn das Jahr aus einem Vorjahr eröffnet wurde), «Angaben für die Steuererklärung» (Jahresergebnis, Eigenkapital, Fremdkapital) und auf Wunsch Unterschriftenzeilen</li>
+                        <li><strong>Excel:</strong> zusätzlich Journal mit Belegnummern, Kontoblätter mit laufendem Saldo und Belegverzeichnis</li>
+                        <li><strong>ZIP:</strong> PDF, Excel, alle Belege (von Buchungen, Ausgaben und Rechnungen) und die eingelesenen Bankauszüge. Die Belege heissen nach Belegnummer und Datum, z.B. «Belege/0007_2025-03-14_Quittung.pdf» &ndash; gleiche Nummer wie im Journal.</li>
+                    </ul>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">Logo (aus der Rechnungsvorlage oder dem Profilbild), Adresse und Unterschriftenzeilen sind wählbar. Die Einstellungen werden pro Verein bzw. Person gespeichert und nächstes Jahr wieder vorgeschlagen.</p>
                 </div>
             </div>
         </div>

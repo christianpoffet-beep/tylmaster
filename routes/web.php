@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\ReleaseController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\ExpenseController;
+use App\Http\Controllers\Admin\AnnualReportController;
+use App\Http\Controllers\Admin\WeblingImportController;
 use App\Http\Controllers\Admin\SubmissionController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\OrganizationController;
@@ -21,6 +23,7 @@ use App\Http\Controllers\Admin\ProjectTypeController;
 use App\Http\Controllers\Admin\PhotoController;
 use App\Http\Controllers\Admin\ChartTemplateController;
 use App\Http\Controllers\Admin\AccountingController;
+use App\Http\Controllers\Admin\BankImportController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\ContractTemplateController;
 use App\Http\Controllers\Admin\ContractTypeController;
@@ -138,6 +141,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('organizations/{organization}/contacts', [InvoiceController::class, 'organizationContacts'])->name('organizations.contacts');
     Route::get('accountings/{accounting}/accounts', [InvoiceController::class, 'accountingAccounts'])->name('accountings.accounts');
     Route::resource('expenses', ExpenseController::class)->except('show');
+    Route::delete('expenses/{expense}/documents/{document}', [ExpenseController::class, 'destroyDocument'])->name('expenses.documents.destroy');
     Route::get('submissions', [SubmissionController::class, 'index'])->name('submissions.index');
     Route::get('submissions/{submission}', [SubmissionController::class, 'show'])->name('submissions.show');
     Route::get('submissions/{submission}/file', [SubmissionController::class, 'file'])->name('submissions.file');
@@ -146,9 +150,15 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::delete('submissions/{submission}', [SubmissionController::class, 'destroy'])->name('submissions.destroy');
 
     // Buchhaltung
+    // Before the resource: "import-webling" is no accounting id
+    Route::get('accountings/import-webling', [WeblingImportController::class, 'create'])->name('accountings.importWebling');
+    Route::post('accountings/import-webling', [WeblingImportController::class, 'store'])->name('accountings.importWebling.store');
     Route::resource('accountings', AccountingController::class);
     Route::patch('accountings/{accounting}/close', [AccountingController::class, 'close'])->name('accountings.close');
     Route::patch('accountings/{accounting}/reopen', [AccountingController::class, 'reopen'])->name('accountings.reopen');
+    Route::post('accountings/{accounting}/refresh-openings', [AccountingController::class, 'refreshOpenings'])->name('accountings.refreshOpenings');
+    Route::get('accountings/{accounting}/export', [AnnualReportController::class, 'show'])->name('accountings.export');
+    Route::get('accountings/{accounting}/export/download', [AnnualReportController::class, 'download'])->name('accountings.export.download');
     Route::get('accountings/{accounting}/journal', [AccountingController::class, 'journal'])->name('accountings.journal');
     Route::get('accountings/{accounting}/ledger/{account}', [AccountingController::class, 'ledger'])->name('accountings.ledger');
     Route::get('accountings/{accounting}/trial-balance', [AccountingController::class, 'trialBalance'])->name('accountings.trialBalance');
@@ -157,6 +167,16 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('accountings/{accounting}/accounts', [AccountingController::class, 'storeAccount'])->name('accountings.accounts.store');
     Route::put('accounting-accounts/{account}', [AccountingController::class, 'updateAccount'])->name('accountings.accounts.update');
     Route::delete('accounting-accounts/{account}', [AccountingController::class, 'destroyAccount'])->name('accountings.accounts.destroy');
+
+    // Bankabgleich (Bankauszug einlesen und buchen)
+    Route::get('accountings/{accounting}/bank', [BankImportController::class, 'index'])->name('accountings.bank');
+    Route::post('accountings/{accounting}/bank/import', [BankImportController::class, 'import'])->name('accountings.bank.import');
+    Route::post('accountings/{accounting}/bank/book', [BankImportController::class, 'book'])->name('accountings.bank.book');
+    Route::post('accountings/{accounting}/bank/ignore', [BankImportController::class, 'ignore'])->name('accountings.bank.ignore');
+    Route::patch('bank-transactions/{bankTransaction}/reopen', [BankImportController::class, 'reopen'])->name('bank-transactions.reopen');
+    Route::get('bank-imports/{bankImport}/file', [BankImportController::class, 'file'])->name('bank-imports.file');
+    Route::delete('bank-imports/{bankImport}', [BankImportController::class, 'destroyImport'])->name('bank-imports.destroy');
+    Route::delete('booking-rules/{bookingRule}', [BankImportController::class, 'destroyRule'])->name('booking-rules.destroy');
 
     // Buchungen
     Route::get('accountings/{accounting}/bookings/create', [BookingController::class, 'create'])->name('bookings.create');

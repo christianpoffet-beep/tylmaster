@@ -76,6 +76,12 @@
                         </td>
                         <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
                             {{ $booking->description }}
+                            @if($booking->expense)
+                                <a href="{{ route('admin.expenses.edit', $booking->expense) }}" class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 hover:underline" title="Zur Ausgabe (mit Beleg)">Ausgabe{{ $booking->expense->documents_count ? ' · Beleg' : '' }}</a>
+                            @endif
+                            @if($booking->bank_transaction_id)
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300" title="Mit einer Bewegung aus dem Bankauszug abgeglichen">Bank</span>
+                            @endif
                             @if($booking->project || $booking->organization || $booking->contact)
                                 <div class="flex flex-wrap gap-1 mt-0.5">
                                     @if($booking->project)

@@ -16,8 +16,22 @@
             · {{ $accounting->period_start->format('d.m.Y') }} – {{ $accounting->period_end->format('d.m.Y') }}
             · {{ $accounting->currency }}
         </p>
+        @if($accounting->previousAccounting || $accounting->nextAccountings->isNotEmpty())
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                @if($accounting->previousAccounting)
+                    Eröffnet aus <a href="{{ route('admin.accountings.show', $accounting->previousAccounting) }}" class="text-blue-600 dark:text-blue-400 hover:underline">{{ $accounting->previousAccounting->name }}</a>@if($accounting->profitAccount) · Gewinn/Verlust auf {{ $accounting->profitAccount->number }} {{ $accounting->profitAccount->name }}@endif
+                @endif
+                @foreach($accounting->nextAccountings as $next)
+                    @if($accounting->previousAccounting || !$loop->first) · @endif
+                    Folgejahr: <a href="{{ route('admin.accountings.show', $next) }}" class="text-blue-600 dark:text-blue-400 hover:underline">{{ $next->name }}</a>
+                @endforeach
+            </p>
+        @endif
     </div>
     <div class="flex items-center gap-2">
+        @if($accounting->nextAccountings->isEmpty())
+            <a href="{{ route('admin.accountings.create', ['from' => $accounting->id]) }}" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" title="Neue Buchhaltung mit den Schlusssalden dieser eröffnen">Folgejahr eröffnen</a>
+        @endif
         @if($accounting->status === 'open')
             <form method="POST" action="{{ route('admin.accountings.close', $accounting) }}" onsubmit="return confirm('Buchhaltung abschliessen?')">
                 @csrf @method('PATCH')
@@ -41,6 +55,40 @@
         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">Abgeschlossen</span>
     @endif
 </div>
+
+{{-- Saldovortrag: stimmt die Eröffnung noch mit dem Schluss des Vorjahres? --}}
+@if($openingDifferences->isNotEmpty())
+    <div class="mb-6 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30 p-4">
+        <p class="text-sm font-medium text-amber-800 dark:text-amber-200">Die Eröffnungssaldi passen nicht mehr zum Schluss von «{{ $accounting->previousAccounting->name }}»</p>
+        <p class="text-xs text-amber-700 dark:text-amber-300 mt-1">Im Vorjahr wurde nach der Eröffnung noch gebucht, oder ein Eröffnungssaldo wurde von Hand geändert.</p>
+        <div class="overflow-x-auto mt-3">
+            <table class="text-sm">
+                <thead>
+                    <tr class="text-xs text-amber-700 dark:text-amber-300">
+                        <th class="pr-6 py-1 text-left font-medium">Konto</th>
+                        <th class="pr-6 py-1 text-right font-medium">Eröffnung jetzt</th>
+                        <th class="py-1 text-right font-medium">Schluss Vorjahr</th>
+                    </tr>
+                </thead>
+                <tbody class="text-amber-900 dark:text-amber-100">
+                    @foreach($openingDifferences as $difference)
+                        <tr>
+                            <td class="pr-6 py-0.5">{{ $difference['number'] }} {{ $difference['name'] }}</td>
+                            <td class="pr-6 py-0.5 text-right font-mono">{{ $difference['actual'] === null ? 'fehlt' : number_format($difference['actual'], 2, '.', "'") }}</td>
+                            <td class="py-0.5 text-right font-mono">{{ number_format($difference['expected'], 2, '.', "'") }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @unless($accounting->is_closed)
+            <form method="POST" action="{{ route('admin.accountings.refreshOpenings', $accounting) }}" class="mt-3">
+                @csrf
+                <button type="submit" class="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700">Schlusssalden übernehmen</button>
+            </form>
+        @endunless
+    </div>
+@endif
 
 {{-- Quick Stats --}}
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -150,6 +198,13 @@
             </div>
         </span>
     </div>
+    <a href="{{ route('admin.accountings.bank', $accounting) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+        Bankabgleich
+        @if($openBankCount)
+            <span class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-amber-500 text-white text-xs font-semibold" title="Offene Bankbewegungen">{{ $openBankCount }}</span>
+        @endif
+    </a>
+    <a href="{{ route('admin.accountings.export', $accounting) }}" class="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" title="Jahresrechnung als PDF, Excel oder ZIP mit Belegen">Export Steuererklärung</a>
     @if(!$accounting->is_closed)
         <a href="{{ route('admin.bookings.create', $accounting) }}" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">+ Neue Buchung</a>
     @endif
@@ -185,10 +240,12 @@
                         <td class="px-4 py-2 text-gray-900 dark:text-gray-100">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $typeColors[$account->type] ?? '' }}">{{ $typeLabels[$account->type] ?? $account->type }}</span>
                         </td>
-                        <td class="px-4 py-2 text-sm text-right font-mono {{ $account->is_header ? '' : ($account->balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100') }}">
-                            @unless($account->is_header)
-                                {{ number_format($account->balance, 2, '.', "'") }}
-                            @endunless
+                        @php $amount = $account->is_header ? ($headerTotals[$account->id] ?? null) : $account->balance; @endphp
+                        <td class="px-4 py-2 text-sm text-right font-mono {{ $account->is_header ? 'font-semibold' : '' }} {{ $amount < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}"
+                            @if($account->is_header) title="Zwischensumme der Konten unter «{{ $account->name }}»" @endif>
+                            @if($amount !== null)
+                                {{ number_format($amount, 2, '.', "'") }}
+                            @endif
                         </td>
                         <td class="px-4 py-2 text-right text-gray-900 dark:text-gray-100">
                             @if(!$account->is_header && !$account->has_bookings && !$accounting->is_closed)
