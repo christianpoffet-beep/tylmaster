@@ -40,19 +40,33 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
     <div class="{{ $card }} p-5 space-y-4">
-        <form method="POST" action="{{ route('admin.royalties.ownLabel') }}" class="flex flex-wrap items-end gap-2">
+        @php $ownIds = $own->pluck('id')->all(); @endphp
+        <form method="POST" action="{{ route('admin.royalties.ownLabel') }}" x-data="{ filter: '' }">
             @csrf
-            <div class="flex-1 min-w-[12rem]">
-                <label for="own-label" class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Eigenes Label</label>
-                <select name="organization_id" id="own-label" class="w-full {{ $input }}">
-                    @foreach($labels as $label)
-                        <option value="{{ $label->id }}" @selected($own?->id === $label->id)>{{ $label->primary_name }} (#{{ $label->id }})</option>
-                    @endforeach
-                </select>
+            <div class="flex items-center justify-between gap-2 mb-1">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400 inline-flex items-center gap-1.5">
+                    Eigene Labels ({{ count($ownIds) }})
+                    <x-admin.info-tip>
+                        The yelling light und die Labels, die ihm gehören. Ihr Anteil in einem Vertrag bleibt Ertrag und wird niemandem gutgeschrieben.
+                        Ihre Produkte brauchen einen Vertrag mit den Künstler:innen. Produkte <em>anderer</em> Labels ohne Vertrag gehen dagegen zu 100 % an das Label.
+                    </x-admin.info-tip>
+                </span>
+                <input type="search" x-model="filter" placeholder="Label suchen" class="w-36 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-xs py-1 focus:border-blue-500 focus:ring-blue-500">
             </div>
-            <button type="submit" class="px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">Speichern</button>
+            <div class="max-h-40 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
+                @foreach($labels->sortBy(fn ($l) => [in_array($l->id, $ownIds, true) ? 0 : 1, mb_strtolower($l->primary_name)]) as $label)
+                    <label class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+                           x-show="!filter || @js(mb_strtolower($label->all_names)).includes(filter.toLowerCase())">
+                        <input type="checkbox" name="organization_ids[]" value="{{ $label->id }}" @checked(in_array($label->id, $ownIds, true))
+                               class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                        <span>{{ $label->primary_name }}</span>
+                        <span class="text-xs text-gray-400">#{{ $label->id }}</span>
+                    </label>
+                @endforeach
+            </div>
+            @error('organization_ids') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            <button type="submit" class="mt-2 px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">Eigene Labels speichern</button>
         </form>
-        <p class="text-xs text-gray-400 -mt-2">Sein Anteil bleibt Ertrag. Produkte anderer Labels ohne Vertrag gehen zu 100 % an das Label.</p>
 
         <form method="GET" class="flex flex-wrap items-end gap-2">
             <div class="flex-1 min-w-[12rem]">
@@ -63,10 +77,16 @@
                     @endforeach
                 </select>
             </div>
-            <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 pb-2">
-                <input type="checkbox" name="all" value="1" @checked($all) onchange="this.form.submit()" class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
-                auch Produkte ohne Nutzung
-            </label>
+            <span class="inline-flex items-center gap-1.5 pb-2">
+                <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <input type="checkbox" name="all" value="1" @checked($all) onchange="this.form.submit()" class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
+                    auch Produkte ohne Rebeat-Nutzung
+                </label>
+                <x-admin.info-tip>
+                    Normalerweise zeigt die Liste nur Produkte, für die Rebeat seit dem Stichtag Nutzung gemeldet hat – nur sie kommen in die nächste Abrechnung.
+                    Mit Häkchen erscheint der ganze Katalog, auch Produkte ohne Streams und Downloads, etwa um Verträge für neue Veröffentlichungen schon im Voraus zu erfassen.
+                </x-admin.info-tip>
+            </span>
         </form>
     </div>
 

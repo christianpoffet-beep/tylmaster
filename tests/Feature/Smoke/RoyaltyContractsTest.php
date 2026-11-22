@@ -155,6 +155,24 @@ class RoyaltyContractsTest extends TestCase
         $this->assertStringContainsString('"organization_id":"' . $this->label->id . '"', $html, 'The own label is a party');
         $this->assertStringContainsString('"organization_id":"' . $this->band->id . '"', $html, 'The band is a party');
         $this->assertStringContainsString('Fog', $html, 'The tracks of the product are linked');
+        $this->assertStringContainsString('Veröffentlichung des Produkts', $html);
+        $this->assertStringContainsString('"label":"Streaming & Downloads","mode":"split","splits":[20,80],"category":"streaming"', $html,
+            'A template without rights brings the streaming split along');
+    }
+
+    public function test_without_a_release_date_the_first_usage_is_the_start(): void
+    {
+        $release = Release::create(['title' => 'Ohne Datum']);
+        $track = Track::create(['title' => 'Nebel', 'status' => 'released']);
+        $release->tracks()->attach($track, ['track_number' => 1, 'disc_number' => 1]);
+        $this->usage($track, 3);
+
+        $this->actingAs($this->user)->get("/admin/contracts/create?release={$release->id}")->assertOk()
+            ->assertSee('value="2024-05-01"', false)->assertSee('erste Nutzung bei Rebeat');
+
+        // Opened normally, nothing is suggested
+        $this->actingAs($this->user)->get('/admin/contracts/create')->assertOk()
+            ->assertDontSee('erste Nutzung bei Rebeat')->assertDontSee('"category":"streaming"', false);
     }
 
     public function test_the_overview_shows_what_is_covered_and_what_is_missing(): void
@@ -188,8 +206,19 @@ class RoyaltyContractsTest extends TestCase
             ->getContent();
         $this->assertStringContainsString("release={$missing->id}", $html, 'A link to the prefilled contract');
 
-        // The own label is chosen once
-        $this->actingAs($this->user)->post('/admin/royalties/contracts/own-label', ['organization_id' => $zentrum->id])->assertSessionHas('success');
-        $this->assertSame($zentrum->id, RoyaltySettings::ownOrganization()->id);
+        // A label The yelling light owns counts as its own: its products need an artist contract
+        $this->actingAs($this->user)->post('/admin/royalties/contracts/own-label', ['organization_ids' => [$zentrum->id, $this->label->id]])
+            ->assertSessionHas('success', '2 eigene Labels gespeichert.');
+        $this->assertSame([$this->label->id, $zentrum->id], RoyaltySettings::ownOrganizations()->pluck('id')->all(), 'The yelling light first');
+        $this->assertSame($this->label->id, RoyaltySettings::ownOrganization()->id);
+
+        $this->actingAs($this->user)->get('/admin/royalties/contracts')->assertOk()
+            ->assertDontSee('ohne Vertrag: 100 % an Zentrum')->assertSee('Eigene Labels (2)');
+
+        // ... and a new contract for one of its products is made with that label
+        $html = $this->actingAs($this->user)->get("/admin/contracts/create?release={$other->id}")->assertOk()->getContent();
+        $this->assertStringContainsString('"organization_id":"' . $zentrum->id . '"', $html);
+
+        $this->actingAs($this->user)->post('/admin/royalties/contracts/own-label', ['organization_ids' => []])->assertSessionHasErrors('organization_ids');
     }
 }

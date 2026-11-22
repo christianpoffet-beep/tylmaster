@@ -12,8 +12,9 @@ use Illuminate\Support\Collection;
 /**
  * Which products the statements can settle: per product its usage (not yet
  * settled by hand) and the contract that splits it. A product of another
- * label without a contract goes 100% to that label; one of the own label
- * needs a contract with a split for streaming.
+ * label without a contract goes 100% to that label; one of the own labels
+ * (The yelling light and the labels it owns) needs a contract with a split
+ * for streaming.
  */
 class RoyaltyCoverage
 {
@@ -23,11 +24,12 @@ class RoyaltyCoverage
     public const OTHER_LABEL = 'other_label';
     public const MISSING = 'missing';
 
-    private ?Organization $own;
+    /** @var Collection<int, Organization> */
+    private Collection $own;
 
     public function __construct()
     {
-        $this->own = RoyaltySettings::ownOrganization();
+        $this->own = RoyaltySettings::ownOrganizations();
     }
 
     /**
@@ -86,18 +88,19 @@ class RoyaltyCoverage
         ];
     }
 
-    public function own(): ?Organization
+    /** @return Collection<int, Organization> */
+    public function own(): Collection
     {
         return $this->own;
     }
 
-    /** The own label - also under another record of the same name */
+    /** One of the own labels - also under another record of the same name */
     public function isOwn(Organization $organization): bool
     {
-        if (!$this->own) return false;
+        $name = mb_strtolower(trim($organization->primary_name));
 
-        return $organization->id === $this->own->id
-            || mb_strtolower(trim($organization->primary_name)) === mb_strtolower(trim($this->own->primary_name));
+        return $this->own->contains(fn (Organization $own) => $own->id === $organization->id
+            || mb_strtolower(trim($own->primary_name)) === $name);
     }
 
     private function status(Collection $contracts, ?Organization $otherLabel): string

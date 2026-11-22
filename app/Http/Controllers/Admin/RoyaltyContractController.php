@@ -39,9 +39,16 @@ class RoyaltyContractController extends Controller
 
     public function setOwnLabel(Request $request)
     {
-        $data = $request->validate(['organization_id' => 'required|integer|exists:organizations,id']);
-        RoyaltySettings::setOwnOrganization(Organization::findOrFail($data['organization_id']));
+        $data = $request->validate([
+            'organization_ids' => 'required|array|min:1',
+            'organization_ids.*' => 'integer|exists:organizations,id',
+        ], [
+            'organization_ids.required' => 'Mindestens ein eigenes Label wählen.',
+        ]);
+        RoyaltySettings::setOwnOrganizations($data['organization_ids']);
 
-        return back()->with('success', 'Eigenes Label gespeichert.');
+        $count = count($data['organization_ids']);
+
+        return back()->with('success', $count === 1 ? 'Eigenes Label gespeichert.' : "{$count} eigene Labels gespeichert.");
     }
 }

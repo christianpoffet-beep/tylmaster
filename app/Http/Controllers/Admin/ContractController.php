@@ -95,7 +95,7 @@ class ContractController extends Controller
      * its tracks, and the parties - the own label and the band - are set; the
      * form fills in the rest from the template as usual.
      *
-     * @return array{template_id: ?int, title: ?string, start_date: ?string, releases: \Illuminate\Support\Collection, tracks: \Illuminate\Support\Collection, parties: array}
+     * @return array{template_id: ?int, title: ?string, start_date: ?string, start_hint: ?string, releases: \Illuminate\Support\Collection, tracks: \Illuminate\Support\Collection, parties: array, rights: array}
      */
     private function prefill(Request $request, $templates): array
     {
@@ -105,20 +105,46 @@ class ContractController extends Controller
 
         $owners = $release?->organizations ?? $track?->organizations ?? collect();
         $band = $owners->firstWhere('type', 'band');
-        $own = \App\Services\Royalties\RoyaltySettings::ownOrganization();
-        $parties = collect([$own, $band])->filter()->unique('id')->values()
-            ->map(fn ($org, $i) => ['type' => 'organization', 'organization_id' => (string) $org->id, 'contact_id' => '', 'share' => $i === 0 ? 20 : 80, 'role_label' => ''])
-            ->all();
+        // The contract is made with the product's own label (one The yelling light owns), else with The yelling light
+        $coverage = app(\App\Services\Royalties\RoyaltyCoverage::class);
+        $own = $owners->where('type', 'label')->first(fn ($label) => $coverage->isOwn($label))
+            ?? \App\Services\Royalties\RoyaltySettings::ownOrganization();
+        // Own label 20, artists 80; without a band on the product the second slot stays open to pick
+        $party = fn (?\App\Models\Organization $org, float $share) => ['type' => 'organization', 'organization_id' => $org ? (string) $org->id : '', 'contact_id' => '', 'share' => $share, 'role_label' => ''];
+        $parties = $own && ($release || $track) && $band?->id !== $own->id ? [$party($own, 20), $party($band, 80)] : [];
 
         $subject = $release?->title ?? $track?->display_title;
+        $tracks = $release ? $release->tracks : ($track ? collect([$track]) : collect());
+
+        // Start: the release of the product; without one the first month with usage,
+        // so the contract covers everything the statements will settle
+        [$startDate, $startHint] = [null, null];
+        if ($release?->release_date) {
+            [$startDate, $startHint] = [$release->release_date->format('Y-m-d'), 'Vorschlag: Veröffentlichung des Produkts.'];
+        } elseif ($release || $track) {
+            $firstUsage = \App\Models\RoyaltyLine::where(function ($q) use ($tracks, $release) {
+                $q->whereIn('track_id', $tracks->pluck('id'));
+                if ($release) $q->orWhere('release_id', $release->id);
+            })->min('period');
+            if ($firstUsage) {
+                [$startDate, $startHint] = [substr((string) $firstUsage, 0, 10), 'Vorschlag: erste Nutzung bei Rebeat (das Produkt hat kein Veröffentlichungsdatum). Ist das Vertragsdatum bekannt, bitte dieses eintragen.'];
+            }
+        }
+
+        // Without rights in the template, the split the statements need: streaming, own label first
+        $rights = ($release || $track) && empty($template?->rights)
+            ? [['label' => 'Streaming & Downloads', 'mode' => 'split', 'splits' => [20, 80], 'category' => 'streaming']]
+            : [];
 
         return [
             'template_id' => $template?->id,
             'title' => $subject ? trim(($band ? $band->primary_name . ' – ' : '') . $subject) : null,
-            'start_date' => ($release?->release_date)?->format('Y-m-d'),
+            'start_date' => $startDate,
+            'start_hint' => $startHint,
             'releases' => $release ? collect([$release]) : collect(),
-            'tracks' => $release ? $release->tracks : ($track ? collect([$track]) : collect()),
-            'parties' => count($parties) >= 2 ? $parties : [],
+            'tracks' => $tracks,
+            'parties' => $parties,
+            'rights' => $rights,
         ];
     }
 

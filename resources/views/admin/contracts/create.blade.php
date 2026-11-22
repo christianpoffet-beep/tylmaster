@@ -83,8 +83,8 @@
                 <div>
                     <label for="start_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Startdatum</label>
                     <input type="date" name="start_date" id="start_date" value="{{ old('start_date', $prefill['start_date']) }}" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    @if($prefill['start_date'])
-                        <p class="text-xs text-gray-400 mt-1">Vorschlag: Veröffentlichung des Produkts. Die Abrechnungen nehmen den Vertrag für Nutzungen ab diesem Datum.</p>
+                    @if($prefill['start_hint'])
+                        <p class="text-xs text-gray-400 mt-1">{{ $prefill['start_hint'] }} Die Abrechnungen nehmen den Vertrag für Nutzungen ab diesem Datum.</p>
                     @endif
                 </div>
                 <div>
@@ -180,7 +180,7 @@
                 'rightsLabelA' => old('rights_label_a', ''),
                 'rightsLabelB' => old('rights_label_b', ''),
                 'rightsLabels' => old('rights_labels', []),
-                'rightsData' => old('rights', []),
+                'rightsData' => old('rights', $prefill['rights']),
             ])
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
@@ -270,6 +270,7 @@ function contractForm() {
         },
         keepParties(wanted) {
             wanted.forEach(want => {
+                if (!want.organization_id) return; // an open slot to pick the artists in
                 if (this.parties.some(p => p.type === 'organization' && String(p.organization_id) === want.organization_id)) return;
                 const empty = this.parties.find(p => !p.organization_id && !p.contact_id);
                 if (empty) Object.assign(empty, { type: 'organization', organization_id: want.organization_id, contact_id: '' });
