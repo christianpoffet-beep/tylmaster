@@ -322,9 +322,18 @@ class RebeatMatcherTest extends TestCase
 
         $this->actingAs(User::factory()->create())->postJson('/_expired', ['_token' => 'alt'])
             ->assertStatus(419)
-            ->assertJsonPath('diagnose.angemeldet', 'ja')
             ->assertJsonPath('diagnose.Token gesendet', 'ja')
-            ->assertJsonPath('diagnose.Session-Cookie', 'nein');
+            ->assertJsonPath('diagnose.Session-Cookie', 'nein')
+            ->assertJsonPath('diagnose.Cookie-Name', config('session.cookie'));
+
+        // The same session cookie twice (another site on the parent domain) shows
+        $cookie = config('session.cookie');
+        $this->call('POST', '/_expired', [], [], [], ['HTTP_ACCEPT' => 'application/json', 'HTTP_COOKIE' => "{$cookie}=a; other=1; {$cookie}=b"])
+            ->assertStatus(419)->assertJsonPath('diagnose.Session-Cookie', '2× (doppelt)');
+
+        // A form gets a page with the same facts instead of the bare "Page Expired"
+        $this->post('/_expired', ['_token' => 'alt'])->assertStatus(419)
+            ->assertSee('Sitzung abgelaufen (419)')->assertSee('Session-Cookie')->assertSee('Cookie-Domain');
     }
 
     public function test_a_non_rebeat_upload_shows_an_error(): void

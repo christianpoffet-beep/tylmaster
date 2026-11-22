@@ -31,18 +31,12 @@ return Application::configure(basePath: dirname(__DIR__))
                     : back()->with('error', $message);
             }
 
-            // A script that posts (the Rebeat upload) learns what was missing - none of it secret
+            // A script that posts (the Rebeat upload) learns what was missing - none of it secret;
+            // a form gets resources/views/errors/419.blade.php, which shows the same
             if ($request->expectsJson()) {
-                $yes = fn (bool $value) => $value ? 'ja' : 'nein';
-
                 return response()->json([
                     'message' => 'Der Server lehnt die Sitzung ab',
-                    'diagnose' => [
-                        'Session-Cookie' => $yes($request->cookies->has(config('session.cookie'))),
-                        'angemeldet' => $yes(auth()->guard('web')->check()),
-                        'Token gesendet' => $yes(filled($request->input('_token')) || filled($request->header('X-CSRF-TOKEN'))),
-                        'Grösse' => round((int) $request->server('CONTENT_LENGTH') / 1024) . ' KB',
-                    ],
+                    'diagnose' => \App\Support\SessionDiagnosis::of($request),
                 ], 419);
             }
 
