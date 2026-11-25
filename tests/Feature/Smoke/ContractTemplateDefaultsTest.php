@@ -169,6 +169,44 @@ class ContractTemplateDefaultsTest extends TestCase
     }
 
     /**
+     * A contract does not remember its template. Editing one offers the logo
+     * of a template of the same kind, so a logo added later still reaches it.
+     * A logo is a picture the PDF can print: no SVG.
+     */
+    public function test_an_existing_contract_takes_the_template_logo_when_edited(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('contracts/logos/zentrum.png', 'png-bytes');
+        ContractType::firstOrCreate(['slug' => 'publishing'], ['name' => 'Publishing', 'sort_order' => 2]);
+        $template = ContractTemplate::create(['name' => 'Publishing', 'contract_type_slug' => 'publishing', 'language' => 'de',
+            'logo_path' => 'contracts/logos/zentrum.png', 'logo_in_header' => true, 'logo_as_watermark' => false]);
+        $contract = Contract::create(['title' => 'Verlagsvertrag', 'type' => 'publishing', 'status' => 'draft', 'language' => 'de']);
+        $org = Organization::create(['type' => 'publishing', 'names' => ['Zentrum']]);
+        $contact = Contact::create(['first_name' => 'Anna', 'last_name' => 'Muster']);
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get("/admin/contracts/{$contract->id}/edit")->assertOk()
+            ->assertSee('Logo aus der Vorlage')->assertSee('name="logo_template_id"', false);
+
+        $form = [
+            'title' => 'Verlagsvertrag', 'type' => 'publishing', 'status' => 'draft', 'language' => 'de',
+            'parties' => [
+                ['type' => 'organization', 'organization_id' => $org->id, 'share' => 15],
+                ['type' => 'contact', 'contact_id' => $contact->id, 'share' => 85],
+            ],
+        ];
+        $this->actingAs($user)->put("/admin/contracts/{$contract->id}", $form + [
+            'logo_source' => 'upload', 'logo_file' => UploadedFile::fake()->create('logo.svg', 2, 'image/svg+xml'),
+        ])->assertSessionHasErrors('logo_file');
+
+        $this->actingAs($user)->put("/admin/contracts/{$contract->id}", $form + [
+            'logo_source' => 'template', 'logo_template_id' => $template->id, 'logo_in_header' => '1',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame('contracts/logos/zentrum.png', $contract->fresh()->logo_path);
+        $this->assertTrue($contract->fresh()->logo_in_header);
+    }
+
+    /**
      * The contract form fills itself from the JSON the template hands out, so
      * every new default has to be in there.
      */

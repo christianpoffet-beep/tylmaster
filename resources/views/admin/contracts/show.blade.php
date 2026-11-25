@@ -265,7 +265,7 @@
                     @php if (($contract->auto_number_sections ?? true) && $section['numbered']) { $sectionNo++; } @endphp
                     <div>
                         @if($section['title'])
-                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">@if(($contract->auto_number_sections ?? true) && $section['numbered'])<span class="text-gray-400">{{ $sectionNo }}.</span> @endif{!! $marked($section['title']) !!}</h3>
+                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">@if(isset($section['number']))<span class="text-gray-400">{{ $section['number'] }}.</span> @elseif(($contract->auto_number_sections ?? true) && $section['numbered'])<span class="text-gray-400">{{ $sectionNo }}.</span> @endif{!! $marked($section['title']) !!}</h3>
                         @endif
                         <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{!! $marked($section['body']) !!}</p>
                     </div>

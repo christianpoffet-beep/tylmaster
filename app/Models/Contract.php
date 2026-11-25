@@ -380,6 +380,17 @@ class Contract extends Model
         ));
 
         if ($sections === [] && trim((string) $this->terms) !== '') {
+            // Free text with its own headings ("2. Rechteübertragung"): clauses with the numbers as typed
+            if ($headed = self::splitHeadedText($this->terms)) {
+                return array_map(fn ($s) => [
+                    'title' => $this->fillPlaceholders($s['title']),
+                    'body' => $this->fillPlaceholders($s['body']),
+                    'page_break' => false,
+                    'numbered' => false,
+                    'number' => $s['number'],
+                ], $headed);
+            }
+
             return [[
                 'title' => $t['terms_title'],
                 'body' => $this->fillPlaceholders($this->terms),
@@ -394,6 +405,49 @@ class Contract extends Model
             'page_break' => !empty($s['page_break']),
             'numbered' => !isset($s['numbered']) || !empty($s['numbered']),
         ], $sections);
+    }
+
+    /**
+     * Split a free text on its heading lines, the same rule as «In Abschnitte
+     * umwandeln» in the form: "2. Rechteübertragung" on a line of its own, at
+     * most 80 characters, not ending like a sentence. Only when there are
+     * several and their numbers follow each other without a gap - a numbered
+     * list inside a clause is no heading, and then the text stays one block.
+     *
+     * @return array<int, array{title: string, body: string, number: ?int}>|null
+     */
+    public static function splitHeadedText(string $text): ?array
+    {
+        $found = [];
+        $current = null;
+        foreach (explode("\n", str_replace("\r\n", "\n", $text)) as $line) {
+            $heading = null;
+            if (preg_match('/^\s*(\d+)\s*[.)]\s+(.{1,80})$/u', $line, $m)) {
+                $title = trim($m[2]);
+                $letters = preg_replace('/[^\p{L}]/u', '', $title);
+                $allCaps = $letters !== '' && mb_strtoupper($title) === $title;
+                if ($allCaps || !preg_match('/[.!?]$/u', $title)) {
+                    $heading = ['number' => (int) $m[1], 'title' => $title];
+                }
+            }
+
+            if ($heading) {
+                if ($current) $found[] = $current;
+                $current = $heading + ['body' => ''];
+            } elseif ($current) {
+                $current['body'] .= $line . "\n";
+            } elseif (trim($line) !== '') {
+                $current = ['number' => null, 'title' => '', 'body' => $line . "\n"];
+            }
+        }
+        if ($current) $found[] = $current;
+
+        $numbers = array_values(array_filter(array_column($found, 'number'), fn ($n) => $n !== null));
+        if (count($numbers) < 2 || $numbers !== range($numbers[0], $numbers[0] + count($numbers) - 1)) {
+            return null;
+        }
+
+        return array_map(fn ($s) => ['title' => $s['title'], 'body' => trim($s['body']), 'number' => $s['number']], $found);
     }
 
     /**
@@ -456,6 +510,8 @@ class Contract extends Model
             'relations_track_alt' => 'auch:',
             'relations_releases' => 'Produkte',
             'relations_intro_default' => 'Folgende Songs sind Bestandteil dieses Vertrages.',
+            'relations_works' => 'Werke',
+            'relations_intro_default_works' => 'Folgende Werke sind Bestandteil dieses Vertrages.',
             'relations_credits' => 'Credits',
             'terms_title' => 'Bedingungen',
             'signature_line' => 'Ort, Datum, Unterschrift',
@@ -506,6 +562,8 @@ class Contract extends Model
             'relations_track_alt' => 'also:',
             'relations_releases' => 'Products',
             'relations_intro_default' => 'The following songs are part of this contract.',
+            'relations_works' => 'Works',
+            'relations_intro_default_works' => 'The following works are part of this contract.',
             'relations_credits' => 'Credits',
             'terms_title' => 'Terms',
             'signature_line' => 'Place, date, signature',
@@ -556,6 +614,8 @@ class Contract extends Model
             'relations_track_alt' => 'también:',
             'relations_releases' => 'Productos',
             'relations_intro_default' => 'Las siguientes canciones forman parte de este contrato.',
+            'relations_works' => 'Obras',
+            'relations_intro_default_works' => 'Las siguientes obras forman parte de este contrato.',
             'relations_credits' => 'Créditos',
             'terms_title' => 'Condiciones',
             'signature_line' => 'Lugar, fecha, firma',
