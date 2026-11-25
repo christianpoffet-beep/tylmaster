@@ -297,6 +297,58 @@ class ContractPdfTest extends TestCase
     }
 
     /**
+     * A free text pasted with its own headings ("2. Rechteübertragung") prints
+     * as clauses with the numbers as typed, not as one block under
+     * «Bedingungen». A numbered list inside a clause is no heading.
+     */
+    public function test_headings_in_the_free_text_become_clauses(): void
+    {
+        $contract = $this->makeContract();
+        $contract->update(['terms' => "2. Rechteübertragung\nDie Rechte gehen über.\n\n3. SUISA\nGemäss Ziff. 2.\n\n4. Pflichten von {publisher_name}\nBetreuen."]);
+
+        $html = $this->renderPdfView($contract);
+        $this->assertMatchesRegularExpression('/clause-number">2\.<\/span>\s*Rechteübertragung/u', $html);
+        $this->assertMatchesRegularExpression('/clause-number">3\.<\/span>\s*SUISA/u', $html);
+        $this->assertStringContainsString('Pflichten von Test Label', $html);
+        $this->assertStringNotContainsString('>Bedingungen<', $html);
+
+        $this->actingAs(User::factory()->create())->get("/admin/contracts/{$contract->id}")->assertOk()
+            ->assertSee('Rechteübertragung')->assertSee('Gemäss Ziff. 2.');
+
+        // A list that starts again at 1: no headings, one block as before
+        $this->assertNull(Contract::splitHeadedText("1. Rechte\nText\n2. Pflichten\nDer Künstler:\n1. liefert\n2. meldet"));
+        $this->assertNull(Contract::splitHeadedText("Nur Text.\n1. Ein einziger Punkt"));
+        $this->assertSame([['title' => '', 'body' => 'Vorab.', 'number' => null], ['title' => 'A', 'body' => 'x', 'number' => 5], ['title' => 'B', 'body' => 'y', 'number' => 6]],
+            Contract::splitHeadedText("Vorab.\n5. A\nx\n6) B\ny"));
+    }
+
+    /**
+     * A publishing deal is about the works: the annex speaks of works and
+     * lists their authors, not who played on the recording.
+     */
+    public function test_a_publishing_annex_lists_the_authors_of_the_works(): void
+    {
+        $contract = $this->makeContract();
+        $contract->update(['type' => 'publishing', 'relations_note' => null]);
+        $track = Track::create(['title' => 'Faust', 'status' => 'released']);
+        $author = Contact::create(['first_name' => 'Domi', 'last_name' => 'Test']);
+        $track->contacts()->attach($author->id, ['role' => 'composer', 'ipi_number' => '00660960337']);
+        $track->contacts()->attach($author->id, ['role' => 'instrumentalist', 'instrument' => 'Drums']);
+        $contract->tracks()->attach($track);
+
+        $html = $this->renderPdfView($contract);
+        $this->assertStringContainsString('Folgende Werke sind Bestandteil dieses Vertrages.', $html);
+        $this->assertStringContainsString('>Werke<', $html);
+        $this->assertStringContainsString('Komponist:', $html);
+        $this->assertStringNotContainsString('Instrumentalist:', $html);
+
+        $contract->update(['type' => 'label']);
+        $html = $this->renderPdfView($contract);
+        $this->assertStringContainsString('Folgende Songs sind Bestandteil dieses Vertrages.', $html);
+        $this->assertStringContainsString('Instrumentalist:', $html);
+    }
+
+    /**
      * dompdf has no "pages" counter, so the total is counted in a first pass
      * and handed to the view. Without it only the page number is printed —
      * never "von 0".

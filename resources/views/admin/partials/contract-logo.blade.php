@@ -10,6 +10,8 @@
     $defaultHeader = old('logo_in_header', $logoModel?->logo_in_header) ? true : false;
     $defaultWatermark = old('logo_as_watermark', $logoModel?->logo_as_watermark) ? true : false;
     $offerTemplateLogo = $offerTemplateLogo ?? false;
+    // Editing: the logo of a template of the same kind, offered to take over
+    $templateLogo = $templateLogo ?? null;
 @endphp
 
 <div class="border-t border-gray-200 dark:border-gray-700 pt-6"
@@ -18,6 +20,7 @@
         hasLogo: {{ $hasLogo ? 'true' : 'false' }},
         inHeader: {{ $defaultHeader ? 'true' : 'false' }},
         asWatermark: {{ $defaultWatermark ? 'true' : 'false' }},
+        templateLogo: @js($templateLogo),
      })"
      @template-logo-set.window="setTemplateLogo($event.detail)">
     <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Logo</p>
@@ -25,6 +28,7 @@
 
     <input type="hidden" name="logo_source" :value="source">
     <input type="hidden" name="artwork_logo_id" :value="source === 'artwork' ? (selectedLogo?.id ?? '') : ''">
+    <input type="hidden" name="logo_template_id" :value="source === 'template' ? (templateLogo?.id ?? '') : ''">
 
     {{-- Source selection --}}
     <div class="space-y-2 mb-4">
@@ -38,9 +42,9 @@
         </label>
         @endif
 
-        @if($offerTemplateLogo)
+        @if($offerTemplateLogo || $templateLogo)
         <label x-show="templateLogo" x-cloak class="flex items-center gap-3 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
-            <input type="radio" value="template" x-model="source" class="text-blue-600 focus:ring-blue-500">
+            <input type="radio" value="template" x-model="source" @change="inHeader = !!templateLogo?.in_header; asWatermark = !!templateLogo?.as_watermark" class="text-blue-600 focus:ring-blue-500">
             <span class="flex items-center gap-3">
                 <img :src="templateLogo?.url" alt="" class="h-8 w-auto max-w-[80px] object-contain bg-white rounded border border-gray-200">
                 <span class="text-sm text-gray-700 dark:text-gray-300">Logo aus der Vorlage <span x-text="templateLogo?.label"></span></span>
@@ -98,7 +102,7 @@
     <div x-show="source === 'upload'" x-transition class="mb-4 ml-1">
         <input type="file" name="logo_file" accept="image/*"
             class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900">
-        <p class="text-xs text-gray-400 mt-1">PNG, JPG oder SVG. Empfohlen: transparenter Hintergrund.</p>
+        <p class="text-xs text-gray-400 mt-1">PNG oder JPG, am besten mit transparentem Hintergrund. SVG kann das PDF nicht drucken.</p>
     </div>
     @error('logo_file') <p class="text-red-500 text-xs mb-2 ml-1">{{ $message }}</p> @enderror
 
@@ -114,6 +118,7 @@
             <input type="checkbox" name="logo_as_watermark" value="1" x-model="asWatermark" class="rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
             <span class="text-sm text-gray-700 dark:text-gray-300">Als Wasserzeichen einfügen</span>
         </label>
+        <p x-show="!inHeader && !asWatermark" x-cloak class="text-xs text-amber-600 dark:text-amber-400">Ohne Haken erscheint das Logo nirgends im PDF.</p>
     </div>
 </div>
 
@@ -129,7 +134,16 @@ function contractLogo(init) {
         open: false,
         loading: false,
         selectedLogo: null,
-        templateLogo: null,
+        templateLogo: init.templateLogo ?? null,
+
+        init() {
+            // A logo just chosen shows up top right, unless a placement is ticked already
+            this.$watch('source', (value, old) => {
+                if (['upload', 'artwork'].includes(value) && old !== value && !this.inHeader && !this.asWatermark) {
+                    this.inHeader = true;
+                }
+            });
+        },
 
         /**
          * A chosen contract template may carry its own logo. Selecting it here

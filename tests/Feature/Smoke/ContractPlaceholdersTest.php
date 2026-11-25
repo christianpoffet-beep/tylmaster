@@ -191,6 +191,42 @@ class ContractPlaceholdersTest extends TestCase
     }
 
     /**
+     * The parties as the form saves them when no role is set: the split
+     * labels carry the names, so every party is a group of its own. The
+     * authors are still one side - both of them, in the plural.
+     */
+    public function test_authors_without_a_common_role_are_one_side(): void
+    {
+        $publisher = Organization::create(['type' => 'publishing', 'names' => ['Zentrum-Musikverlag']]);
+        $artist = Contact::create(['first_name' => 'Domi', 'last_name' => 'Test', 'gender' => 'male']);
+        $person = Contact::create(['first_name' => 'Béa', 'last_name' => 'Muster', 'gender' => 'female']);
+
+        foreach ([null, ['Verlag', 'Urheberin', 'Urheber']] as $roles) {
+            $contract = Contract::create(['title' => 'Verlagsvertrag', 'type' => 'publishing', 'status' => 'draft', 'language' => 'de',
+                'rights_labels' => ['Zentrum-Musikverlag', 'Domi Test', 'Béa Muster']]);
+            foreach ([[$publisher->id, null, 15], [null, $artist->id, 42.5], [null, $person->id, 42.5]] as $i => [$org, $contact, $share]) {
+                ContractParty::create(['contract_id' => $contract->id, 'organization_id' => $org, 'contact_id' => $contact, 'share' => $share,
+                    'role_label' => $roles[$i] ?? null, 'sort_order' => $i]);
+            }
+            $contract = $contract->fresh()->load(['parties.organization', 'parties.contact']);
+
+            $this->assertSame(
+                'Rechte, die Domi Test und Béa Muster der SUISA übertragen haben: 15 % für Zentrum-Musikverlag, 85 % für sie. Sie teilen je ihre Daten mit.',
+                $contract->fillPlaceholders('Rechte, die {author_names} der SUISA übertragen {hat|haben}: {publisher_share} % für {publisher_name}, {author_share} % für sie. Sie {teilt|teilen} {je_ihre} Daten mit.'),
+                $roles ? 'A role each' : 'No role'
+            );
+        }
+
+        // Without any role or label: the publisher is still found by its kind, wherever it stands
+        $contract = Contract::create(['title' => 'Ohne Rollen', 'type' => 'publishing', 'status' => 'draft', 'language' => 'de']);
+        ContractParty::create(['contract_id' => $contract->id, 'contact_id' => $artist->id, 'share' => 85, 'sort_order' => 0]);
+        ContractParty::create(['contract_id' => $contract->id, 'organization_id' => $publisher->id, 'share' => 15, 'sort_order' => 1]);
+        $contract = $contract->fresh()->load(['parties.organization', 'parties.contact']);
+        $this->assertSame('Domi Test überträgt Zentrum-Musikverlag 85 %, seine Daten.',
+            $contract->fillPlaceholders('{author_names} {überträgt|übertragen} {publisher_name} {author_share} %, {je_ihre} Daten.'));
+    }
+
+    /**
      * Only something that looks like one verb in two forms is read as a
      * pair. A missing value must stay visible, never become half its name.
      */

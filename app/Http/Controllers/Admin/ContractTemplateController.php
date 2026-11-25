@@ -96,7 +96,7 @@ class ContractTemplateController extends Controller
             'document' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,txt,jpg,jpeg,png|max:51200',
             'logo_source' => 'nullable|in:keep,none,artwork,upload',
             'artwork_logo_id' => 'nullable|exists:artwork_logos,id',
-            'logo_file' => 'nullable|file|image|max:51200',
+            'logo_file' => 'nullable|file|mimes:png,jpg,jpeg,gif,webp|max:51200', // what the PDF can print: no SVG
             'logo_in_header' => 'nullable|boolean',
             'logo_as_watermark' => 'nullable|boolean',
             'parties' => 'nullable|array',
@@ -216,7 +216,7 @@ class ContractTemplateController extends Controller
             'document' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,txt,jpg,jpeg,png|max:51200',
             'logo_source' => 'nullable|in:keep,none,artwork,upload',
             'artwork_logo_id' => 'nullable|exists:artwork_logos,id',
-            'logo_file' => 'nullable|file|image|max:51200',
+            'logo_file' => 'nullable|file|mimes:png,jpg,jpeg,gif,webp|max:51200', // what the PDF can print: no SVG
             'logo_in_header' => 'nullable|boolean',
             'logo_as_watermark' => 'nullable|boolean',
             'parties' => 'nullable|array',

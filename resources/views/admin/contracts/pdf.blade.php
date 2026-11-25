@@ -613,7 +613,7 @@
             <div class="clause" @if($section['page_break'] && ($contract->subject || !$loop->first)) style="page-break-before: always;" @endif>
                 @include('admin.contracts.partials.clause', [
                     'title' => $section['title'],
-                    'number' => ($autoNumber && $section['numbered']) ? $clauseNo : null,
+                    'number' => $section['number'] ?? (($autoNumber && $section['numbered']) ? $clauseNo : null),
                     'titleClass' => 'clause-title',
                     'body' => $section['body'],
                 ])
@@ -650,6 +650,9 @@
         // The annex already says "Anhang" - "Anhang: Aufnahmen" would say it twice.
         $relationsTitle = $contract->fillPlaceholders($contract->relations_heading) ?: $t['relations_title'];
         $relationsTitle = preg_replace('/^' . preg_quote($t['annex_title'], '/') . '\s*[:–-]\s*/iu', '', $relationsTitle) ?: $relationsTitle;
+        // A publishing deal is about the works: their authors, not who played on the recording
+        $aboutWorks = !$contract->coversRecordings();
+        $authorRoles = array_keys(\App\Models\Setting::creditRoles()['Songwriting & Komposition'] ?? \App\Models\Track::CREDIT_ROLES['Songwriting & Komposition']);
     @endphp
     <div class="annex-block">
         <div class="keep-together">
@@ -658,7 +661,7 @@
                 @php $annexHeadingPending = false; @endphp
             @endif
             <div class="clause-title">{{ $relationsTitle }}</div>
-            <div class="relations-note">{{ $contract->fillPlaceholders($contract->relations_note) ?: $t['relations_intro_default'] }}</div>
+            <div class="relations-note">{{ $contract->fillPlaceholders($contract->relations_note) ?: $t[$aboutWorks ? 'relations_intro_default_works' : 'relations_intro_default'] }}</div>
         </div>
 
         @if($contract->projects->count())
@@ -677,7 +680,7 @@
             @foreach($contract->tracks as $track)
                 <div class="track-credit-block">
                     @if($loop->first)
-                        <p style="font-size: 9pt; font-weight: bold; color: #6b7280; margin: 8px 0 4px;">{{ $t['relations_tracks'] }}</p>
+                        <p style="font-size: 9pt; font-weight: bold; color: #6b7280; margin: 8px 0 4px;">{{ $t[$aboutWorks ? 'relations_works' : 'relations_tracks'] }}</p>
                     @endif
                     <div class="track-credit-title">
                         {{ $track->display_title }}@if($track->isrc) <span class="track-credit-isrc">{{ $track->isrc_formatted }}</span>@endif
@@ -685,8 +688,13 @@
                     @if($track->alternative_titles_list)
                         <div class="track-credit-alt">{{ $t['relations_track_alt'] }} {{ $track->alternative_titles_list }}</div>
                     @endif
-                    @if($track->contacts->count())
-                        @foreach($track->contacts as $credit)
+                    @php
+                        $credits = $aboutWorks
+                            ? $track->contacts->filter(fn ($c) => in_array($c->pivot->role, $authorRoles, true))
+                            : $track->contacts;
+                    @endphp
+                    @if($credits->count())
+                        @foreach($credits as $credit)
                             @php
                                 $pivotIpi = $credit->pivot->ipi_number ?? null;
                                 $matchedIpi = $pivotIpi ? collect($credit->ipis ?? [])->first(fn($i) => ($i['number'] ?? null) === $pivotIpi) : null;

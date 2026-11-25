@@ -160,7 +160,7 @@ class ContractController extends Controller
             'document' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,txt,jpg,jpeg,png|max:51200',
             'logo_source' => 'nullable|in:keep,none,artwork,upload,template',
             'artwork_logo_id' => 'nullable|exists:artwork_logos,id',
-            'logo_file' => 'nullable|file|image|max:51200',
+            'logo_file' => 'nullable|file|mimes:png,jpg,jpeg,gif,webp|max:51200', // what the PDF can print: no SVG
             'logo_in_header' => 'nullable|boolean',
             'logo_as_watermark' => 'nullable|boolean',
             'end_date' => 'nullable|date|after_or_equal:start_date',
@@ -333,7 +333,18 @@ class ContractController extends Controller
 
         $otherContracts = Contract::whereKeyNot($contract->id)->orderByDesc('contract_number')->get(['id', 'contract_number', 'title']);
 
-        return view('admin.contracts.edit', compact('contract', 'contacts', 'organizations', 'projects', 'tracks', 'releases', 'orgContactsMap', 'partiesData', 'contractTypes', 'territoryPresets', 'otherContracts'));
+        // A contract does not remember its template: offer the logo of one of the same kind (and language)
+        $logoTemplate = ContractTemplate::whereNotNull('logo_path')->where('contract_type_slug', $contract->type)
+            ->orderByRaw('case when language = ? then 0 else 1 end', [$contract->language ?: 'de'])->orderBy('sort_order')->first();
+        $templateLogo = $logoTemplate && $logoTemplate->logo_path !== $contract->logo_path ? [
+            'id' => $logoTemplate->id,
+            'url' => Storage::disk('public')->url($logoTemplate->logo_path),
+            'label' => $logoTemplate->name,
+            'in_header' => (bool) $logoTemplate->logo_in_header,
+            'as_watermark' => (bool) $logoTemplate->logo_as_watermark,
+        ] : null;
+
+        return view('admin.contracts.edit', compact('contract', 'contacts', 'organizations', 'projects', 'tracks', 'releases', 'orgContactsMap', 'partiesData', 'contractTypes', 'territoryPresets', 'otherContracts', 'templateLogo'));
     }
 
     public function update(Request $request, Contract $contract)
@@ -366,9 +377,10 @@ class ContractController extends Controller
             'zession_currency' => 'nullable|in:CHF,EUR,USD',
             'zession_notes' => 'nullable|string',
             'document' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,txt,jpg,jpeg,png|max:51200',
-            'logo_source' => 'nullable|in:keep,none,artwork,upload',
+            'logo_source' => 'nullable|in:keep,none,artwork,upload,template',
+            'logo_template_id' => 'nullable|exists:contract_templates,id',
             'artwork_logo_id' => 'nullable|exists:artwork_logos,id',
-            'logo_file' => 'nullable|file|image|max:51200',
+            'logo_file' => 'nullable|file|mimes:png,jpg,jpeg,gif,webp|max:51200', // what the PDF can print: no SVG
             'logo_in_header' => 'nullable|boolean',
             'logo_as_watermark' => 'nullable|boolean',
             'territory' => 'nullable|array',
@@ -420,7 +432,8 @@ class ContractController extends Controller
         $validated['rights_label_a'] = $rightsLabels[0] ?? $request->input('rights_label_a');
         $validated['rights_label_b'] = $rightsLabels[1] ?? $request->input('rights_label_b');
 
-        $this->applyLogoSelection($request, $validated);
+        $logoTemplate = $request->filled('logo_template_id') ? ContractTemplate::find($request->input('logo_template_id')) : null;
+        $this->applyLogoSelection($request, $validated, $logoTemplate);
 
         $validated['has_zession'] = $request->boolean('has_zession');
         if (!$validated['has_zession']) {
@@ -434,7 +447,7 @@ class ContractController extends Controller
         $parties = $validated['parties'];
         unset(
             $validated['parties'], $validated['project_ids'], $validated['track_ids'], $validated['release_ids'],
-            $validated['logo_source'], $validated['artwork_logo_id'], $validated['logo_file']
+            $validated['logo_source'], $validated['artwork_logo_id'], $validated['logo_file'], $validated['logo_template_id']
         );
 
         $contract->update($validated);

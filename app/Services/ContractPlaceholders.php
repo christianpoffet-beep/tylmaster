@@ -218,7 +218,9 @@ class ContractPlaceholders
      * The label's side and the artist's side of the deal.
      *
      * Built on the preamble's grouping by role. The label is the group whose
-     * role says «Label», otherwise the first one; the artist is the next group.
+     * role says «Label» or «Verlag», else the first party that is a label or
+     * publisher, else the first one. Everybody else faces it: two authors
+     * without a role, or with a role each, are one side all the same.
      *
      * @return array{label: ContractParty[], artist: ContractParty[]}
      */
@@ -228,41 +230,36 @@ class ContractPlaceholders
             return $this->sides;
         }
 
-        $groups = [];
-        foreach ($this->contract->partyRoleGroups() as $group) {
-            $lastIndex = array_key_last($groups);
-            $last = $lastIndex === null ? null : $groups[$lastIndex];
+        $groups = $this->contract->partyRoleGroups();
 
-            // Band members without any role still form one side.
-            $sharedOrg = $last ? $this->sharedOrganizationId($last['parties']) : null;
-            if ($last && $last['role'] === null && $group['role'] === null
-                && $sharedOrg !== null && $sharedOrg === $this->sharedOrganizationId($group['parties'])) {
-                $groups[$lastIndex]['parties'] = array_merge($last['parties'], $group['parties']);
-                continue;
-            }
-
-            $groups[] = $group;
-        }
-
-        $labelIndex = 0;
+        $labelIndex = null;
         foreach ($groups as $i => $group) {
             if ($group['role'] !== null && preg_match('/label|verlag|publish/iu', $group['role'])) {
                 $labelIndex = $i;
                 break;
             }
         }
+        if ($labelIndex === null) {
+            foreach ($groups as $i => $group) {
+                $type = $group['parties'][0]->organization?->type;
+                if (in_array($type, ['label', 'publishing'], true)) {
+                    $labelIndex = $i;
+                    break;
+                }
+            }
+        }
+        $labelIndex ??= 0;
 
-        $artistIndex = null;
-        foreach (array_keys($groups) as $i) {
+        $artist = [];
+        foreach ($groups as $i => $group) {
             if ($i !== $labelIndex) {
-                $artistIndex = $i;
-                break;
+                $artist = array_merge($artist, $group['parties']);
             }
         }
 
         return $this->sides = [
             'label' => $groups[$labelIndex]['parties'] ?? [],
-            'artist' => $artistIndex !== null ? $groups[$artistIndex]['parties'] : [],
+            'artist' => $artist,
         ];
     }
 

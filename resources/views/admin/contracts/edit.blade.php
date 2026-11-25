@@ -194,7 +194,7 @@
                 'current' => $contract->placeholders()->values(),
             ])
 
-            @include('admin.partials.contract-logo', ['model' => $contract])
+            @include('admin.partials.contract-logo', ['model' => $contract, 'templateLogo' => $templateLogo ?? null])
 
             <div>
                 <label for="document" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Neues Dokument hochladen</label>
