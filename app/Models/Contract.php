@@ -17,7 +17,7 @@ class Contract extends Model
         'sections', 'auto_number_sections', 'closing_note', 'placeholder_values',
         'has_zession', 'zession_amount', 'zession_currency', 'zession_notes',
         'territory', 'rights', 'rights_label_a', 'rights_label_b', 'rights_labels',
-        'logo_path', 'logo_in_header', 'logo_as_watermark',
+        'logo_path', 'logo_in_header', 'logo_as_watermark', 'track_details',
     ];
 
     protected $casts = [
@@ -44,6 +44,21 @@ class Contract extends Model
     public static function languageRule(): string
     {
         return 'in:' . implode(',', array_keys(self::LANGUAGES));
+    }
+
+    /** How the linked songs appear in the PDF: [label, hint] */
+    public const TRACK_DETAILS = [
+        'title' => ['Nur Titel', 'Titel, ISRC und Alternativtitel'],
+        'names' => ['Titel und beteiligte Namen', 'z. B. «Domi Chansorn, Béatrice Graf» – ohne Rollen'],
+        'credits' => ['Titel, Namen und Credits', 'Rolle, Instrument und IPI je Person; im Verlagsvertrag nur die Urheber'],
+    ];
+
+    /** What every contract printed before the choice existed */
+    public const TRACK_DETAILS_DEFAULT = 'credits';
+
+    public function trackDetails(): string
+    {
+        return array_key_exists((string) $this->track_details, self::TRACK_DETAILS) ? $this->track_details : self::TRACK_DETAILS_DEFAULT;
     }
 
     /** Statuses whose contracts count for the statements to the artists (a draft does not) */

@@ -26,6 +26,12 @@ trait HandlesContractLogo
      */
     protected function applyLogoSelection(Request $request, array &$validated, ?ContractTemplate $template = null): void
     {
+        // How the songs appear sits in the same part of the form; a form without it keeps the choice
+        if ($request->has('track_details')) {
+            $choice = (string) $request->input('track_details');
+            $validated['track_details'] = array_key_exists($choice, \App\Models\Contract::TRACK_DETAILS) ? $choice : null;
+        }
+
         $validated['logo_in_header'] = $request->boolean('logo_in_header');
         $validated['logo_as_watermark'] = $request->boolean('logo_as_watermark');
 

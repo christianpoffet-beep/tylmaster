@@ -217,6 +217,7 @@
             ])
 
             @include('admin.partials.contract-logo', ['model' => null, 'offerTemplateLogo' => true])
+            @include('admin.partials.contract-track-details', ['model' => null])
 
             <div>
                 <label for="document" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vertragsdokument</label>
@@ -355,6 +356,7 @@ function contractForm() {
                 window.dispatchEvent(new CustomEvent('paste-releases', { detail: data.default_releases || [] }));
 
                 window.dispatchEvent(new CustomEvent('template-logo-set', { detail: data.logo }));
+                window.dispatchEvent(new CustomEvent('track-details-set', { detail: data.track_details }));
                 this.templateDocumentCount = data.document_count || 0;
                 if (data.default_parties && data.default_parties.length > 0) {
                     this.parties = data.default_parties.map(p => ({

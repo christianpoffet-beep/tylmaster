@@ -19,7 +19,7 @@ class ContractTemplate extends Model
         'default_territory',
         'default_preamble_mode', 'default_preamble_text', 'default_show_parties_table', 'default_auto_number_sections',
         'default_project_ids', 'default_track_ids', 'default_release_ids',
-        'logo_path', 'logo_in_header', 'logo_as_watermark',
+        'logo_path', 'logo_in_header', 'logo_as_watermark', 'track_details',
     ];
 
     protected $casts = [

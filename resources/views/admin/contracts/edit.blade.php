@@ -195,6 +195,7 @@
             ])
 
             @include('admin.partials.contract-logo', ['model' => $contract, 'templateLogo' => $templateLogo ?? null])
+            @include('admin.partials.contract-track-details', ['model' => $contract])
 
             <div>
                 <label for="document" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Neues Dokument hochladen</label>

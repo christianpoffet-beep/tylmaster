@@ -180,6 +180,7 @@
             </div>
 
             @include('admin.partials.contract-logo', ['model' => null])
+            @include('admin.partials.contract-track-details', ['model' => null])
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <label for="document" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Standard-Vertragsdokument</label>

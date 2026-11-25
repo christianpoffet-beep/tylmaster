@@ -652,6 +652,7 @@
         $relationsTitle = preg_replace('/^' . preg_quote($t['annex_title'], '/') . '\s*[:–-]\s*/iu', '', $relationsTitle) ?: $relationsTitle;
         // A publishing deal is about the works: their authors, not who played on the recording
         $aboutWorks = !$contract->coversRecordings();
+        $trackDetails = $contract->trackDetails();
         $authorRoles = array_keys(\App\Models\Setting::creditRoles()['Songwriting & Komposition'] ?? \App\Models\Track::CREDIT_ROLES['Songwriting & Komposition']);
     @endphp
     <div class="annex-block">
@@ -692,8 +693,11 @@
                         $credits = $aboutWorks
                             ? $track->contacts->filter(fn ($c) => in_array($c->pivot->role, $authorRoles, true))
                             : $track->contacts;
+                        $creditNames = $credits->pluck('full_name')->filter()->unique()->values();
                     @endphp
-                    @if($credits->count())
+                    @if($trackDetails === 'names' && $creditNames->count())
+                        <div class="credit-line">{{ $creditNames->join(', ') }}</div>
+                    @elseif($trackDetails === 'credits' && $credits->count())
                         @foreach($credits as $credit)
                             @php
                                 $pivotIpi = $credit->pivot->ipi_number ?? null;
