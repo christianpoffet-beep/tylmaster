@@ -64,7 +64,7 @@ class ContractTemplateController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:contract_templates,name',
             'contract_type_slug' => 'required|exists:contract_types,slug',
-            'language' => 'required|in:de,en,es',
+            'language' => 'required|' . \App\Models\Contract::languageRule(),
             'default_status' => 'nullable|in:draft,active,expired,terminated',
             'default_terms' => 'nullable|string',
             'default_subject' => 'nullable|string',
@@ -184,7 +184,7 @@ class ContractTemplateController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:contract_templates,name,' . $contractTemplate->id,
             'contract_type_slug' => 'required|exists:contract_types,slug',
-            'language' => 'required|in:de,en,es',
+            'language' => 'required|' . \App\Models\Contract::languageRule(),
             'default_status' => 'nullable|in:draft,active,expired,terminated',
             'default_terms' => 'nullable|string',
             'default_subject' => 'nullable|string',

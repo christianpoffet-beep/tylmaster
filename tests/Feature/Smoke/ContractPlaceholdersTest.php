@@ -132,6 +132,33 @@ class ContractPlaceholdersTest extends TestCase
         $this->assertSame('ihre bzw. seine', $this->soloContract(null)->fillPlaceholders('{je_ihre}'));
     }
 
+    /**
+     * The placeholders that bring words of their own speak the contract's
+     * language: names joined with «et», «des membres de …», «leurs».
+     */
+    public function test_the_automatic_words_follow_the_contract_language(): void
+    {
+        $fr = $this->bandContract(['language' => 'fr', 'contract_number' => 'VT-FR']);
+        $this->assertSame(
+            'Tobias Kalt et Lukas Oberholzer communiquent leurs coordonnées. Les droits des membres de Red Tape Redemption restent réservés.',
+            $fr->fillPlaceholders('{artist_members} {communique|communiquent} {je_ihre} coordonnées. Les droits {artist_interpreten} restent réservés.')
+        );
+        $this->assertSame('de Max Muster, ses coordonnées', $this->soloContract('male', ['language' => 'fr'])->fillPlaceholders('{artist_interpreten}, {je_ihre} coordonnées'));
+
+        $elided = $this->soloContract('female', ['language' => 'fr']);
+        $elided->parties[1]->contact->update(['first_name' => 'Anna']);
+        $this->assertSame("d'Anna Muster", $elided->fresh()->load(['parties.organization', 'parties.contact'])->fillPlaceholders('{artist_interpreten}'));
+
+        $en = $this->bandContract(['language' => 'en', 'contract_number' => 'VT-EN']);
+        $this->assertSame('Tobias Kalt and Lukas Oberholzer, their respective details, of the members of Red Tape Redemption',
+            $en->fillPlaceholders('{artist_members}, {je_ihre} details, {artist_interpreten}'));
+        $this->assertSame('her details', $this->soloContract('female', ['language' => 'en'])->fillPlaceholders('{je_ihre} details'));
+
+        $es = $this->bandContract(['language' => 'es', 'contract_number' => 'VT-ES']);
+        $this->assertSame('Tobias Kalt y Lukas Oberholzer, sus datos, de los miembros de Red Tape Redemption',
+            $es->fillPlaceholders('{artist_members}, {je_ihre} datos, {artist_interpreten}'));
+    }
+
     public function test_a_gap_stays_visible_and_is_reported(): void
     {
         $contract = $this->soloContract('male', [

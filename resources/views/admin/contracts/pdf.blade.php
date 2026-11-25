@@ -468,7 +468,7 @@
                 <td style="vertical-align:top;">
                     <h1>{{ $contract->title }}</h1>
                     <p class="contract-number">
-                        {{ $typeName !== '' ? strtr($t['type_title'], [':type' => $typeName]) : $t['subtitle'] }}@if($contract->contract_number) &middot; {{ $contract->contract_number }}@endif
+                        {{ $t['type_titles'][$contract->type] ?? ($typeName !== '' ? strtr($t['type_title'], [':type' => $typeName]) : $t['subtitle']) }}@if($contract->contract_number) &middot; {{ $contract->contract_number }}@endif
                         {{-- The status only matters on paper while the contract is not in force. --}}
                         @if($contract->status && $contract->status !== 'active')
                             <span class="status-badge status-{{ $contract->status }}">{{ $t['status_' . $contract->status] ?? $contract->status }}</span>
@@ -705,7 +705,7 @@
                                 $creditMeta = implode(' ', $creditMetaParts);
                             @endphp
                             <div class="credit-line">
-                                <span class="credit-role">{{ $roleLabels[$credit->pivot->role] ?? $credit->pivot->role }}:</span>
+                                <span class="credit-role">{{ \App\Models\Contract::CREDIT_ROLE_LABELS[$contract->language][$credit->pivot->role] ?? $roleLabels[$credit->pivot->role] ?? $credit->pivot->role }}:</span>
                                 {{ $creditName }}@if($creditMeta) <span class="credit-meta">{{ $creditMeta }}</span>@endif
                             </div>
                         @endforeach

@@ -37,6 +37,15 @@ class Contract extends Model
         'logo_as_watermark' => 'boolean',
     ];
 
+    /** The languages a contract can be written in: its PDF prints in it, the text is written in it */
+    public const LANGUAGES = ['de' => 'Deutsch', 'en' => 'English', 'fr' => 'Français', 'es' => 'Español'];
+
+    /** Validation rule for a contract or template language */
+    public static function languageRule(): string
+    {
+        return 'in:' . implode(',', array_keys(self::LANGUAGES));
+    }
+
     /** Statuses whose contracts count for the statements to the artists (a draft does not) */
     public const SETTLING_STATUSES = ['active', 'expired', 'terminated'];
 
@@ -586,8 +595,13 @@ class Contract extends Model
         'es' => [
             'subtitle' => 'Contrato',
             'type_title' => 'Contrato de :type',
-            'meta_start' => 'Fecha de inicio',
-            'meta_end' => 'Fecha de finalización',
+            'type_titles' => [
+                'label' => 'Contrato discográfico', 'publishing' => 'Contrato editorial', 'management' => 'Contrato de management',
+                'licensing' => 'Contrato de licencia', 'booking' => 'Contrato de booking', 'promotion' => 'Contrato de promoción',
+                'admin' => 'Contrato de administración',
+            ],
+            'meta_start' => 'Inicio',
+            'meta_end' => 'Fin',
             'meta_open_ended' => 'indefinido',
             'status_draft' => 'Borrador',
             'status_active' => 'Activo',
@@ -634,6 +648,90 @@ class Contract extends Model
             'closing_title' => 'Disposiciones finales',
             'annex_title' => 'Anexo',
             'parties_total' => 'Total',
+        ],
+        'fr' => [
+            'subtitle' => 'Contrat',
+            'type_title' => 'Contrat :type',
+            'type_titles' => [
+                'label' => 'Contrat de label', 'publishing' => "Contrat d'édition", 'management' => 'Contrat de management',
+                'licensing' => 'Contrat de licence', 'booking' => 'Contrat de booking', 'promotion' => 'Contrat de promotion',
+                'admin' => "Contrat d'administration",
+            ],
+            'meta_start' => 'Début',
+            'meta_end' => 'Fin',
+            'meta_open_ended' => 'durée indéterminée',
+            'status_draft' => 'Projet',
+            'status_active' => 'Actif',
+            'status_expired' => 'Expiré',
+            'status_terminated' => 'Résilié',
+            'parties_title' => 'Parties contractantes',
+            'parties_col_party' => 'Partie',
+            'parties_col_contact' => 'Personne de contact',
+            'parties_col_share' => 'Part',
+            'subject_title' => 'Objet du contrat',
+            'zession_title' => 'Avance',
+            'zession_note' => 'Ce montant sera imputé sur les recettes futures.',
+            'territory_title' => 'Territoire',
+            'territory_worldwide' => 'Monde entier',
+            'rights_title' => 'Rémunération',
+            'rights_intro' => 'Les recettes sont réparties entre :parties comme suit :',
+            'rights_col_type' => 'Type de droit',
+            'rights_col_split' => 'Répartition',
+            'party_default_prefix' => 'Partie',
+            'list_conjunction' => 'et',
+            'relations_title' => 'Éléments liés',
+            'relations_projects' => 'Projets',
+            'relations_tracks' => 'Titres',
+            'relations_track_alt' => 'aussi :',
+            'relations_releases' => 'Produits',
+            'relations_intro_default' => 'Les titres suivants font partie du présent contrat.',
+            'relations_works' => 'Œuvres',
+            'relations_intro_default_works' => 'Les œuvres suivantes font partie du présent contrat.',
+            'relations_credits' => 'Crédits',
+            'terms_title' => 'Conditions',
+            'signature_line' => 'Lieu, date, signature',
+            'party_default_a' => 'Partie 1',
+            'party_default_b' => 'Partie 2',
+            'generated_on' => 'Généré le',
+            'phone_short' => 'Tél.',
+            'page' => 'Page',
+            'page_of' => 'sur',
+            'preamble_title' => 'Parties contractantes',
+            'preamble_represented_by' => 'représentée par',
+            'preamble_consisting_of' => 'composé de',
+            'preamble_hereinafter' => 'ci-après « :role »',
+            'preamble_hereinafter_joint' => 'ci-après ensemble « :role »',
+            'preamble_and' => 'et',
+            'closing_title' => 'Dispositions finales',
+            'annex_title' => 'Annexe',
+            'parties_total' => 'Total',
+        ],
+    ];
+
+    /**
+     * The credit roles in the annex, in the contract's language. German
+     * uses the labels of the settings; a role missing here keeps its label
+     * (most technical ones are English in every language).
+     */
+    public const CREDIT_ROLE_LABELS = [
+        'en' => [
+            'composer' => 'Composer', 'lyricist' => 'Lyricist', 'arranger' => 'Arranger', 'choir' => 'Choir / Ensemble',
+            'conductor' => 'Conductor', 'producer' => 'Producer', 'co_producer' => 'Co-producer', 'main_artist' => 'Main artist',
+            'guest_musician' => 'Guest musician', 'narrator' => 'Narrator',
+        ],
+        'fr' => [
+            'composer' => 'Composition', 'lyricist' => 'Paroles', 'arranger' => 'Arrangement', 'orchestrator' => 'Orchestration',
+            'lead_vocals' => 'Chant principal', 'background_vocals' => 'Chœurs', 'instrumentalist' => 'Instrumentiste',
+            'choir' => 'Chœur / Ensemble', 'conductor' => 'Direction', 'producer' => 'Production', 'co_producer' => 'Coproduction',
+            'main_artist' => 'Artiste principal', 'featured_artist' => 'Artiste invité', 'guest_musician' => 'Musicien invité',
+            'narrator' => 'Narration',
+        ],
+        'es' => [
+            'composer' => 'Composición', 'lyricist' => 'Letra', 'arranger' => 'Arreglos', 'orchestrator' => 'Orquestación',
+            'lead_vocals' => 'Voz principal', 'background_vocals' => 'Coros', 'instrumentalist' => 'Instrumentista',
+            'choir' => 'Coro / Ensemble', 'conductor' => 'Dirección', 'producer' => 'Producción', 'co_producer' => 'Coproducción',
+            'main_artist' => 'Artista principal', 'featured_artist' => 'Artista invitado', 'guest_musician' => 'Músico invitado',
+            'narrator' => 'Narración',
         ],
     ];
 

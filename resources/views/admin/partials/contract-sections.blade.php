@@ -170,7 +170,9 @@ function contractSections(initial, editorId, subjectField) {
             // ("Folgen der Vertragsbeendigung"), except as the first word.
             const SMALL_WORDS = new Set(['und', 'oder', 'sowie', 'bzw', 'der', 'die', 'das', 'des', 'dem', 'den',
                 'ein', 'eine', 'einer', 'eines', 'von', 'vom', 'zu', 'zum', 'zur', 'für', 'mit', 'ohne', 'im', 'in',
-                'am', 'an', 'auf', 'aus', 'bei', 'nach', 'über', 'unter', 'gegen', 'gemäss', 'and', 'or', 'of', 'the']);
+                'am', 'an', 'auf', 'aus', 'bei', 'nach', 'über', 'unter', 'gegen', 'gemäss', 'and', 'or', 'of', 'the',
+                'et', 'ou', 'de', 'du', 'des', 'la', 'le', 'les', 'l', 'd', 'à', 'au', 'aux', 'en', 'par', 'pour', 'sur', 'avec', 'sans',
+                'y', 'o', 'del', 'el', 'los', 'las', 'con', 'por', 'para', 'sin', 'al']);
             const titleCase = (t) => t.toLowerCase().replace(/(^|[\s(/-])(\p{L}+)/gu, (m, sep, word, offset) =>
                 sep + (offset > 0 && SMALL_WORDS.has(word) ? word : word.charAt(0).toUpperCase() + word.slice(1)));
 

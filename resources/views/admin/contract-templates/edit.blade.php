@@ -36,7 +36,7 @@
                 <div>
                     <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sprache *</label>
                     @php
-                        $languageOptions = ['de' => 'Deutsch', 'en' => 'English', 'es' => 'Español'];
+                        $languageOptions = \App\Models\Contract::LANGUAGES;
                         // Keep a legacy/out-of-range stored value selectable so an unrelated edit can't silently coerce it.
                         if ($contractTemplate->language && !isset($languageOptions[$contractTemplate->language])) {
                             $languageOptions[$contractTemplate->language] = strtoupper($contractTemplate->language);

@@ -415,7 +415,7 @@ class ContractPdfTest extends TestCase
     {
         $user = User::factory()->create();
 
-        foreach (['de', 'en', 'es'] as $language) {
+        foreach (array_keys(Contract::LANGUAGES) as $language) {
             $contract = $this->makeContract($language);
 
             $response = $this->actingAs($user)
@@ -423,7 +423,39 @@ class ContractPdfTest extends TestCase
 
             $response->assertOk();
             $this->assertStringStartsWith('%PDF-', $response->getContent(), "PDF failed for language: {$language}");
+            $this->assertSame([], array_diff(array_keys(Contract::PDF_STRINGS['de']), array_keys(Contract::pdfStrings($language))),
+                "Every text of the PDF in {$language}");
         }
+        $this->assertEqualsCanonicalizing(array_keys(Contract::LANGUAGES), array_keys(Contract::PDF_STRINGS), 'A language to choose is a language to print');
+    }
+
+    /**
+     * A French contract: the kind of contract, the preamble and the annex
+     * in French, the contract and the template accept the language.
+     */
+    public function test_a_french_contract_prints_in_french(): void
+    {
+        $contract = $this->makeContract('fr');
+        $contract->update(['type' => 'publishing']);
+        $contract->parties()->get()->each(fn ($p, $i) => $p->update(['role_label' => $i === 0 ? 'Éditeur' : 'Auteur']));
+        $track = Track::create(['title' => 'Faust', 'status' => 'released']);
+        $track->contacts()->attach(Contact::first()->id, ['role' => 'lyricist']);
+        $contract->tracks()->attach($track);
+
+        $html = $this->renderPdfView($contract);
+        $this->assertStringContainsString("Contrat d&#039;édition", $html);
+        $this->assertStringContainsString("ci-après «\u{00A0}Éditeur\u{00A0}»", $html);
+        $this->assertStringContainsString('Les œuvres suivantes font partie du présent contrat.', $html);
+        $this->assertStringContainsString('Paroles:', $html);
+        $this->assertStringContainsString('Lieu, date, signature', $html);
+
+        $user = User::factory()->create();
+        \App\Models\ContractType::firstOrCreate(['slug' => 'publishing'], ['name' => 'Publishing', 'sort_order' => 2]);
+        $this->actingAs($user)->get('/admin/contracts/create')->assertOk()->assertSee('<option value="fr"', false)->assertSee('Français');
+        $this->actingAs($user)->get("/admin/contracts/{$contract->id}")->assertOk()->assertSee('Français');
+        $this->actingAs($user)->post('/admin/contract-templates', ['name' => 'Contrat d\'édition', 'contract_type_slug' => 'publishing', 'language' => 'fr'])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('fr', \App\Models\ContractTemplate::where('name', "Contrat d'édition")->value('language'));
     }
 
     /**
