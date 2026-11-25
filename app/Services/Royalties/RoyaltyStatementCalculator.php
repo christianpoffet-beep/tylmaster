@@ -195,7 +195,7 @@ class RoyaltyStatementCalculator
             : $release->contracts->concat($release->tracks->flatMap->contracts);
 
         $valid = $candidates->unique('id')
-            ->filter(fn (Contract $c) => $c->settlesBetween($month, $month->copy()->endOfMonth()) && $c->splitFor('streaming') !== null)
+            ->filter(fn (Contract $c) => $c->coversRecordings() && $c->settlesBetween($month, $month->copy()->endOfMonth()) && $c->splitFor('streaming') !== null)
             ->sortBy(fn (Contract $c) => [$c->type === 'label' ? 0 : 1, -($c->start_date?->timestamp ?? 0), -$c->id])
             ->values();
 
