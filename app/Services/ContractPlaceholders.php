@@ -38,7 +38,7 @@ class ContractPlaceholders
         'label_name' => 'Name des Labels: die Partei mit der Rolle «Label» oder «Verlag», sonst die erste Partei',
         'artist_name' => 'Name der Künstlerseite, z. B. die Band',
         'artist_members' => 'Personen der Künstlerseite, z. B. «Tobias Kalt und Lukas Oberholzer»',
-        'artist_interpreten' => '«der Mitglieder von <Band>» bzw. «von <Person>»',
+        'artist_interpreten' => '«der Mitglieder von <Band>» bzw. «von <Person>», in der Vertragssprache (z. B. «des membres de <Band>»)',
         'artist_share' => 'Anteil der Künstlerseite in %, aus der Vergütungszeile mit «Streaming», «Download» oder «Digital» im Namen (sonst der generelle Anteil)',
         'label_share' => 'Anteil des Labels in %, aus derselben Zeile',
         'sync_artist_share' => 'Anteil der Künstlerseite in %, aus der Vergütungszeile mit «Sync» im Namen',
@@ -54,7 +54,7 @@ class ContractPlaceholders
         'contract_number' => 'Vertragsnummer',
         'teilt_teilen' => '«teilt» bzw. «teilen»',
         'meldet_melden' => '«meldet» bzw. «melden»',
-        'je_ihre' => '«je ihre» bzw. «ihre» oder «seine» (nach dem Geschlecht im Kontakt)',
+        'je_ihre' => '«je ihre» bzw. «ihre» oder «seine» (nach dem Geschlecht im Kontakt); französisch «leurs»/«ses», englisch «their respective»/«his»/«her», spanisch «sus»',
     ];
 
     /** Verb pairs whose two forms share no common start. */
@@ -352,7 +352,7 @@ class ContractPlaceholders
             'artist_name' => $this->sideName($artist),
             'artist_members' => $members !== [] ? $this->joinList($members) : null,
             'artist_interpreten' => $members === [] ? null
-                : ($plural && $band ? 'der Mitglieder von ' . $band : 'von ' . $this->joinList($members)),
+                : ($plural && $band ? $this->of(0, $band) : $this->of(1, $this->joinList($members))),
             'artist_share' => $this->share($main, $artist, true),
             'label_share' => $this->share($main, $label, true),
             'sync_artist_share' => $sync ? $this->share($sync, $artist) : null,
@@ -368,8 +368,44 @@ class ContractPlaceholders
             'contract_number' => $contract->contract_number ?: null,
             'teilt_teilen' => $plural ? 'teilen' : 'teilt',
             'meldet_melden' => $plural ? 'melden' : 'meldet',
-            'je_ihre' => $plural ? 'je ihre' : $this->possessive($artist),
+            'je_ihre' => $plural ? self::POSSESSIVES[$this->language()]['plural'] : $this->possessive($artist),
         ];
+    }
+
+    /** «der Mitglieder von <Band>» | «von <Person>», per contract language */
+    protected const MEMBERS_OF = [
+        'de' => ['der Mitglieder von', 'von'],
+        'en' => ['of the members of', 'of'],
+        'fr' => ['des membres de', 'de'],
+        'es' => ['de los miembros de', 'de'],
+    ];
+
+    /**
+     * «je ihre» and its singular, per contract language, before a noun in the
+     * plural («… aktuellen Kontaktdaten»). French and Spanish do not change
+     * with the person, only with the number.
+     */
+    protected const POSSESSIVES = [
+        'de' => ['plural' => 'je ihre', 'female' => 'ihre', 'male' => 'seine', 'other' => 'ihre bzw. seine', 'organization' => 'ihre'],
+        'en' => ['plural' => 'their respective', 'female' => 'her', 'male' => 'his', 'other' => 'their', 'organization' => 'their'],
+        'fr' => ['plural' => 'leurs', 'female' => 'ses', 'male' => 'ses', 'other' => 'ses', 'organization' => 'ses'],
+        'es' => ['plural' => 'sus', 'female' => 'sus', 'male' => 'sus', 'other' => 'sus', 'organization' => 'sus'],
+    ];
+
+    /** "von X" in the contract's language; French elides before a vowel: «d'Anna», «des membres d'Ozone» */
+    protected function of(int $form, string $name): string
+    {
+        $prefix = self::MEMBERS_OF[$this->language()][$form];
+        if ($this->language() === 'fr' && preg_match('/^[aeiouyhàâäéèêëîïôöûü]/iu', $name)) {
+            return preg_replace('/\bde$/u', "d'", $prefix) . $name;
+        }
+
+        return $prefix . ' ' . $name;
+    }
+
+    protected function language(): string
+    {
+        return array_key_exists((string) $this->contract->language, self::MEMBERS_OF) ? $this->contract->language : 'de';
     }
 
     /**
@@ -416,14 +452,15 @@ class ContractPlaceholders
         if (!$party) {
             return null;
         }
+        $forms = self::POSSESSIVES[$this->language()];
         if (!$party->contact) {
-            return 'ihre';
+            return $forms['organization'];
         }
 
         return match ($party->contact->gender) {
-            'female' => 'ihre',
-            'male' => 'seine',
-            default => 'ihre bzw. seine',
+            'female' => $forms['female'],
+            'male' => $forms['male'],
+            default => $forms['other'],
         };
     }
 

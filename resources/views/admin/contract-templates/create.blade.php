@@ -42,7 +42,7 @@
                 <div>
                     <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sprache *</label>
                     <select name="language" id="language" required class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
-                        @foreach(['de' => 'Deutsch', 'en' => 'English', 'es' => 'Español'] as $code => $label)
+                        @foreach(\App\Models\Contract::LANGUAGES as $code => $label)
                             <option value="{{ $code }}" {{ old('language', 'de') === $code ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
