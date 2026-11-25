@@ -166,6 +166,31 @@ class ContractPdfTest extends TestCase
     }
 
     /**
+     * Two authors, one entered as an artist (organization), the other as a
+     * person: both are named, not "<Artist> bestehend aus <Person>".
+     */
+    public function test_an_artist_next_to_a_person_is_not_a_band_and_its_member(): void
+    {
+        $contract = $this->makeContract();
+        $contract->parties()->delete();
+
+        $publisher = Organization::create(['type' => 'label', 'names' => ['Test Verlag']]);
+        $artist = Organization::create(['type' => 'band', 'names' => ['Domi Test']]);
+        $person = Contact::create(['first_name' => 'Béa', 'last_name' => 'Muster', 'city' => 'Genf']);
+
+        ContractParty::create(['contract_id' => $contract->id, 'organization_id' => $publisher->id, 'share' => 15, 'role_label' => 'Verlag', 'sort_order' => 0]);
+        ContractParty::create(['contract_id' => $contract->id, 'organization_id' => $artist->id, 'share' => 42.5, 'role_label' => 'Urheberschaft', 'sort_order' => 1]);
+        ContractParty::create(['contract_id' => $contract->id, 'contact_id' => $person->id, 'share' => 42.5, 'role_label' => 'Urheberschaft', 'sort_order' => 2]);
+        $contract->load(['parties.organization', 'parties.contact']);
+
+        $blocks = $contract->preambleBlocks(Contract::pdfStrings('de'));
+
+        $this->assertSame(['Domi Test', 'Béa Muster', 'Genf', '(nachfolgend gemeinsam «Urheberschaft»)'], $blocks[1]['lines']);
+        $this->assertSame('Domi Test und Béa Muster', $contract->fillPlaceholders('{author_names}'));
+        $this->assertSame('15 / 85, übertragen', $contract->fillPlaceholders('{publisher_share} / {author_share}, {überträgt|übertragen}'));
+    }
+
+    /**
      * The letterhead reads like one: no "Typ" row, the kind of contract next
      * to its number, Swiss phone numbers grouped, no "https://".
      */

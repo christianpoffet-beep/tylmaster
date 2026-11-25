@@ -143,6 +143,29 @@ class RoyaltyStatementsTest extends TestCase
         $this->assertStringContainsString('ohne Track', implode(' ', $result['warnings']));
     }
 
+    public function test_a_publishing_contract_never_splits_the_recordings(): void
+    {
+        // About the works, even with a row that reads like streaming - on a track with a label deal and on one without
+        $publishing = Contract::create(['title' => 'Verlagsvertrag', 'type' => 'publishing', 'status' => 'active', 'start_date' => '2022-01-01',
+            'rights' => [['label' => 'Digitale Rechte', 'mode' => 'split', 'splits' => [15, 85]]]]);
+        $publishing->parties()->create(['organization_id' => $this->zentrum->id, 'share' => 15, 'sort_order' => 0]);
+        $publishing->parties()->create(['organization_id' => $this->band->id, 'share' => 85, 'sort_order' => 1]);
+        $publishing->tracks()->attach(Track::whereIn('title', ['Fog', 'Ohne Vertrag'])->pluck('id'));
+
+        $result = app(\App\Services\Royalties\RoyaltyStatementCalculator::class)->calculate($this->statement());
+        $parties = RoyaltyStatementBooker::parties($result['items'])
+            ->mapWithKeys(fn ($p) => [$p->role . ':' . $p->name => [round($p->share, 2), round($p->recouped, 2), $p->credit]])->all();
+        $this->assertSame([
+            'artist:Tar Pond' => [44.16, 5.0, 39.16],
+            'label:Zentrum' => [18.4, 0.0, 18.4],
+            'own:The yelling light' => [11.04, 0.0, 11.04],
+            'none:ohne Vertrag / ohne Track' => [18.4, 0.0, 18.4],
+        ], $parties, 'As without the publishing contract');
+
+        $this->actingAs($this->user)->get('/admin/royalties/contracts')->assertOk()
+            ->assertDontSee('15 % Zentrum')->assertSee('Vertrag fehlt');
+    }
+
     public function test_usage_missing_for_the_payouts_is_pointed_out(): void
     {
         $calculator = app(\App\Services\Royalties\RoyaltyStatementCalculator::class);

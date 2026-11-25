@@ -40,6 +40,15 @@ class Contract extends Model
     /** Statuses whose contracts count for the statements to the artists (a draft does not) */
     public const SETTLING_STATUSES = ['active', 'expired', 'terminated'];
 
+    /** Contract types about the works, not the recordings: they never split the Rebeat income */
+    public const WORKS_TYPES = ['publishing'];
+
+    /** Can split the income of the recordings (Rebeat): not a publishing deal */
+    public function coversRecordings(): bool
+    {
+        return !in_array($this->type, self::WORKS_TYPES, true);
+    }
+
     /**
      * What a right is about, so the statements know which split applies to
      * which income. Keys stay stable; the labels are shown in the form.
@@ -238,9 +247,11 @@ class Contract extends Model
             };
 
             // A group of several contacts under one organization reads as
-            // "<Org> / bestehend aus / <Person>, <Adresse>".
-            $orgIds = array_unique(array_filter(array_map(fn ($p) => $p->organization_id, $parties)));
-            $sharedOrg = (count($orgIds) === 1 && count($parties) > 1)
+            // "<Org> / bestehend aus / <Person>, <Adresse>". Only when every
+            // party belongs to it: an artist next to a person without that
+            // organization are two authors, not a band and its member.
+            $orgIds = array_unique(array_map(fn ($p) => $p->organization_id, $parties));
+            $sharedOrg = (count($orgIds) === 1 && reset($orgIds) !== null && count($parties) > 1)
                 ? $parties[0]->organization
                 : null;
 

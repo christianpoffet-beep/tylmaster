@@ -47,7 +47,8 @@ class RoyaltyCoverage
 
         $products = $releases->map(function (Release $release) use ($usage, $albumUsage) {
             $amount = (float) ($albumUsage[$release->id] ?? 0) + $release->tracks->sum(fn (Track $t) => (float) ($usage[$t->id]->amount ?? 0));
-            $contracts = $release->contracts->concat($release->tracks->flatMap->contracts)->unique('id')->values();
+            $contracts = $release->contracts->concat($release->tracks->flatMap->contracts)->unique('id')
+                ->filter(fn (Contract $c) => $c->coversRecordings())->values();
             $labels = $release->organizations->where('type', 'label')->concat($release->tracks->flatMap->organizations->where('type', 'label'))->unique('id');
             $otherLabel = $labels->first(fn (Organization $label) => !$this->isOwn($label));
 
@@ -71,13 +72,14 @@ class RoyaltyCoverage
             ->whereIn('id', $usage->keys()->reject(fn ($id) => $onProducts->has($id)))->get()
             ->map(function (Track $track) use ($usage) {
                 $otherLabel = $track->organizations->where('type', 'label')->first(fn ($label) => !$this->isOwn($label));
+                $contracts = $track->contracts->filter(fn (Contract $c) => $c->coversRecordings())->values();
 
                 return (object) [
                     'track' => $track,
                     'amount' => (float) $usage[$track->id]->amount,
-                    'contracts' => $track->contracts,
+                    'contracts' => $contracts,
                     'label' => $otherLabel,
-                    'status' => $this->status($track->contracts, $otherLabel),
+                    'status' => $this->status($contracts, $otherLabel),
                 ];
             });
 
