@@ -323,6 +323,61 @@ class ContractPdfTest extends TestCase
     }
 
     /**
+     * How the songs appear is chosen with the logo: only the title, the title
+     * with the names, or the full credits (as before, the default).
+     */
+    public function test_the_songs_print_as_title_names_or_credits(): void
+    {
+        $contract = $this->makeContract();
+        $contract->update(['type' => 'label']);
+        $track = Track::create(['title' => 'Faust', 'status' => 'released', 'isrc' => 'CH4812600021']);
+        $domi = Contact::create(['first_name' => 'Domi', 'last_name' => 'Test']);
+        $bea = Contact::create(['first_name' => 'Béa', 'last_name' => 'Muster']);
+        $track->contacts()->attach($domi->id, ['role' => 'composer', 'ipi_number' => '00660960337']);
+        $track->contacts()->attach($domi->id, ['role' => 'instrumentalist', 'instrument' => 'Drums']);
+        $track->contacts()->attach($bea->id, ['role' => 'lyricist']);
+        $contract->tracks()->attach($track);
+
+        $html = $this->renderPdfView($contract);
+        $this->assertStringContainsString('Instrumentalist:', $html, 'No choice yet: the full credits');
+        $this->assertStringContainsString('(Drums)', $html);
+
+        $contract->update(['track_details' => 'names']);
+        $html = $this->renderPdfView($contract);
+        $this->assertStringContainsString('Domi Test, Béa Muster', $html, 'Each person once');
+        $this->assertStringNotContainsString('Komponist:', $html);
+        $this->assertStringNotContainsString('(Drums)', $html);
+
+        $contract->update(['track_details' => 'title']);
+        $html = $this->renderPdfView($contract);
+        $this->assertStringContainsString('Faust', $html);
+        $this->assertStringNotContainsString('Domi Test', $html);
+
+        // The form keeps the choice; a form without the field leaves it alone
+        $user = User::factory()->create();
+        \App\Models\ContractType::firstOrCreate(['slug' => 'label'], ['name' => 'Label', 'sort_order' => 1]);
+        $form = ['title' => 'Testvertrag', 'type' => 'label', 'status' => 'draft', 'language' => 'de', 'parties' => [
+            ['type' => 'organization', 'organization_id' => Organization::first()->id, 'share' => 50],
+            ['type' => 'contact', 'contact_id' => $domi->id, 'share' => 50],
+        ]];
+        $this->actingAs($user)->get("/admin/contracts/{$contract->id}/edit")->assertOk()->assertSee('Titel und beteiligte Namen');
+        $this->actingAs($user)->put("/admin/contracts/{$contract->id}", $form + ['track_details' => 'names'])->assertSessionHasNoErrors();
+        $this->assertSame('names', $contract->fresh()->track_details);
+        $this->actingAs($user)->put("/admin/contracts/{$contract->id}", $form)->assertSessionHasNoErrors();
+        $this->assertSame('names', $contract->fresh()->track_details);
+        $this->actingAs($user)->put("/admin/contracts/{$contract->id}", $form + ['track_details' => 'everything'])->assertSessionHasNoErrors();
+        $this->assertNull($contract->fresh()->track_details, 'Unknown: back to the default');
+        $this->assertSame('credits', $contract->fresh()->trackDetails());
+
+        // A template hands its choice to a new contract
+        $this->actingAs($user)->post('/admin/contract-templates', ['name' => 'Nur Titel', 'contract_type_slug' => 'label', 'language' => 'de', 'track_details' => 'title'])
+            ->assertSessionHasNoErrors();
+        $template = \App\Models\ContractTemplate::where('name', 'Nur Titel')->sole();
+        $this->assertSame('title', $template->track_details);
+        $this->actingAs($user)->getJson("/admin/contract-templates/{$template->id}/data")->assertJsonPath('track_details', 'title');
+    }
+
+    /**
      * A publishing deal is about the works: the annex speaks of works and
      * lists their authors, not who played on the recording.
      */

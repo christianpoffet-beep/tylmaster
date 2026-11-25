@@ -419,6 +419,7 @@ class ContractTemplateController extends Controller
                 ->map(fn ($t) => ['id' => $t->id, 'title' => $t->display_title ?? $t->title, 'status' => $t->status])->values(),
             'default_releases' => $contractTemplate->defaultReleases()
                 ->map(fn ($r) => ['id' => $r->id, 'title' => $r->title, 'status' => $r->status ?? null])->values(),
+            'track_details' => $contractTemplate->track_details,
             'logo' => $contractTemplate->logo_path ? [
                 'url' => Storage::disk('public')->url($contractTemplate->logo_path),
                 'label' => $contractTemplate->name,
